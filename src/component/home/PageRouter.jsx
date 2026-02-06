@@ -5,6 +5,7 @@ import MapPage from "./page/map/MapPage"
 import PestsPage from "./page/pests/PestsPage"
 import CropsPage from "./page/crops/CropsPage"
 import CommunityPage from "./page/community/CommunityPage"
+import AiChatPage from "./page/aichat/AiChatPage";
 
 
 /**
@@ -26,6 +27,7 @@ export default function PageRouter() {
                 <Route path="/pests" element={<PestsPage />} />
                 <Route path="/crops" element={<CropsPage />} />
                 <Route path="/community" element={<CommunityPage />} />
+                <Route path="/aichat" element={<AiChatPage />} />
             </Route>
         </Routes>
     )

@@ -1,6 +1,7 @@
 /* tailwindcss import and font style import*/
 
 @import "tailwindcss";
+@import "./component/home/page/aichat/aichat.css";
 
 body {
     font-family: "Noto Sans KR", sans-serif;

@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import HeaderUi from "./HeaderUI";
+import HeaderUi from "./HeaderUi";
 import { useState, useMemo } from "react"
 import Dropdown from "../dropdown/Dropdown";
+
 
 /**
  * 상단 네비게이션의 카테고리 정의
@@ -12,6 +13,8 @@ const NAV_MENU = [
     { id: "map", label: "농업지도", path: "/map" },
     { id: "crops", label: "작물백과", path: "/crop-tech" },
     { id: "community", label: "커뮤니티", path: "/community" },
+    { id: "informationHub", label: "정보허브", path: "/informationHub"},
+    
 ]
 
 export default function Header() {
@@ -34,7 +37,10 @@ export default function Header() {
             { name: "지역별 토양 분석 지도", path: "/map/soil" },
         ],
         crops: [{ name: "품종별 재배기술", path: "/crop-tech" }],
-        community: [{ name: "게시판", path: "/community" }]
+        community: [{ name: "게시판", path: "/community" }],
+        informationHub: [{name: "병충해 정보", path: "/informationHub/insectPestsInfo"}]
+        
+
     }), []);
 
     // 메뉴 active 판정 후 스타일 적용
@@ -42,6 +48,14 @@ export default function Header() {
         const base = "transition-all duration-200";
         const active = pathname.startsWith(path)
             ? "text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500 font-bold"
+            : "text-slate-600 hover:text-emerald-600";
+        return `${base} ${active}`;
+    };
+    // 챗봇
+    const getHeaderStyleAiChat = () => {
+        const base = "transition-all duration-200";
+        const active = pathname.startsWith("/aichat")
+            ? "text-emerald-700 border-b-2 border-emerald-500 font-bold"
             : "text-slate-600 hover:text-emerald-600";
         return `${base} ${active}`;
     };
@@ -90,8 +104,16 @@ export default function Header() {
                             )}
                         </div>
                     ))}
+                    <HeaderUi 
+                        variant="text"
+                        onClick={() => navigate("/aichat")}
+                        className={getHeaderStyleAiChat()}
+                    >
+                        AI챗봇
+                    </HeaderUi>          
 
                 </div>
+                
 
             </div>
 
