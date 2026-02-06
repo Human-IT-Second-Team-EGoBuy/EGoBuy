@@ -18,7 +18,7 @@ export const CROP_ITEMS = [
   { key: "토마토", label: "토마토", emoji: "🍅", model: "model-liriope" },
   { key: "감자", label: "감자", emoji: "🥔", model: "model-wambugu" },
   { key: "쌀", label: "쌀", emoji: "🌾", model: "model-wambugu" },
-  { key: "밀", label: "밀", emoji: "🌾", model: "model-wambugu" },
+  { key: "밀", label: "밀", emoji: "🌿", model: "model-wambugu" },
   { key: "옥수수", label: "옥수수", emoji: "🌽", model: "model-wambugu" },
 ];
 

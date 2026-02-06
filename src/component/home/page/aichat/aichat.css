@@ -23,13 +23,43 @@
 .cp-wrap { @apply bg-slate-50 border border-slate-100 rounded-3xl p-5; }
 .cp-note { @apply text-sm text-slate-600; }
 .cp-row { @apply mt-4 flex gap-2; }
-.cp-input {
-  @apply flex-1 px-4 py-3 rounded-2xl border border-slate-200
-  focus:outline-none focus:ring-2 focus:ring-emerald-200;
-}
-.cp-btn {
-  @apply px-5 py-3 rounded-2xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700;
-}
+.cp-input { @apply flex-1 px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200;}
+.cp-btn { @apply px-5 py-3 rounded-2xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700;}
+/* ChatPanel layout */
+.cp-shell { @apply bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden flex h-[calc(100vh-180px)];}
+.cp-side { @apply w-[260px] bg-slate-50 p-4 flex flex-col min-h-0;}
+.cp-main { @apply flex-1 p-5 flex flex-col min-h-0; }
+.cp-nav { @apply mt-5 flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1;}
+/* ChatPanel sidebar */
+.cp-new { @apply w-full rounded-2xl px-4 py-3 font-semibold bg-gradient-to-br from-emerald-500 to-lime-500 hover:opacity-90 text-white; }
+.cp-nav-title { @apply text-base uppercase tracking-wider text-slate-900 px-2 pt-[30px];}
+/* ChatPanel main */
+.cp-note { @apply text-sm text-slate-600;}
+.cp-chat { @apply mt-4 flex-1 rounded-3xl border border-slate-100 bg-white p-4 overflow-y-auto min-h-0;}
+.cp-empty { @apply text-slate-400 text-sm;}
+/* ChatPanel input row */
+.cp-row { @apply mt-4 flex gap-2;}
+.cp-input { @apply flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-200;}
+.cp-btn { @apply px-5 py-3 rounded-2xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700;}
+.cp-chat-item { @apply text-left px-3 py-2 rounded-2xl text-slate-800 hover:bg-slate-100;}
+/* sidebar empty */
+.cp-nav-empty { @apply mt-2 px-3 py-3 rounded-2xl text-sm text-slate-500 bg-slate-100; }
+/* chat list item (sidebar) */
+.cp-chat-item {
+  @apply text-left px-3 py-2 rounded-2xl bg-white border border-slate-100 hover:bg-slate-50 transition;}
+.cp-chat-item.is-active { @apply ring-2 ring-emerald-200 border-emerald-200; }
+.cp-chat-title { @apply block text-sm font-semibold text-slate-900 truncate; }
+.cp-chat-sub   { @apply block text-xs text-slate-500 truncate mt-0.5; }
+/* message list + bubbles */
+.cp-msg-list { @apply flex flex-col gap-2; }
+.cp-bubble { @apply max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed; }
+.cp-bubble.is-bot  { @apply bg-slate-100 text-slate-900 self-start; }
+.cp-bubble.is-user { @apply bg-emerald-600 text-white self-end; }
+.cp-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.18) rgba(0,0,0,.06);}
+.cp-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.cp-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); border-radius: 9999px; }
+.cp-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,.06); border-radius: 9999px; }
+
 
 /* CropCard */
 .cc-btn {
@@ -58,7 +88,7 @@
 .eg-desc { @apply text-xs text-slate-500 mt-1; }
 .eg-grid { @apply mt-3 grid grid-cols-2 gap-3; }
 .eg-card { @apply rounded-2xl overflow-hidden border border-slate-200; }
-.eg-img { @apply w-full h-32 object-cover; }
+.eg-img { @apply w-full h-40 object-cover; }
 .eg-caption { @apply p-2 text-xs text-slate-600; }
 .eg-tip { @apply mt-3 text-[11px] text-slate-500; }
 
@@ -70,7 +100,7 @@
 /* ImagePreview */
 .ip-label { @apply text-xs text-slate-500 mb-2; }
 .ip-box { @apply rounded-3xl border border-slate-200 bg-white overflow-hidden; }
-.ip-img { @apply w-full max-h-[280px] object-contain; }
+.ip-img { @apply w-full max-h-[280px] object-contain p-5; }
 
 /* ImageUploader */
 .iu-head { @apply flex items-center justify-between; }
@@ -79,7 +109,8 @@
   @apply text-xs px-3 py-1 rounded-full border border-slate-200 hover:bg-white;
 }
 .iu-drop {
-  @apply mt-2 w-full rounded-3xl border-2 border-dashed p-6 text-center transition cursor-pointer select-none;
+  @apply mt-2 w-full  min-h-[180px] rounded-3xl border-2 border-dashed p-6 text-center transition cursor-pointer select-none
+  flex flex-col justify-center;
 }
 .iu-drop-idle { @apply border-slate-200 bg-white hover:bg-slate-50; }
 .iu-drop-drag { @apply border-emerald-400 bg-emerald-50; }
@@ -92,8 +123,7 @@
 /* ModeToggle */
 .mt-wrap { @apply flex flex-nowrap bg-slate-100 rounded-2xl p-1; }
 .mt-btn {
-  @apply px-4 py-2 rounded-2xl text-sm font-semibold whitespace-nowrap transition;
-}
+  @apply px-4 py-2 rounded-2xl text-sm font-semibold whitespace-nowrap transition;}
 .mt-active { @apply bg-white shadow-sm text-emerald-700; }
 .mt-idle { @apply text-slate-600 hover:text-slate-800; }
 
@@ -105,10 +135,7 @@
   @apply flex-1 px-5 py-3 rounded-2xl bg-emerald-600 text-white font-semibold
   hover:bg-emerald-700 disabled:opacity-50;
 }
-.vp-secondary {
-  @apply px-5 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50
-  font-semibold text-slate-700;
-}
+.vp-secondary { @apply px-5 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-slate-700;}
 
 /* AiChatPage */
 .ap-wrap { @apply p-4 md:p-6; }

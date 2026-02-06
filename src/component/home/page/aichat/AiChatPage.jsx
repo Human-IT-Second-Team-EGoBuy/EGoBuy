@@ -8,7 +8,7 @@ import ChatPanel from "./components/ChatPanel";
 import VisionPanel from "./components/VisionPanel";
 
 export default function AiChatPage() {
-  const [mode, setMode] = useState("vision");
+  const [mode, setMode] = useState("chat");
   const fileInputRef = useRef(null);
 
   const [crop, setCrop] = useState("딸기");
