@@ -13,7 +13,7 @@ const NAV_MENU = [
     { id: "map", label: "농업지도", path: "/map" },
     { id: "crops", label: "작물백과", path: "/crop-tech" },
     { id: "community", label: "커뮤니티", path: "/community" },
-    { id: "informationHub", label: "정보허브", path: "/informationHub"},
+    { id: "informationhub", label: "정보허브", path: "/insectPestsInfo"},
     
 ]
 
@@ -38,7 +38,7 @@ export default function Header() {
         ],
         crops: [{ name: "품종별 재배기술", path: "/crop-tech" }],
         community: [{ name: "게시판", path: "/community" }],
-        informationHub: [{name: "병충해 정보", path: "/informationHub/insectPestsInfo"}]
+        informationHub: [{name: "병충해 정보", path: "/insectPestsInfo"}]
         
 
     }), []);
@@ -54,7 +54,7 @@ export default function Header() {
     // 챗봇
     const getHeaderStyleAiChat = () => {
         const base = "transition-all duration-200";
-        const active = pathname.startsWith("/aichat")
+        const active = pathname.startsWith("/aiChat")
             ? "text-emerald-700 border-b-2 border-emerald-500 font-bold"
             : "text-slate-600 hover:text-emerald-600";
         return `${base} ${active}`;

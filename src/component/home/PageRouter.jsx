@@ -6,6 +6,7 @@ import PestsPage from "./page/pests/PestsPage"
 import CropsPage from "./page/crops/CropsPage"
 import CommunityPage from "./page/community/CommunityPage"
 import AiChatPage from "./page/aichat/AiChatPage";
+import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
 
 
 /**
@@ -27,7 +28,8 @@ export default function PageRouter() {
                 <Route path="/pests" element={<PestsPage />} />
                 <Route path="/crops" element={<CropsPage />} />
                 <Route path="/community" element={<CommunityPage />} />
-                <Route path="/aichat" element={<AiChatPage />} />
+                <Route path="/insectPestsInfo" element={<InsectPestsInfoPage/>} />
+                <Route path="/aiChat" element={<AiChatPage />} />
             </Route>
         </Routes>
     )
