@@ -1,0 +1,26 @@
+.home-layout{
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 56px 1fr; /* header / body */
+}
+
+.header-layout{
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.body-layout{
+  display: grid;
+  grid-template-columns: 240px 1fr; /* sidebar / main */
+  min-height: 0; /* 스크롤 꼬임 방지 */
+}
+
+.sidebar-layout{
+  background: #4f8f5c;
+  overflow: auto;
+}
+
+.page-layout{
+  overflow: auto;
+  background: #fff;
+}
