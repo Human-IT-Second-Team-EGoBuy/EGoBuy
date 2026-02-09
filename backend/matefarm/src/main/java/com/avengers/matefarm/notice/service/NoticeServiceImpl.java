@@ -33,6 +33,8 @@ import java.util.List;
 @Service
 public class NoticeServiceImpl implements NoticeService {
 
+    private final Integer PAGE_SIZE = 10;   // 1~10 | 11~20 처럼 보여줄 페이지 번호의 숫자를 정의
+
     private final FilesService filesService;
     private final NoticeRepository noticeRepository;
     private final UserService userService;
@@ -91,9 +93,10 @@ public class NoticeServiceImpl implements NoticeService {
     /* 공지사항 단건 조회 */
     public NoticeDetailResponseDTO getDetailedNotice(Long noticeId) {
 
-        UserEntity userEntity = userService.findUserById(noticeId);
         NoticeEntity noticeEntity = noticeRepository.findById(noticeId)
                 .orElseThrow( () -> new CommonException(ErrorCode.NOT_FOUND_NOTICE));
+
+        UserEntity userEntity = userService.findUserById(noticeEntity.getWriterId().getUserId());
 
         // files 조회
         List<FilesResponseDTO> files = filesService.getFilesWithOwnerTypeAndOwnerId(OwnerType.NOTICE, noticeId);
@@ -128,7 +131,7 @@ public class NoticeServiceImpl implements NoticeService {
     public PageResponseDTO<NoticeResponseDTO> getNoticeList(Pageable pageable) {
 
         // Data 조회 ( Page 타입으로 반환 ) -
-        // findAll(Pagealbe)의 경우 일반적인 FindAll()과 다르게 ORDERBY 설정을 두었으므로 LIMIT 10 OFFSET 0 과 같은 쿼리를 추가로 날려 모든 요소가 한 번에 반환되지 않도록 해준다.
+        // findAll(Pagealbe)의 경우 일반적인 FindAll()과 다르게 ORDER BY 설정을 두었으므로 LIMIT 10 OFFSET 0 과 같은 쿼리를 추가로 날려 모든 요소가 한 번에 반환되지 않도록 해준다.
         Page<NoticeEntity> notices = noticeRepository.findAll(pageable);
 
         // EntityToDTO
@@ -136,11 +139,13 @@ public class NoticeServiceImpl implements NoticeService {
                 .map(NoticeResponseDTO::from)
                 .toList();
 
+        // 한 페이지당 보여줄 게시글의 수(getSize())와 1~10, 11~20처럼 페이지 번호를 보여줄 갯수(PAGE_SIZE)를 혼동하지 말 것.
         return new PageResponseDTO<>(
                 noticeDTOs,
                 notices.getNumber() + 1,    // 0번부터 시작이므로 + 1
-                10,                                // Page Size
-                notices.getSize(),                 // 페이지당 요소의 수
+                PAGE_SIZE,                         //  보여줄 페이지 번호의 갯수. ( DTO에서 내부 로직에  사용하기 위함 )
+                // 아래 두 함수는 int, long을 각각 반환하지만 객체 생성 당시 Auto Boxing으로 인해 Integer로 자동 캐스팅 된다.
+                notices.getSize(),                 // 페이지당 요소의 수 ( Controller에서 정의한 Size : ) Pageable 타입의 객체가 생성될 당시 size : 10 정보를 갖고 있어 getSize() 할 시 한 페이지당 보여줄 요소의 수, 10을 반환함
                 (int)notices.getTotalElements()    // 토탈 요소의 수
         );
     }

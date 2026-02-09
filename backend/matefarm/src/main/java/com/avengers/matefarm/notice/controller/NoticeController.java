@@ -68,13 +68,20 @@ public class NoticeController {
     }
 
     /* 공지사항 List 조회 */
-    @GetMapping
+    @GetMapping("/list")
     public ResponseDTO<PageResponseDTO<NoticeResponseDTO>> getNotices(
+            //@PageableDefault : Hibernate가 해당 정보를 참고하여 SQL 구문 생성 -> 게시글 10개씩, 생성일 기준, 내림차순 명시.( ORDER BY 는 기본이 ASC ) 반환
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            // 둘 다 front에서 쿼리스트링으로 ?page=0 과 같이 넘겨주면 Pageable 객체가 알아서 반환해줌.
+//            @RequestParam(name = "page") int page,
+//            @RequestParam(name = "size") int size
     ) {
 
         // Jpa의 Pageable은 LIMIT 10 OFFSET 500 같은 쿼리를 사용하여, 모든 요소를 반환하지 않음.
-        PageResponseDTO<NoticeResponseDTO> pages = noticeService.getNoticeList(pageable);
+        PageResponseDTO<NoticeResponseDTO> pages =
+                noticeService.
+                        getNoticeList(pageable);
+
         return ResponseDTO.ok(pages);
 
     }

@@ -40,6 +40,8 @@ public class NoticeResponseDTO {
         return NoticeResponseDTO.builder()
                 .noticeId(entity.getNoticeId())
                 .noticeTitle(entity.getNoticeTitle())
+                .noticeContent(entity.getNoticeContent())   // 누락되어 추가
+                .filesTf(entity.getFilesTf())               // 누락되어 추가
                 .writerId(entity.getWriterId().getUserId()) // Jpa가 UserEntity타입의 객체를 반환하므로 여기에서 닉네임을 추출
                 .writerName(entity.getWriterId().getUserName())
                 .createdAt(entity.getCreatedAt())
