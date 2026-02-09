@@ -1,0 +1,98 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+ext {
+    springAiVersion = "2.0.0-M2"
+}
+
+group = 'com.avengers'
+version = '0.0.1-SNAPSHOT'
+description = 'matefarm'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    // 파일의 Mime Type을 검출하는 Aphach Tika를 사용하기 위한 라이브러리
+    implementation 'org.apache.tika:tika-core:2.9.1'
+
+    //  S3 라이브러리
+//    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'software.amazon.awssdk:s3:2.20.0'
+    implementation 'software.amazon.awssdk:auth:2.20.0'
+    implementation 'software.amazon.awssdk:regions:2.20.0'
+
+
+
+    // Redis 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Mail 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // Mybatis 라이브러리
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Security 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // 유효성 검증을 위함
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // Jpa 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+    implementation 'org.springframework.ai:spring-ai-tika-document-reader'
+
+
+    // 롬복 라이브러리
+    compileOnly 'org.projectlombok:lombok'
+
+    // 개발용
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    //필기. 모델 매퍼
+    implementation 'org.modelmapper:modelmapper:3.1.1'
+
+    //필기. jwt 토큰 라이브러리
+    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
