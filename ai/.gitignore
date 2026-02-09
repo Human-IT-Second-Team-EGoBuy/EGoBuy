@@ -1,0 +1,99 @@
+########################################
+# 1) OS / Editor
+########################################
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+########################################
+# 2) Python
+########################################
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+htmlcov/
+
+# venv (프로젝트마다 .venv 쓰는 구조)
+.venv/
+venv/
+env/
+
+########################################
+# 3) Node / Frontend (있을 수도 있어서)
+########################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.vite/
+
+########################################
+# 4) Secrets (.env)
+########################################
+.env
+**/.env
+!.env.example
+!**/.env.example
+
+########################################
+# 5) Chroma / Vector DB / Local Volumes
+########################################
+# 로컬에서만 쓰는 볼륨 폴더
+volumes/
+**/volumes/
+
+# embedder가 들고있는 로컬 chroma db (팀 공유 안 할 거면 ignore)
+services/embedder/data/chroma_db/
+services/embedder/data/chroma_db/**
+
+# 혹시 다른 위치에 생성되는 chroma도 방지
+chroma_db/
+**/chroma_db/
+
+########################################
+# 6) HuggingFace / ML caches (로컬 경로)
+########################################
+hf-cache/
+**/hf-cache/
+.cache/
+**/.cache/
+**/torch_cache/
+**/wandb/
+
+########################################
+# 7) Logs
+########################################
+*.log
+logs/
+**/logs/
+
+########################################
+# 8) Docker
+########################################
+*.tar
+*.img
+*.pid
+
+########################################
+# 9) Windows 특수: "farmproject (1)" 같은 복사 폴더가 생기면
+########################################
+* (1)/
+* (2)/

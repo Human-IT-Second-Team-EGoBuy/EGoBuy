@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://farmproject.local/schemas/model_predict_response.schema.json",
+  "title": "ModelPredictResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["model", "topk", "confidence", "meta"],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "description": "요청 추적용 ID (선택)"
+    },
+    "model": {
+      "type": "string",
+      "description": "모델 식별자(repo_id 등)"
+    },
+    "best": {
+      "$ref": "#/$defs/TopKItem",
+      "description": "top1 항목(편의를 위해 제공)",
+      "nullable": true
+    },
+    "topk": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/TopKItem" },
+      "description": "확률 내림차순 Top-K 결과"
+    },
+    "confidence": {
+      "$ref": "#/$defs/Confidence",
+      "description": "top1/top2/margin/entropy 기반 신뢰도 지표"
+    },
+    "meta": {
+      "$ref": "#/$defs/Meta",
+      "description": "전처리/디바이스/지연시간 등 부가정보"
+    }
+  },
+  "$defs": {
+    "TopKItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "label", "prob"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "label": { "type": "string", "description": "모델 라벨(영문/원본)" },
+        "label_ko": { "type": "string", "description": "한글 라벨(가능한 경우)" },
+        "prob": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "Confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["top1_prob", "top2_prob", "margin", "entropy"],
+      "properties": {
+        "top1_index": { "type": "integer", "minimum": 0 },
+        "top2_index": { "type": "integer", "minimum": 0 },
+        "top1_prob": { "type": "number", "minimum": 0, "maximum": 1 },
+        "top2_prob": { "type": "number", "minimum": 0, "maximum": 1 },
+        "margin": { "type": "number", "minimum": -1, "maximum": 1 },
+        "entropy": { "type": "number", "minimum": 0 }
+      }
+    },
+    "Meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["latency_ms"],
+      "properties": {
+        "latency_ms": { "type": "integer", "minimum": 0 },
+        "device": { "type": "string", "description": "cpu/cuda 등" },
+        "prep_mode": { "type": "string" },
+        "resize_mode": { "type": "string" },
+        "crop_ratio": { "type": ["number", "null"] },
+        "use_ensemble": { "type": "boolean" },
+        "ensemble_crops": {
+          "type": ["array", "null"],
+          "items": { "type": ["number", "null"] }
+        },
+        "use_leaf_mask": { "type": "boolean" },
+        "image_size": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    }
+  }
+}

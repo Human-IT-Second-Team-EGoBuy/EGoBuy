@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://farmproject.local/schemas/analyze_response.schema.json",
+  "title": "AnalyzeResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "decision", "models", "final", "meta"],
+  "properties": {
+    "request_id": { "type": "string" },
+
+    "decision": {
+      "type": "string",
+      "enum": ["CONFIDENT", "UNCERTAIN", "REJECT"],
+      "description": "LangGraph 판정 결과"
+    },
+
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["liriope", "wambugu"],
+      "properties": {
+        "liriope": { "$ref": "#/$defs/ModelPredictResponseNullable" },
+        "wambugu": { "$ref": "#/$defs/ModelPredictResponseNullable" }
+      },
+      "description": "각 모델 서비스 결과(실행 안 했으면 null 가능)"
+    },
+
+    "final": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "prob"],
+      "properties": {
+        "label": { "type": "string", "description": "최종 판단 라벨(가능하면 통일된 표준 라벨)" },
+        "label_ko": { "type": "string" },
+        "prob": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source_model": {
+          "type": "string",
+          "description": "최종 라벨을 채택한 모델(liriope/wambugu/ensemble 등)"
+        }
+      }
+    },
+
+    "explanation": {
+      "type": "object",
+      "description": "LLM 기반 설명(UNCERTAIN/REJECT일 때도 안내 포함)",
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string", "description": "한 줄 요약" },
+        "details": { "type": "string", "description": "자세한 설명(증상/원인/대응)" },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "사용자 행동 가이드"
+        },
+        "disclaimer": { "type": "string", "description": "주의/한계/현장 확인 안내" }
+      }
+    },
+
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["latency_ms_total"],
+      "properties": {
+        "latency_ms_total": { "type": "integer", "minimum": 0 },
+        "latency_ms_models": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "liriope": { "type": "integer", "minimum": 0 },
+            "wambugu": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "thresholds_used": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "실제 적용된 판정 기준"
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "ModelPredictResponseNullable": {
+      "type": ["object", "null"],
+      "description": "모델이 실행되지 않았으면 null",
+      "additionalProperties": true
+    }
+  }
+}
