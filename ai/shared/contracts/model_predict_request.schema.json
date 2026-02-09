@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://farmproject.local/schemas/model_predict_request.schema.json",
+  "title": "ModelPredictRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image"],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "description": "요청 추적용 ID (선택)"
+    },
+    "image": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "contentMediaType": "image/*",
+      "description": "이미지 파일을 base64로 인코딩한 문자열"
+    },
+    "image_mime": {
+      "type": "string",
+      "description": "image/jpeg, image/png 등 (선택)",
+      "examples": ["image/jpeg", "image/png"]
+    },
+    "top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 5
+    },
+    "options": {
+      "type": "object",
+      "description": "모델별 전처리/추론 옵션",
+      "additionalProperties": true,
+      "properties": {
+        "prep_mode": {
+          "type": "string",
+          "enum": ["v1", "v2", "v3"],
+          "default": "v3",
+          "description": "TF(liriope) 전처리 스케일 모드"
+        },
+        "resize_mode": {
+          "type": "string",
+          "enum": ["pad", "stretch"],
+          "default": "pad",
+          "description": "TF(liriope) 리사이즈 모드"
+        },
+        "crop_ratio": {
+          "type": ["number", "null"],
+          "minimum": 0.1,
+          "maximum": 1.0,
+          "default": null,
+          "description": "TF(liriope) center crop 비율"
+        },
+        "use_leaf_mask": {
+          "type": "boolean",
+          "default": false,
+          "description": "TF(liriope) 단순 잎 마스크 적용 여부"
+        },
+        "use_ensemble": {
+          "type": "boolean",
+          "default": false,
+          "description": "TF(liriope) 앙상블(TTA) 적용 여부"
+        },
+        "ensemble_crops": {
+          "type": ["array", "null"],
+          "default": null,
+          "items": {
+            "type": ["number", "null"],
+            "minimum": 0.1,
+            "maximum": 1.0
+          },
+          "description": "예: [null, 0.95, 0.90] (null은 no-crop 의미)"
+        }
+      }
+    }
+  }
+}

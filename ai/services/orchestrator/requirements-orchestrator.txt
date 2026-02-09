@@ -1,0 +1,22 @@
+# Web API
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+pydantic>=2.6,<3.0
+python-dotenv>=1.0,<2.0
+
+# LLM / LangChain
+langchain>=0.2,<0.4
+langchain-core>=0.2,<0.4
+langchain-openai>=0.1,<0.3
+
+# LangGraph
+langgraph>=0.2,<0.4
+
+# 모델 서비스 호출용 HTTP 클라이언트
+httpx>=0.25,<1.0
+
+python-multipart>=0.0.9,<1.0
+
+# (추천) 명시해두면 버전 꼬임 방지
+openai>=1.0,<3.0
+tiktoken>=0.5,<1.0
