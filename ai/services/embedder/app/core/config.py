@@ -5,7 +5,7 @@ APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # .../app
 EMBEDDER_ROOT = os.path.dirname(APP_DIR)                               # .../embedder
 DATA_DIR = os.path.join(EMBEDDER_ROOT, "data")
 
-# ✅ embedder/data/chroma_db
+# embedder/data/chroma_db
 PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", os.path.join(DATA_DIR, "chroma_db"))
 
 COLLECTION_CULTIVATION = os.getenv("COLLECTION_CULTIVATION", "cultivation_kb")
