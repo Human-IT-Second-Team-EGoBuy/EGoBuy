@@ -4,16 +4,15 @@ import com.avengers.matefarm.common.exception.CommonException;
 import com.avengers.matefarm.common.exception.ErrorCode;
 import com.avengers.matefarm.files.dto.FilesEntity;
 import com.avengers.matefarm.files.dto.response.FilesResponseDTO;
+import com.avengers.matefarm.files.dto.response.SingleFileUploadResponseDTO;
 import com.avengers.matefarm.files.enums.OwnerType;
 import com.avengers.matefarm.files.policy.AllowedMimeType;
 import com.avengers.matefarm.files.repository.FilesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
-import org.modelmapper.internal.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -24,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /*
@@ -75,7 +75,7 @@ public class FilesServiceImpl implements FilesService {
      해당 로직이 끝난 뒤에는 고아 객체가 된 상태로 Heap 영역에 남아서 GC에 의해 처리될 때 까지 리소스 낭비가 됨.
      따라서 전역으로 객체를 선언하여 한 객체를 여러 Thread에서  Thread-safe한 구조로 사용 .
      tika 객체는 Heap 영역에 존재하는 데이터일 뿐, 여러 API 요청 ( 각 Thread ) 와는 다르다.
-     Rest API에 의해 S3에 파일을 업로드 하기 전 validationCheck를 하기 위해 단 하나의 tika 객체에 담긴 Type 정보를 찾기 위해
+     Rest API에 의해 S3에 파일을 업로드 하기 전 validation Check를 하기 위해 단 하나의 tika 객체에 담긴 Type 정보를 찾기 위해
      여러 Thread가 참조할 뿐이다.
 
       단일 코어의 프로세서가 여러 프로세스를 직렬로 처리해야 하는 것과 달리 "프로세스 - 쓰레드" 관점에서 본다면,
@@ -102,12 +102,15 @@ public class FilesServiceImpl implements FilesService {
 
     @Override
     /* 파일 업로드 하는 모든 메소드가 공용으로 사용하는 업로드할 파일의 MIME 타입을 검사하는 메소드 */
-    public void validationCheck(List<MultipartFile> files) {
+    public void validationCheck(List<MultipartFile> files, Boolean imageOnly) {
 
         // 파일이 없는 경우.
         if (files == null || files.isEmpty()) {
             return;
         }
+
+        // 검사할 화이트리스트 결정
+        Set<String> whitelist = imageOnly ? AllowedMimeType.getImageTypes() : AllowedMimeType.getAllowedTypes();
 
         long totalSize = 0;
         // 파일의 용량 및 타입 검증
@@ -127,7 +130,7 @@ public class FilesServiceImpl implements FilesService {
                 log.info("추출된 MIME Type: {}, 원본 FileName: {}", detectedMimeType, file.getOriginalFilename());
 
                 // 3. 화이트리스트와 비교
-                if (!AllowedMimeType.isAllowed(detectedMimeType)) {
+                if (!whitelist.contains(detectedMimeType)) {    // Set의 contains() 사용
                     log.error("허용되지 않는 파일 형식 시도: {}", detectedMimeType);
                     throw new CommonException(ErrorCode.INVALID_FILE_TYPE);
                 }
@@ -155,8 +158,8 @@ public class FilesServiceImpl implements FilesService {
         }
 
         // 공통 로직
-        // validation check
-        validationCheck(files);
+        // validation check 파일 형식 검사
+        validationCheck(files, false);
 
         // upload
         List<FilesResponseDTO> uploadedFiles = new ArrayList<>();
@@ -187,7 +190,7 @@ public class FilesServiceImpl implements FilesService {
                                 .fileOriginalName(fileUploadResponseDTO.getFileOriginalName())
                                 .objectKey(fileUploadResponseDTO.getObjectKey())
                                 .fileSize(fileUploadResponseDTO.getFileSize())
-                                .cloudFrontUrl(fileUploadResponseDTO.getCloudFrontUrl())
+                                .cloudfrontUrl(fileUploadResponseDTO.getCloudfrontUrl())
                                 .build()
                 );
             }
@@ -223,7 +226,7 @@ public class FilesServiceImpl implements FilesService {
                             .fileOriginalName(file.getOriginalFileName())
                             .objectKey(file.getObjectKey())
                             .fileSize(file.getFileSize())
-                            .cloudFrontUrl(cloudfrontUrl)
+                            .cloudfrontUrl(cloudfrontUrl)
                             .build()
             );
         }
@@ -253,7 +256,7 @@ public class FilesServiceImpl implements FilesService {
             return FilesResponseDTO.builder()
                     .fileOriginalName(originalName)
                     .objectKey(objectKey)   // FilesEntity 가 사용할 키값 추가
-                    .cloudFrontUrl(String.format("%s/%s", CDNDomain, objectKey))
+                    .cloudfrontUrl(String.format("%s/%s", CDNDomain, objectKey))
                     .fileSize(file.getSize())
                     .build();
 
@@ -290,6 +293,66 @@ public class FilesServiceImpl implements FilesService {
 
     }
 
+    /* 게시글 작성 중, Editor를 통해 본문에 이미지를 삽입할 때 CloudFrontUrl을 즉각 반환하기 위한 API */
+    @Override
+    public SingleFileUploadResponseDTO uploadSingleImage(MultipartFile file) {
+
+        /*  "게시글 생성 -> S3에 업로드" 가 기존 방식이었으나, 게시글 생성 전 시점에 CloudfrontUrl을 반환하려면
+         *  S3에 업로드 -> files에 OwnerId 없이 삽입 -> 게시글 생성 -> files에 데이터 수정
+         *  방식으로 로직을 만들어야 한다.
+        * */
+
+        // 공통 로직
+        // 이미지 형식 유효성 검사
+        validationCheck(List.of(file), true);   // 단건 파일, 이미지의 경우 List.of() 사용
+
+        String originalName = file.getOriginalFilename();
+        String objectKey = generateTempS3Key(OwnerType.EDITOR_TEMP, originalName);
+
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(S3bucket)
+                    .key(objectKey)
+                    .contentType(file.getContentType())
+                    .build();
+
+            s3Client.putObject(putObjectRequest,
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+
+            log.info("S3 업로드 성공: {}", objectKey);
+
+            FilesEntity filesEntity = FilesEntity.builder()
+                    .bucketName(S3bucket)
+                    .objectKey(objectKey)   // TEMP 전용 키
+                    .originalFileName(file.getOriginalFilename())
+                    .contentType(file.getContentType())
+                    .fileSize(file.getSize())
+                    .ownerType(OwnerType.EDITOR_TEMP)
+                    .ownerId(0L)     // Null을 없애기 위해 임시 값 처리.
+                    .createdAt(LocalDateTime.now().withNano(0))
+                    .build();
+
+
+            // OnwerId를 file_id와 동일하게 임시 설정.
+            FilesEntity savedEntity = filesRepository.save(filesEntity);
+            savedEntity.updateOwnerId(savedEntity.getFileId());
+            filesRepository.save(savedEntity);
+
+
+            return SingleFileUploadResponseDTO.builder()
+                    .cloudfrontUrl(String.format("%s/%s", CDNDomain, objectKey))
+                    .build();
+
+        } catch (IOException e) {
+            log.error("파일 업로드 중 오류 발생: {}", originalName);
+            throw new CommonException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /* 본문에 삽입된 이미지를 게시글 생성 시점에 정상적인 루트로 업데이트하는 메소드 */
+
+    /* @Transactiona을 통해 게시글 생성 실패 시 S3에 올라간 파일들을 전부 삭제하는 예외 처리 전용 메소드 */
+
     /* Object Key 생성 메소드 */
     private String generateS3Key(OwnerType ownerType, Long ownerId, String originalName) {
         // Ex. NOTICE/1/UUID.pdf 형식
@@ -297,6 +360,11 @@ public class FilesServiceImpl implements FilesService {
         return String.format("%s/%d/%s%s", ownerType.name(), ownerId, UUID.randomUUID(), extension);
     }
 
-    /* @Transactiona을 통해 게시글 생성 실패 시 S3에 올라간 파일들을 전부 삭제하는 예외 처리 전용 메소드 */
+    /* OwnerType이 EDITOR_TEMP인 파일의 ObjectKey를 생성해주는 메소드 */
+    private String generateTempS3Key(OwnerType ownerType, String originalName) {
+        // Ex. EDITOR_TEMP/UUID.png 형식
+        String extension = originalName.substring(originalName.lastIndexOf("."));
+        return String.format("%s/%s%s", ownerType.name(), UUID.randomUUID(), extension);    // OwnerId를 제거.
+    }
 
 }
