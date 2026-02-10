@@ -29,7 +29,12 @@ public class CommunityPostController {
         return ResponseDTO.ok(response);
     }
 
-    /* 게시글 조회 메소드 */
+    /* 게시글 수정 */
+
+
+    /* 게시글 삭제 */
+
+    /* 게시글 단건 조회 */
     @GetMapping("/{community_post_id}")
     public ResponseDTO<CommunityPostDetailedResponseDTO> getDetailedPost(
             @PathVariable("community_post_id") Long communityPostId

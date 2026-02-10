@@ -56,4 +56,12 @@ public class CommunityPostServiceImpl implements CommunityPostService {
 
         return CommunityPostDetailedResponseDTO.from(communityPostEntity);
     }
+
+    /* CommunityPostEntity 타입의 객체가 필요한 도메인에서 사용할 서비스 레이어에만 존재하는 메소드 정의 */
+    @Override
+    public CommunityPostEntity getPostInfo(Long postId) {
+
+        return communityPostRepository.findById(postId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_POST));
+    }
 }
