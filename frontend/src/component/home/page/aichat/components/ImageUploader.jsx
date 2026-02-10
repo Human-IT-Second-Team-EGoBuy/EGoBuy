@@ -6,24 +6,34 @@ export default function ImageUploader({
   onPickFile,
   onReset,
   onFileChange,
+  onDragEnter,
   onDragOver,
   onDragLeave,
   onDrop,
 }) {
+  const handleReset = (e) => {
+    e.stopPropagation(); // drop onClick 방지
+    onReset();
+  };
+
   return (
     <div>
       <div className="iu-head">
         <div className="iu-title">이미지 업로드</div>
 
         {file && (
-          <button onClick={onReset} className="iu-reset">
+          <button type="button" onClick={handleReset} className="iu-reset">
             초기화
           </button>
         )}
       </div>
 
       <div
+        role="button"
+        tabIndex={0}
         onClick={onPickFile}
+        onKeyDown={(e) => e.key === "Enter" && onPickFile()}
+        onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
