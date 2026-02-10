@@ -6,10 +6,10 @@ import ExampleGuide from "./ExampleGuide";
 import ResultPanel from "./ResultPanel";
 
 export default function VisionPanel({
-  crop,
+  cropId,
+  cropName,
   cropItems,
-  selectedModel,
-  onSelectCrop,
+  onSelectCropId,
 
   file,
   previewUrl,
@@ -20,23 +20,27 @@ export default function VisionPanel({
   onPickFile,
   onReset,
   onFileChange,
+  onDragEnter,
   onDragOver,
   onDragLeave,
   onDrop,
   onDiagnose,
+  diagnosing,
 }) {
   const leftSpan = result ? "lg:col-span-5" : "lg:col-span-12";
 
+  //  진단 가능 조건(안전)
+  const canDiagnose = !!file && !!cropId && !diagnosing;
+
   return (
     <div className="vp-grid">
-      {/* 좌측 */}
       <div className={leftSpan}>
         <div className="vp-left-box">
           <CropSelector
-            crop={crop}
+            cropId={cropId}
+            cropName={cropName}
             items={cropItems}
-            selectedModel={selectedModel}
-            onSelect={onSelectCrop}
+            onSelect={onSelectCropId}
           />
 
           <ImageUploader
@@ -46,33 +50,47 @@ export default function VisionPanel({
             onPickFile={onPickFile}
             onReset={onReset}
             onFileChange={onFileChange}
+            onDragEnter={onDragEnter} 
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
           />
 
-          {previewUrl && <ImagePreview url={previewUrl} />}
-
-          {!result && <ExampleGuide />}
+          {previewUrl ? <ImagePreview url={previewUrl} /> : null}
+          {!result ? <ExampleGuide /> : null}
 
           <div className="vp-actions">
-            <button onClick={onDiagnose} disabled={!file} className="vp-primary">
-              진단하기
+            <button
+              type="button"
+              onClick={onDiagnose}
+              disabled={!canDiagnose}
+              className="vp-primary"
+            >
+              {diagnosing ? "진단중..." : "진단하기"}
             </button>
 
-            <button onClick={onPickFile} className="vp-secondary">
+            <button
+              type="button"
+              onClick={onPickFile}
+              disabled={diagnosing}
+              className="vp-secondary"
+            >
               파일 선택
             </button>
+
+            {/* (선택) 결과가 있을 때만 리셋 버튼 추가하고 싶으면 */}
+            {/* <button type="button" onClick={onReset} disabled={diagnosing} className="vp-ghost">
+              초기화
+            </button> */}
           </div>
         </div>
       </div>
 
-      {/* 우측 */}
-      {result && (
+      {result ? (
         <div className="lg:col-span-7">
-          <ResultPanel crop={crop} result={result} />
+          <ResultPanel crop={cropName} result={result} />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

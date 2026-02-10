@@ -1,0 +1,97 @@
+/* src/component/home/page/informationHub/insectPestsInfo.css */
+@import "tailwindcss";
+
+/* Page shell */
+.bpi-wrap { @apply min-h-screen bg-[#f6f7fb]; }
+.bpi-container { @apply mx-auto max-w-[980px] px-4 sm:px-6 py-8 sm:py-10; }
+.bpi-card { @apply rounded-[24px] sm:rounded-[28px] bg-white shadow-sm ring-1 ring-slate-200; }
+
+.bpi-head { @apply px-6 sm:px-10 pt-8 sm:pt-10; }
+.bpi-title { @apply text-[22px] sm:text-[26px] font-semibold text-slate-900; }
+.bpi-desc { @apply mt-2 text-sm text-slate-500; }
+
+.bpi-divider { @apply mt-6 sm:mt-8 border-t border-slate-100; }
+.bpi-body { @apply px-6 sm:px-10 py-6; }
+.bpi-spacer { @apply h-8 sm:h-10; }
+
+/* Filters */
+.bpi-filter-row { @apply flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4; }
+
+/* SelectLike */
+.bpi-select-wrap { @apply relative w-full sm:w-auto; }
+.bpi-select {
+  @apply h-[44px] w-full sm:w-[180px]
+  appearance-none rounded-xl border bg-white px-4 pr-10
+  text-sm outline-none shadow-sm border-slate-200 text-slate-700 focus:border-emerald-300;
+}
+.bpi-select-disabled { @apply border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed; }
+.bpi-select-arrow { @apply pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400; }
+
+/* Table */
+.bpi-table-wrap {
+  @apply mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white
+  shadow-[0_10px_30px_rgba(15,23,42,0.06)];
+}
+.bpi-table-scroll { @apply overflow-x-auto; }
+
+/* 모바일에서 테이블이 너무 줄어들지 않도록 최소폭 */
+.bpi-table { @apply w-full text-sm min-w-[560px]; }
+
+.bpi-thead { @apply bg-slate-50 text-slate-600; }
+.bpi-tr-head { @apply border-b border-slate-200; }
+.bpi-th { @apply px-6 py-4 text-left font-semibold whitespace-nowrap; }
+
+.bpi-tbody { @apply text-slate-700; }
+.bpi-tr { @apply border-b border-slate-100 last:border-b-0 cursor-pointer hover:bg-slate-50/50; }
+.bpi-td { @apply px-6 py-5 whitespace-nowrap; }
+.bpi-td-muted { @apply px-6 py-5 text-slate-500 whitespace-nowrap; }
+.bpi-name { @apply font-medium text-slate-900; }
+
+.bpi-empty { @apply px-6 py-14 text-center text-slate-500; }
+
+/* Badge */
+.bpi-badge { @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 whitespace-nowrap; }
+.bpi-badge-insect { @apply bg-emerald-50 text-emerald-700 ring-emerald-200; }
+.bpi-badge-disease { @apply bg-amber-50 text-amber-700 ring-amber-200; }
+
+/* Pagination */
+.bpi-pager { @apply flex items-center justify-center gap-2 bg-white px-6 py-5; }
+.bpi-btn {
+  @apply min-w-[44px] rounded-xl border px-4 py-2 text-sm transition
+  border-slate-200 bg-white text-slate-600 hover:bg-slate-50;
+}
+.bpi-btn-active { @apply border-emerald-200 bg-emerald-50 text-emerald-700; }
+.bpi-btn-disabled { @apply cursor-not-allowed opacity-50 hover:bg-white; }
+.bpi-input{ @apply h-[44px] w-full sm:w-[260px] rounded-xl border bg-white px-4 text-sm outline-none shadow-sm 
+  border-slate-200 text-slate-700 focus:border-emerald-300; }
+
+/* pestDetail.css */
+
+.pd-wrap { @apply min-h-screen bg-[#f6f7fb]; }
+.pd-container { @apply mx-auto max-w-[980px] px-4 sm:px-6 py-8 sm:py-10; }
+.pd-card { @apply rounded-[24px] sm:rounded-[28px] bg-white shadow-sm ring-1 ring-slate-200; }
+
+.pd-head { @apply px-6 sm:px-10 pt-8 sm:pt-10; }
+.pd-back { @apply text-sm text-slate-500 hover:text-slate-900 transition; }
+
+.pd-title-row { @apply mt-4 flex items-center gap-3 flex-wrap; }
+.pd-title { @apply text-[22px] sm:text-[26px] font-semibold text-slate-900; }
+.pd-sub { @apply mt-2 text-sm text-slate-500; }
+
+.pd-divider { @apply mt-6 sm:mt-8 border-t border-slate-100; }
+
+.pd-body { @apply px-6 sm:px-10 py-6 grid gap-4; }
+
+.pd-section { @apply rounded-2xl border border-slate-200 bg-white p-5; }
+.pd-section-title { @apply text-sm font-bold text-slate-800; }
+.pd-section-body { @apply mt-2 text-sm text-slate-600 leading-relaxed whitespace-pre-line; }
+.pd-empty { @apply text-slate-400; }
+
+.pd-state { @apply rounded-2xl border border-slate-200 bg-slate-50 px-6 py-10 text-center text-slate-500; }
+
+.pd-badge { @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 whitespace-nowrap; }
+.pd-badge-insect { @apply bg-emerald-50 text-emerald-700 ring-emerald-200; }
+.pd-badge-disease { @apply bg-amber-50 text-amber-700 ring-amber-200; }
+
+.pd-spacer { @apply h-8 sm:h-10; }
+

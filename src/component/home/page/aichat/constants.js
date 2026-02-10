@@ -1,4 +1,4 @@
-// src/page/aichat/constants.js
+
 
 export const MODEL_BY_CROP = {
   딸기: "model-liriope",
@@ -11,16 +11,21 @@ export const MODEL_BY_CROP = {
   옥수수: "model-wambugu",
 };
 
+
 export const CROP_ITEMS = [
-  { key: "딸기", label: "딸기", emoji: "🍓", model: "model-liriope" },
-  { key: "사과", label: "사과", emoji: "🍎", model: "model-liriope" },
-  { key: "포도", label: "포도", emoji: "🍇", model: "model-liriope" },
-  { key: "토마토", label: "토마토", emoji: "🍅", model: "model-liriope" },
-  { key: "감자", label: "감자", emoji: "🥔", model: "model-wambugu" },
-  { key: "쌀", label: "쌀", emoji: "🌾", model: "model-wambugu" },
-  { key: "밀", label: "밀", emoji: "🌿", model: "model-wambugu" },
-  { key: "옥수수", label: "옥수수", emoji: "🌽", model: "model-wambugu" },
+  { crop_id: 11, crop_name: "딸기", emoji: "🍓", model: "model-liriope" },
+  { crop_id: 20, crop_name: "사과", emoji: "🍎", model: "model-liriope" },
+  { crop_id: 21, crop_name: "포도", emoji: "🍇", model: "model-liriope" },
+  { crop_id: 10, crop_name: "토마토", emoji: "🍅", model: "model-liriope" },
+  { crop_id: 30, crop_name: "감자", emoji: "🥔", model: "model-wambugu" },
+  { crop_id: 40, crop_name: "쌀", emoji: "🌾", model: "model-wambugu" },
+  { crop_id: 41, crop_name: "밀", emoji: "🌿", model: "model-wambugu" },
+  { crop_id: 42, crop_name: "옥수수", emoji: "🌽", model: "model-wambugu" },
 ];
+
+
+export const DEV_USE_MOCK = true;
+
 
 // UI 테스트용 더미 결과
 export const MOCK_RESULTS = {
@@ -35,3 +40,41 @@ export const MOCK_RESULTS = {
     { name: "정상(예시)", conf: 0.07 },
   ],
 };
+
+// src/component/page/aichat/components/constants.js
+
+export const DUMMY_CHATS = [
+  {
+    id: "c1",
+    title: "토마토 잎 말림 문의",
+    messages: [
+      { role: "bot", text: "토마토 잎이 말리는 원인은 수분 스트레스/해충/바이러스 등 다양해요." },
+      { role: "user", text: "최근 잎이 위로 말리고 노랗게 변해요." },
+      { role: "bot", text: "관수/온도 변화 여부와 잎 뒷면 해충(진딧물) 유무를 먼저 확인해볼까요?" },
+    ],
+  },
+  {
+    id: "c2",
+    title: "사과 점무늬 증상",
+    messages: [
+      { role: "user", text: "사과 잎에 갈색 점이 많이 생겼어요." },
+      { role: "bot", text: "탄저병/겹무늬썩음병/점무늬낙엽병 가능성이 있어요. 사진이 있으면 더 정확해요." },
+    ],
+  },
+  {
+    id: "c3",
+    title: "감자 잎 반점",
+    messages: [
+      { role: "user", text: "감자 잎에 반점이 퍼져요." },
+      { role: "bot", text: "역병/겹무늬병 등을 의심할 수 있어요. 발생 시기와 날씨도 중요해요." },
+    ],
+  },
+  {
+    id: "c4",
+    title: "벼(쌀) 생육 상담",
+    messages: [
+      { role: "user", text: "벼 잎 끝이 마르는 것 같아요." },
+      { role: "bot", text: "수분/염류/비료 과다/병해 가능성이 있어요. 논 물관리 상태를 알려주세요." },
+    ],
+  },
+];
