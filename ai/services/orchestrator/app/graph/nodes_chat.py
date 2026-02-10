@@ -21,7 +21,7 @@ async def node_retrieve_for_chat(state: ChatState) -> ChatState:
 
     q = " ".join(parts)
 
-    # ✅ 진단 후속 질문용이면 병충해만 강제하고 싶을 수도 있음(정책상 어차피 안 쓰면 상관 없음)
+    # 진단 후속 질문용이면 병충해만 강제하고 싶을 수도 있음(정책상 어차피 안 쓰면 상관 없음)
     state["evidence"] = await retrieve(q, intent="병충해", top_n=5)
     return state
 
@@ -57,7 +57,7 @@ def node_generate_answer(state: ChatState) -> ChatState:
 def build_chat_graph():
     g = StateGraph(ChatState)
 
-    #  state key와 겹치지 않는 노드명 사용!
+    #  state key와 겹치지 않는 노드명 사용
     g.add_node("retrieve_ctx", node_retrieve_for_chat)
     g.add_node("generate_answer", node_generate_answer)
 
