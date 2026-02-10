@@ -8,6 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter
 public class SingleFileUploadRequestDTO {
 
-    @JsonProperty("files")
-    MultipartFile files;
+    @JsonProperty("file")
+    MultipartFile file;
 }
