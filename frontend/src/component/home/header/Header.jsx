@@ -13,7 +13,7 @@ const NAV_MENU = [
     { id: "map", label: "농업지도", path: "/map" },
     { id: "crops", label: "작물백과", path: "/crop-tech" },
     { id: "community", label: "커뮤니티", path: "/community" },
-    { id: "informationhub", label: "정보허브", path: "/insectPestsInfo"},
+    { id: "informationhub", label: "정보허브", path: "/insect-pests-info" },
     
 ]
 
@@ -38,7 +38,7 @@ export default function Header() {
         ],
         crops: [{ name: "품종별 재배기술", path: "/crop-tech" }],
         community: [{ name: "게시판", path: "/community" }],
-        informationHub: [{name: "병충해 정보", path: "/insectPestsInfo"}]
+        informationhub: [{ name: "병충해 정보", path: "/insect-pests-info" }],
         
 
     }), []);
@@ -104,14 +104,9 @@ export default function Header() {
                             )}
                         </div>
                     ))}
-                    <HeaderUi 
-                        variant="text"
-                        onClick={() => navigate("/aichat")}
-                        className={getHeaderStyleAiChat()}
-                    >
+                    <HeaderUi variant="text" onClick={() => navigate("/ai-chat")} className={getStyleAiChat()}>
                         AI챗봇
-                    </HeaderUi>          
-
+                    </HeaderUi>         
                 </div>
                 
 
