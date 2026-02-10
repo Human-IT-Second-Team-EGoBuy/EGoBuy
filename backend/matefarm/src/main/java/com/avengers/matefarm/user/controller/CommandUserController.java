@@ -340,6 +340,7 @@ public class CommandUserController {
         return ResponseDTO.ok(null);
 
     }
+
     /* 16. 이메일 변경 */
 
 

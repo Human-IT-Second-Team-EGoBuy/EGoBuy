@@ -50,7 +50,7 @@ public enum ErrorCode {
     NOT_FOUND_USER(40401, HttpStatus.NOT_FOUND, "사용자가 존재하지 않습니다."),
     NOT_FOUND_FILES(40402, HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다."),
     NOT_FOUND_NOTICE(40403, HttpStatus.NOT_FOUND, "공지사항이 존재하지 않습니다."),
-
+    NOT_FOUND_POST(40404, HttpStatus.NOT_FOUND,"게시글이 존재하지 않습니다."),
     // 409: 중복 데이터 (Conflict)
     DUPLICATE_NICKNAME(40900,  HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.."),
     DUPLICATE_PASSWORD(40901, HttpStatus.CONFLICT,"현재 사용중인 비밀번호로 변경할 수 없습니다."),
