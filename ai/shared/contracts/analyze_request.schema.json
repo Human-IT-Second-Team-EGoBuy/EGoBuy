@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://farmproject.local/schemas/analyze_request.schema.json",
+  "title": "AnalyzeRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image"],
+  "properties": {
+    "request_id": { "type": "string" },
+    "user_id": { "type": "string", "description": "사용자 식별자(선택)" },
+
+    "image": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "contentMediaType": "image/*",
+      "description": "업로드 이미지(base64). (외부는 multipart 가능, 내부 계약은 base64로 통일 가능)"
+    },
+    "image_mime": {
+      "type": "string",
+      "examples": ["image/jpeg", "image/png"]
+    },
+
+    "top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 5
+    },
+
+    "routing": {
+      "type": "object",
+      "description": "LangGraph 분기/동작 옵션",
+      "additionalProperties": false,
+      "properties": {
+        "run_both_models": {
+          "type": "boolean",
+          "default": true,
+          "description": "두 모델을 모두 실행할지 여부"
+        },
+        "use_ensemble_on_uncertain": {
+          "type": "boolean",
+          "default": true,
+          "description": "불확실 판정일 때만 liriope 앙상블 재시도"
+        }
+      }
+    },
+
+    "thresholds": {
+      "type": "object",
+      "description": "CONFIDENT/UNCERTAIN/REJECT 판정 기준(옵션)",
+      "additionalProperties": false,
+      "properties": {
+        "confident_min_prob": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.65 },
+        "confident_min_margin": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.15 },
+        "reject_min_prob": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.35 }
+      }
+    },
+
+    "llm": {
+      "type": "object",
+      "description": "LLM 설명 생성 옵션",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "model": { "type": "string", "description": "예: gpt-4o-mini 등" },
+        "language": { "type": "string", "default": "ko" },
+        "style": { "type": "string", "default": "friendly_clinic", "description": "설명 톤/형식 프리셋" }
+      }
+    }
+  }
+}
