@@ -46,6 +46,7 @@ dependencies {
 
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     // Security 라이브러리
     implementation 'org.springframework.boot:spring-boot-starter-security'
     // 유효성 검증을 위함
