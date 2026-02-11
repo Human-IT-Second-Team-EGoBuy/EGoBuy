@@ -85,6 +85,13 @@ dependencies {
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // WebClient가 포함된 WebFlux 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 }
 
 dependencyManagement {
