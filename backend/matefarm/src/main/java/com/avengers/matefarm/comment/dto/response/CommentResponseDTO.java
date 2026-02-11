@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Builder
 @Getter
@@ -29,8 +31,8 @@ public class CommentResponseDTO {
     @JsonProperty("nickname")
     private String nickname;
 
-//    @JsonProperty("recomment")
-//    private List<RecommentResponseDTO> recomment;
+    @JsonProperty("re_comment")
+    private List<CommentResponseDTO> reComment;
 
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
@@ -41,9 +43,13 @@ public class CommentResponseDTO {
                 .commentId(entity.getCommentId())
                 .commentContent(entity.getCommentContent())
                 .createdAt(entity.getCreatedAt())
-                .nickname(entity.getWriter().getNickname()) // UserEntity에서 가져옴
-                .writerId(entity.getWriter().getUserId())
+                .nickname(entity.getWriterId().getNickname()) // UserEntity에서 가져옴
+                .writerId(entity.getWriterId().getUserId())
                 .postId(entity.getPostId().getCommunityPostId()) // PostEntity에서 가져옴
+                .reComment(entity.getChildren() != null ?       // Entity를 반환받고, 부모 객체에 List로 담긴 자식 객체를 List로 반환.
+                        entity.getChildren().stream()
+                                .map(CommentResponseDTO::from)
+                                .collect(Collectors.toList()) : null)
                 .build();
     }
 }

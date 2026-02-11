@@ -6,11 +6,13 @@ import com.avengers.matefarm.comment.dto.response.CommentResponseDTO;
 import com.avengers.matefarm.comment.service.CommentService;
 import com.avengers.matefarm.common.ResponseDTO;
 import com.avengers.matefarm.security.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController("CommentController")
 @RequestMapping("/api/comment")
 
@@ -50,6 +52,7 @@ public class CommentController {
 
         String token = bearerToken.substring(7); // "Bearer " 제거
         Long userId = jwtUtil.getUserIdFromToken(token);    // Claims에서 UserId 추출
+        log.info("Claims에서 꺼낸 userId값 확인 :{}", userId);
 
         CommentResponseDTO responseDTO =
                 commentService.
@@ -70,6 +73,7 @@ public class CommentController {
     ) {
         String token = bearerToken.substring(7); // "Bearer " 제거
         Long userId = jwtUtil.getUserIdFromToken(token);    // Claims에서 UserId 추출
+        log.info("Claims에서 꺼낸 userId값 확인 :{}", userId);
 
         commentService.deleteComment(commentId, userId);
 

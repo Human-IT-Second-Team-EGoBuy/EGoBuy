@@ -3,6 +3,7 @@ package com.avengers.matefarm.comment.dto;
 import com.avengers.matefarm.comment.enums.DeleteYN;
 import com.avengers.matefarm.communitypost.dto.CommunityPostEntity;
 import com.avengers.matefarm.user.dto.UserEntity;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +11,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "comment")
@@ -40,23 +43,32 @@ public class CommentEntity {
     // 작성자와의 관계 (N:1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id", nullable = false)
-    private UserEntity writer;
+    private UserEntity writerId;
 
     // 게시글과의 관계 (N:1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private CommunityPostEntity postId;
 
-    // 대댓글과의 관계 (1:N)
-    // @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
-    // private List<ReplyEntity> replies = new ArrayList<>();
+    // 추가 : 대댓글의 경우 부모 댓글의 Id를 가짐 | 주체(대댓글) -> 대상(부모)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonProperty("parent")
+    private CommentEntity parent;
+
+    // 추가 : 댓글과의 관계 1:N  | 주체(댓글) -> 대상(대댓글)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<CommentEntity> children = new ArrayList<>();
+
+
+
 
     /* from 메소드 */
-    public static CommentEntity from(String content, UserEntity writer, CommunityPostEntity post) {
+    public static CommentEntity from(String content, UserEntity writer, CommunityPostEntity post, CommentEntity parent) {
         return CommentEntity.builder()
                 .commentContent(content)
-                .writer(writer)
+                .writerId(writer)
                 .postId(post)
+                .parent(parent)     // 추가. parent == null 이면 부모, 값이 있으면 대댓글.
                 .deleteYn(DeleteYN.N)
                 .createdAt(LocalDateTime.now().withNano(0))
                 .build();

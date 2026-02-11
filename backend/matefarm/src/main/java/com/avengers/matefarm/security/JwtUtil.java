@@ -155,6 +155,7 @@ public class JwtUtil {
     public String generateRefreshToken(UserEntity user, List<String> roles) {
         return Jwts.builder()
                 .setSubject(user.getUserAuthId()) // 사용자 식별자 변경 (userAuthId 사용)
+                .claim("userId", user.getUserId())  // 사용자 식별자 추가
                 .claim("email", user.getEmail()) // 이메일 클레임 추가
                 .claim("auth", roles) // 역할 정보 클레임 추가
                 .claim("userAuthId", user.getUserAuthId()) // user_auth_id 클레임 추가
