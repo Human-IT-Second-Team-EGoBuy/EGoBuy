@@ -9,7 +9,17 @@ function TypeBadge() {
   return <span className="pd-badge pd-badge-disease">병</span>;
 }
 
+const cleanText = (v) => {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length ? s : null;
+};
+
+const joinLines = (...lines) => lines.map(cleanText).filter(Boolean).join("\n");
+
+
 export default function DiseaseDetailPage() {
+
   //  라우터가 :diseaseId 이므로 키도 맞춤
   const { diseaseId } = useParams();
   const id = Number(diseaseId);
@@ -73,21 +83,22 @@ export default function DiseaseDetailPage() {
   }, [id, fetchDetail]);
 
   const title = base?.pest_name ?? base?.sick_name_kor ?? "병 상세";
-  const updated = base?.updated_at ? String(base.updated_at).slice(0, 10) : "-";
   const subtitle = base
-    ? `${cropNameMap.get(base.crop_id) ?? "-"} · 업데이트 ${updated}`
+    ? joinLines(
+        `작물: ${cropNameMap.get(base.crop_id) ?? "-"}`,
+        base?.sick_name_eng ? `영문: ${base.sick_name_eng}` : null,
+        base?.sick_name_chn ? `한자: ${base.sick_name_chn}` : null,
+        detail?.virus_name ? `병원체: ${detail.virus_name}` : null
+      )
     : "";
 
   const sections = useMemo(
     () => [
-      { key: "route", label: "감염 경로", value: detail?.infection_route },
-      { key: "cond", label: "발생 조건", value: detail?.development_condition },
-      { key: "symp", label: "증상", value: detail?.symptoms },
-      { key: "prevent", label: "예방/관리", value: detail?.prevention_method },
-      { key: "bio", label: "생물적 방제", value: detail?.biology_prvnbe_mth },
-      { key: "chem", label: "화학적 방제", value: detail?.chemical_prvnbe_mth },
-      { key: "virus", label: "바이러스명", value: detail?.virus_name },
-      { key: "etc", label: "기타", value: detail?.etc },
+      { key: "cond", label: "발생상태", value: cleanText(detail?.development_condition) },
+      { key: "symp", label: "증상", value: cleanText(detail?.symptoms) },
+      { key: "prevent", label: "방제방법", value: cleanText(detail?.prevention_method) },
+      { key: "bio", label: "생물학적 방제", value: cleanText(detail?.biology_prvnbe_mth) },
+      { key: "chem", label: "화학적 방제", value: cleanText(detail?.chemical_prvnbe_mth) },
     ],
     [detail]
   );

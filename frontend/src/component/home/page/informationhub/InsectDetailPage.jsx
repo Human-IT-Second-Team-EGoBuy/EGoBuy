@@ -9,6 +9,15 @@ function TypeBadge() {
   return <span className="pd-badge pd-badge-insect">해충</span>;
 }
 
+const cleanText = (v) => {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length ? s : null;
+};
+
+const joinLines = (...lines) => lines.map(cleanText).filter(Boolean).join("\n");
+
+
 export default function InsectDetailPage() {
   // 라우터가 :insectId 이므로 키도 맞춤
   const { insectId } = useParams();
@@ -73,22 +82,28 @@ export default function InsectDetailPage() {
   }, [id, fetchDetail]);
 
   const title = base?.pest_name ?? base?.tgt_vrmn_name ?? "해충 상세";
-  const updated = base?.updated_at ? String(base.updated_at).slice(0, 10) : "-";
+
   const subtitle = base
-    ? `${cropNameMap.get(base.crop_id) ?? "-"} · 업데이트 ${updated}`
+    ? joinLines(
+        `작물: ${cropNameMap.get(base.crop_id) ?? "-"}`,
+        base?.insect_species_kor ? `종(국문): ${base.insect_species_kor}` : null,
+        base?.insect_species ? `학명: ${base.insect_species}` : null,
+        base?.insect_order ? `목: ${base.insect_order}` : null,
+        base?.insect_family ? `과: ${base.insect_family}` : null,
+        base?.insect_genus ? `속: ${base.insect_genus}` : null
+      )
     : "";
 
   const sections = useMemo(
     () => [
-      { key: "distrb", label: "분포 정보", value: detail?.distrb_info },
-      { key: "stle", label: "형태 정보", value: detail?.stle_info },
-      { key: "ecology", label: "생태 정보", value: detail?.ecology_info },
-      { key: "damage", label: "피해 정보", value: detail?.damage_info },
-      { key: "qrant", label: "검역/기타", value: detail?.qrant_info },
-      { key: "prevent", label: "예방/관리", value: detail?.prevent_method },
-      { key: "bio", label: "생물적 방제", value: detail?.biology_prvnbe_mth },
-      { key: "chem", label: "화학적 방제", value: detail?.chemical_prvnbe_mth },
-      { key: "etc", label: "기타", value: detail?.etc },
+      { key: "distrb", label: "분포 정보", value: cleanText(detail?.distrb_info) },
+      { key: "stle", label: "형태 정보", value: cleanText(detail?.stle_info) },
+      { key: "ecology", label: "생태 정보", value: cleanText(detail?.ecology_info) },
+      { key: "damage", label: "피해 정보", value: cleanText(detail?.damage_info) },
+      { key: "qrant", label: "검역 정보", value: cleanText(detail?.qrant_info) },
+      { key: "prevent", label: "예방/관리", value: cleanText(detail?.prevent_method) },
+      { key: "bio", label: "생물적 방제", value: cleanText(detail?.biology_prvnbe_mth) },
+      { key: "chem", label: "화학적 방제", value: cleanText(detail?.chemical_prvnbe_mth) },
     ],
     [detail]
   );

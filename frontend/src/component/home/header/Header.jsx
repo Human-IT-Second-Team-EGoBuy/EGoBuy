@@ -104,7 +104,7 @@ export default function Header() {
                             )}
                         </div>
                     ))}
-                    <HeaderUi variant="text" onClick={() => navigate("/ai-chat")} className={getStyleAiChat()}>
+                    <HeaderUi variant="text" onClick={() => navigate("/ai-chat")} className={getHeaderStyleAiChat()}>
                         AI챗봇
                     </HeaderUi>         
                 </div>
