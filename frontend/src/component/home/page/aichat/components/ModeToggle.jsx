@@ -3,6 +3,7 @@ export default function ModeToggle({ mode, onChange }) {
   return (
     <div className="mt-wrap">
       <button
+        type="button"
         onClick={() => onChange("chat")}
         className={`mt-btn ${mode === "chat" ? "mt-active" : "mt-idle"}`}
       >
@@ -10,6 +11,7 @@ export default function ModeToggle({ mode, onChange }) {
       </button>
 
       <button
+        type="button"
         onClick={() => onChange("vision")}
         className={`mt-btn ${mode === "vision" ? "mt-active" : "mt-idle"}`}
       >

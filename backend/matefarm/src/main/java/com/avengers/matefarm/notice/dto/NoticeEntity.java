@@ -33,7 +33,7 @@ public class NoticeEntity {
     @Column(name = "files_tf", nullable = false, length = 1)
     private FileExist filesTf; // 파일 첨부 여부 (Y/N)
 
-    // 작성자와의 연관 관계 (N:1)
+    // 작성자와의 연관 관계 (N:1) | 주체(UserEntity를 소유하는 객체) -> 대상(UserEntity)
     // DDL의 writer_id BIGINT와 연결됨
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id", nullable = false)

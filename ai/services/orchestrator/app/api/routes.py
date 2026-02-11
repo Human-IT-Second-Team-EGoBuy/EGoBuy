@@ -1,10 +1,12 @@
 import time
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import List, Optional, Literal
+
 
 from app.graph.builder import get_analyze_graph
 from app.services.capabilities import route_model_by_crop_id
-from app.storage.memory_store import new_conversation_id, save_diagnosis, append_message
+from app.storage.memory_store import new_conversation_id
 
 from app.services.retriever import retrieve
 from app.services.diagnosis_rag_llm import get_llm as get_diag_llm, build_diagnosis_prompt
@@ -67,10 +69,6 @@ async def analyze(
     out.setdefault("meta", {})
     out["meta"]["latency_ms_total"] = int((time.time() - t0) * 1000)
 
-    # (선택) 후속질문 안 하면 사실 필요 없음
-    save_diagnosis(conv_id, out.get("final", {}), out.get("evidence", []))
-    append_message(conv_id, "system", f"진단결과: {out.get('final', {})}")
-
     final = out.get("final", {}) or {}
     label_ko = (final.get("label_ko") or "").strip()
 
@@ -100,8 +98,15 @@ async def analyze(
     }
 
 
+class HistoryMessage(BaseModel):
+    role: Literal["USER", "ASSISTANT"]
+    content: str
+
 class ChatRagRequest(BaseModel):
     message: str
+    history: List[HistoryMessage] = Field(default_factory=list)  # 없으면 []
+    chatroom_id: Optional[int] = None
+    crop_id: Optional[int] = None
 
 
 @router.post("/chat_rag")
@@ -117,11 +122,12 @@ async def chat_rag(req: ChatRagRequest):
 
     evidence = await retrieve(req.message, intent=intent, top_n=5)
 
+    history_dicts = [m.model_dump() for m in req.history]
+
     prompt = build_chat_prompt(
         user_message=req.message,
-        diagnosis={},          # 일반챗봇은 진단 없음
         evidence_docs=evidence,
-        history=[],
+        history=history_dicts,
     )
 
     llm = get_chat_llm()

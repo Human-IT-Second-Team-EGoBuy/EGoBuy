@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph, END
 
 from app.graph.state import AnalyzeState
 from app.graph.nodes_analyze import run_selected_model, decide_and_finalize
-from app.graph.nodes_chat import chat_flow  # 네가 이미 만들어둔 chat 노드(가정)
+from app.graph.nodes_chat import chat_flow
 
 _analyze_graph = None
 _chat_graph = None
