@@ -34,6 +34,7 @@ public class PostLikeServiceImpl implements PostLikeService {
     @Override
     @Transactional
     public PostLikeResponseDTO postLike(Long userId, Long postId) {
+        /* 추후 경쟁상태 해결 필요*/
 
         // 유저가 존재하는가
         UserEntity userEntity = userService.findUserById(userId);
