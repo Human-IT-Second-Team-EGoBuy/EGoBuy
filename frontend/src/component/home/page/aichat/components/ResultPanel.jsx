@@ -1,42 +1,78 @@
-const percent = (n) => `${Math.round(n * 100)}%`;
+// src/component/page/aichat/components/ResultPanel.jsx
+
+// 0~1 확률을 %로 변환 (NaN 방지)
+const toPercent = (n) => {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "0%";
+  return `${Math.round(v * 100)}%`;
+};
+
+// 0~1 확률을 0~100 width로 변환 (NaN 방지)
+const toWidth = (n) => {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(100, Math.round(v * 100)));
+};
+
+// top1 키 호환( name/conf  또는 label/prob  또는 best 구조)
+const pickTop1 = (result) => {
+  const t = result?.top1 ?? result?.best ?? null;
+
+  const name =
+    t?.name ??
+    t?.label_ko ?? // 한글 라벨 우선
+    t?.label ??
+    "결과 없음";
+
+  const conf = t?.conf ?? t?.prob ?? 0;
+
+  return { name, conf };
+};
 
 export default function ResultPanel({ crop, result }) {
+  const top1 = pickTop1(result);
+  const advice = Array.isArray(result?.advice) ? result.advice : [];
+
   return (
     <div className="rp-wrap">
       <div className="rp-header">
         <div className="rp-title">진단 결과</div>
         <div className="rp-crop">
-          작물: <span className="rp-crop-strong">{crop}</span>
+          작물: <span className="rp-crop-strong">{crop || "-"}</span>
         </div>
       </div>
 
       <div className="rp-body">
         <div className="rp-card">
           <div className="rp-label">Top-1</div>
-          <div className="rp-name">{result.top1.name}</div>
+          <div className="rp-name">{top1.name}</div>
+
+          {result?.summary ? <div className="rp-summary">{result.summary}</div> : null}
 
           <div className="rp-row">
             <div className="rp-row-top">
               <span>Confidence</span>
-              <span className="rp-row-value">{percent(result.top1.conf)}</span>
+              <span className="rp-row-value">{toPercent(top1.conf)}</span>
             </div>
 
             <div className="rp-bar-bg">
-              <div
-                className="rp-bar"
-                style={{ width: `${Math.round(result.top1.conf * 100)}%` }}
-              />
+              <div className="rp-bar" style={{ width: `${toWidth(top1.conf)}%` }} />
             </div>
           </div>
         </div>
 
         <div className="rp-tip">
           <div className="rp-tip-title">정확도를 높이는 팁</div>
-          <ul className="rp-tip-list">
-            {result.advice.map((t) => (
-              <li key={t}>{t}</li>
-            ))}
-          </ul>
+
+          {advice.length === 0 ? (
+            <div className="rp-tip-empty">추가 안내가 없어요.</div>
+          ) : (
+            <ul className="rp-tip-list">
+              {advice.map((t, idx) => (
+                <li key={`${idx}-${t}`}>{t}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

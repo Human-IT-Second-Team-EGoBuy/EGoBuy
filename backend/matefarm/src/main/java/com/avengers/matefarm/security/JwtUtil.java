@@ -131,10 +131,17 @@ public class JwtUtil {
         return parseClaims(token).getSubject();  // 이제 userAuthId가 subject에 저장됨
     }
 
+    // 설명. Claim 객체에서 UserId 추출 ( userId가 필요한 곳에서 사용 )
+    public Long getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("userId", Long.class);
+    }
+
     // 설명. 액세스 토큰 생성 메소드
     public String generateToken(UserEntity user, List<String> roles) {
         return Jwts.builder()
                 .setSubject(user.getUserAuthId()) // 사용자 식별자 변경 (userAuthId 사용)
+                .claim("userId", user.getUserId())  // 사용자 식별자 추가
                 .claim("email", user.getEmail()) // 이메일 클레임 추가
                 .claim("auth", roles) // 역할 정보 클레임 추가
                 .claim("userAuthId", user.getUserAuthId()) // user_auth_id 클레임 추가
@@ -148,6 +155,7 @@ public class JwtUtil {
     public String generateRefreshToken(UserEntity user, List<String> roles) {
         return Jwts.builder()
                 .setSubject(user.getUserAuthId()) // 사용자 식별자 변경 (userAuthId 사용)
+                .claim("userId", user.getUserId())  // 사용자 식별자 추가
                 .claim("email", user.getEmail()) // 이메일 클레임 추가
                 .claim("auth", roles) // 역할 정보 클레임 추가
                 .claim("userAuthId", user.getUserAuthId()) // user_auth_id 클레임 추가

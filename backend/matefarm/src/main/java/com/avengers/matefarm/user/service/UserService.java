@@ -415,7 +415,7 @@ public class UserService implements UserDetailsService {
         return newUser;
     }
 
-    /* */
+    /* UserId로 User 조회하는 메소드 */
     public UserEntity findUserById(Long userId) {
 
         return userRepository.findById(userId)

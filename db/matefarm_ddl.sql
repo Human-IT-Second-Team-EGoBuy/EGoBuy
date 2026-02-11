@@ -1,753 +1,543 @@
-DROP TABLE IF EXISTS monthly_employee_num_statistics;
-DROP TABLE IF EXISTS monthly_department_overtime_allowance_statistics;
-DROP TABLE IF EXISTS semiannual_department_performance_ratio_statistics;
-DROP TABLE IF EXISTS feedback;
-DROP TABLE IF EXISTS task;
-DROP TABLE IF EXISTS task_eval;
-DROP TABLE IF EXISTS task_type_eval;
-DROP TABLE IF EXISTS grade;
-DROP TABLE IF EXISTS evaluation;
-DROP TABLE IF EXISTS task_item;
-DROP TABLE IF EXISTS evaluation_policy;
-DROP TABLE IF EXISTS task_type;
-DROP TABLE IF EXISTS business_trip;
-DROP TABLE IF EXISTS leave_return;
-DROP TABLE IF EXISTS commute;
-DROP TABLE IF EXISTS attendance_request_file;
-DROP TABLE IF EXISTS attendance_request;
-DROP TABLE IF EXISTS attendance_request_type;
-DROP TABLE IF EXISTS payment;
-DROP TABLE IF EXISTS irregular_allowance;
-DROP TABLE IF EXISTS public_holiday;
-DROP TABLE IF EXISTS tax_credit;
-DROP TABLE IF EXISTS non_taxable;
-DROP TABLE IF EXISTS major_insurance;
-DROP TABLE IF EXISTS earned_income_tax;
-DROP TABLE IF EXISTS annual_vacation_promotion_policy;
-DROP TABLE IF EXISTS vacation_request_file;
-DROP TABLE IF EXISTS vacation_request;
-DROP TABLE IF EXISTS vacation;
-DROP TABLE IF EXISTS vacation_policy;
-DROP TABLE IF EXISTS vacation_type;
-DROP TABLE IF EXISTS department_member;
-DROP TABLE IF EXISTS appointment;
-DROP TABLE IF EXISTS appointment_item;
-DROP TABLE IF EXISTS discipline_reward;
-DROP TABLE IF EXISTS language_test;
-DROP TABLE IF EXISTS `language`;
-DROP TABLE IF EXISTS qualification;
-DROP TABLE IF EXISTS contract;
-DROP TABLE IF EXISTS career;
-DROP TABLE IF EXISTS education;
-DROP TABLE IF EXISTS family_member;
-DROP TABLE IF EXISTS family_relationship;
-DROP TABLE IF EXISTS session_history;
-DROP TABLE IF EXISTS chatbot_session;
-DROP TABLE IF EXISTS employee;
-DROP TABLE IF EXISTS duty;
-DROP TABLE IF EXISTS `role`;
-DROP TABLE IF EXISTS `position`;
-DROP TABLE IF EXISTS attendance_status_type;
-DROP TABLE IF EXISTS department;
-DROP TABLE IF EXISTS company;
-DROP TABLE IF EXISTS BATCH_STEP_EXECUTION_CONTEXT;
-DROP TABLE IF EXISTS batch_job_execution_context;
-DROP TABLE IF EXISTS BATCH_STEP_EXECUTION;
-DROP TABLE IF EXISTS BATCH_JOB_EXECUTION_PARAMS;
-DROP TABLE IF EXISTS BATCH_JOB_EXECUTION;
-DROP TABLE IF EXISTS BATCH_JOB_INSTANCE;
-DROP SEQUENCE IF EXISTS BATCH_JOB_SEQ;
-DROP SEQUENCE IF EXISTS BATCH_STEP_SEQ;
-DROP SEQUENCE IF EXISTS BATCH_JOB_EXECUTION_SEQ;
-DROP SEQUENCE IF EXISTS BATCH_STEP_EXECUTION_SEQ;
-DROP SEQUENCE IF EXISTS BATCH_JOB_EXECUTION_CONTEXT_SEQ;
-DROP SEQUENCE IF EXISTS BATCH_STEP_EXECUTION_CONTEXT_SEQ;
+-- 1) 새로운  project 계정 만들기
+CREATE USER 'matefarm'@'%' IDENTIFIED BY  'matefarm';
 
--- 회사 테이블
-CREATE TABLE company (
-                         company_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                         company_name VARCHAR(255) NOT NULL,
-                         ceo VARCHAR(255) NOT NULL,
-                         ceo_signature VARCHAR(255) NOT NULL,
-                         business_registration_number VARCHAR(255) NOT NULL,
-                         company_address VARCHAR(255) NOT NULL,
-                         company_phone_number VARCHAR(255) NOT NULL,
-                         company_stamp_url TEXT NOT NULL,
-                         company_logo_url TEXT NOT NULL
-) ENGINE=INNODB COMMENT '회사' CHARACTER SET utf8mb4;
+-- 2) 데이터베이스 생성 후 계정에 권한 부여
 
--- 부서 테이블
-CREATE TABLE department (
-                            department_code VARCHAR(255) PRIMARY KEY,
-                            department_name VARCHAR(255) NOT NULL,
-                            created_at TIMESTAMP NOT NULL,
-                            disbanded_at TIMESTAMP NULL,
-                            min_employee_num INT NOT NULL DEFAULT 0,
-                            upper_department_code VARCHAR(255) NULL,
-                            FOREIGN KEY (upper_department_code) REFERENCES department(department_code)
-) ENGINE=INNODB COMMENT '부서' CHARACTER SET utf8mb4;
+-- 데이터베이스(스키마) 생성
+CREATE DATABASE matefarm;
 
--- 출퇴근 상태 유형 테이블
-CREATE TABLE attendance_status_type (
-                                        attendance_status_type_code VARCHAR(255) PRIMARY KEY,
-                                        attendance_status_type_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '출퇴근 상태' CHARACTER SET utf8mb4;
+-- 데이터베이스 확인
+SHOW databases;
 
--- 직위 테이블
-CREATE TABLE `position` (
-                            position_code VARCHAR(255) PRIMARY KEY,
-                            position_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '직위' CHARACTER SET utf8mb4;
+-- matefarm 계정에 권한 부여
+GRANT ALL PRIVILEGES ON matefarm.* TO 'matefarm'@'%';
 
--- 직책 테이블
-CREATE TABLE `role` (
-                        role_code VARCHAR(255) PRIMARY KEY,
-                        role_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '직책' CHARACTER SET utf8mb4;
+-- matefarm 계정의 바뀐 권한 확인하기
+SHOW GRANTS FOR 'matefarm'@'%';
 
--- 직무 테이블
-CREATE TABLE duty (
-                      duty_code VARCHAR(255) PRIMARY KEY,
-                      duty_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '직책' CHARACTER SET utf8mb4;
-
--- 사원 테이블
-CREATE TABLE employee (
-                          employee_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          employee_number VARCHAR(255) NOT NULL UNIQUE,
-                          employee_role VARCHAR(255) NOT NULL CHECK(employee_role IN ('EMPLOYEE','HR','MANAGER','ADMIN')),
-                          password VARCHAR(255) NOT NULL,
-                          gender VARCHAR(255) NOT NULL CHECK(gender IN ('MALE', 'FEMALE')),
-                          name VARCHAR(255) NOT NULL,
-                          birth_date DATE NOT NULL,
-                          email VARCHAR(255) NOT NULL,
-                          phone_number VARCHAR(255) NOT NULL,
-                          profile_img_url TEXT NOT NULL,
-                          join_date DATE NOT NULL,
-                          join_type VARCHAR(255) NOT NULL CHECK(join_type IN ('ROOKIE','VETERAN')), -- 신입사원 또는 경력직
-                          resignation_date DATE NULL,
-                          resignation_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(resignation_status IN ('Y','N')),
-                          salary BIGINT NOT NULL,
-                          monthly_salary BIGINT NOT NULL,
-                          street_address VARCHAR(255) NOT NULL,
-                          detailed_address VARCHAR(255) NOT NULL,
-                          postcode VARCHAR(255) NOT NULL,
-                          department_code VARCHAR(255) NOT NULL,
-                          attendance_status_type_code VARCHAR(255) NOT NULL,
-                          position_code VARCHAR(255) NOT NULL,
-                          role_code VARCHAR(255) NOT NULL,
-                          duty_code VARCHAR(255) NOT NULL,
-                          FOREIGN KEY (department_code) REFERENCES department(department_code),
-                          FOREIGN KEY (attendance_status_type_code) REFERENCES attendance_status_type(attendance_status_type_code),
-                          FOREIGN KEY (position_code) REFERENCES `position`(position_code),
-                          FOREIGN KEY (role_code) REFERENCES `role`(role_code),
-                          FOREIGN KEY (duty_code) REFERENCES duty(duty_code)
-) ENGINE=INNODB COMMENT '사원' CHARACTER SET utf8mb4;
-
--- 사원별 챗봇 세션 테이블
-CREATE TABLE chatbot_session (
-                                 session_id VARCHAR(255) NOT NULL PRIMARY KEY,
-                                 employee_id BIGINT NOT NULL,
-                                 created_at TIMESTAMP NOT NULL,
-                                 first_question VARCHAR(255) NOT NULL
-) ENGINE=INNODB COMMENT '사원별챗봇세션' CHARACTER SET utf8mb4;
+-- ddl 구문 삽입 전 DB 사용 명시
+USE matefarm;
 
 
--- 세션별 대화 이력 테이블
-CREATE TABLE session_history (
-    session_history_id VARCHAR(255) NOT NULL PRIMARY KEY,
-    chatbot_type VARCHAR(255) NOT NULL CHECK(chatbot_type IN ('CHATBOT','HUMAN')), -- 챗봇 또는 사람
-    chatbot_content TEXT,
-    session_id VARCHAR(255) NOT NULL,
-    selected_keyword VARCHAR(255) NULL,
-    FOREIGN KEY (session_id) REFERENCES chatbot_session(session_id)
-) ENGINE=INNODB COMMENT '세션별대화이력' CHARACTER SET utf8mb4;
+------------------------------------------------------------------------------------------
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS recomment;
+DROP TABLE IF EXISTS comment;
+DROP TABLE IF EXISTS community_post;
+DROP TABLE IF EXISTS post_like;
+DROP TABLE IF EXISTS post_report;
+DROP TABLE IF EXISTS user_report;
+DROP TABLE IF EXISTS answer;
+DROP TABLE IF EXISTS inquiry;
+DROP TABLE IF EXISTS conversations_messages;
+DROP TABLE IF EXISTS conversations;
+DROP TABLE IF EXISTS penalty;
+DROP TABLE IF EXISTS blacklist;
+DROP TABLE IF EXISTS farm_log;
+DROP TABLE IF EXISTS files;
+DROP TABLE IF EXISTS notice;
+DROP TABLE IF EXISTS soil_analysis;
+DROP TABLE IF EXISTS habitat_records;
+DROP TABLE IF EXISTS insect_detail;
+DROP TABLE IF EXISTS insect;
+DROP TABLE IF EXISTS disease_detail;
+DROP TABLE IF EXISTS disease;
+DROP TABLE IF EXISTS crop_cultivation;
+DROP TABLE IF EXISTS variety;
+DROP TABLE IF EXISTS variety_group;
+DROP TABLE IF EXISTS crop;
+DROP TABLE IF EXISTS crop_categories;
+DROP TABLE IF EXISTS land_transactions;
+DROP TABLE IF EXISTS wildlife_species;
+DROP TABLE IF EXISTS regional_retail_prices;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================
+-- 전체 테이블 DDL (AUTO_INCREMENT 및 FK 제약조건 포함)
+-- ============================================
+
+-- 1. users 테이블
+CREATE TABLE `users` (
+	`user_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`user_name` VARCHAR(20) NOT NULL,
+	`user_auth_id` VARCHAR(255) NOT NULL,
+	`user_password` VARCHAR(255) NOT NULL,
+	`nickname` VARCHAR(20) NOT NULL,
+	`email` VARCHAR(255) NOT NULL,
+	`phone_number` VARCHAR(255) NULL,
+	`road_name_address` VARCHAR(255) NULL,
+	`detailed_address` VARCHAR(255) NULL,
+	`postcode` VARCHAR(20) NULL,
+	`user_role` ENUM('USER', 'ADMIN') NOT NULL,
+	`user_status` ENUM('ACTIVE', 'INACTIVE', 'BLACKED','DELETED') NOT NULL,
+	`signup_path` ENUM('NORMAL', 'KAKAO', 'NAVER', 'GOOGLE') NOT NULL,
+	`user_identifier` VARCHAR(20) NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+	`deleted_at` TIMESTAMP NULL,
+	`privacy_agreement_yn` ENUM('Y', 'N') NOT NULL,
+	`marketing_email_agreement_yn` ENUM('Y', 'N') NOT NULL,
+	PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB;
+
+-- 2. crop_categories 테이블
+CREATE TABLE `crop_categories` (
+	`category_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`category_name` VARCHAR(255) NOT NULL,
+	`status` INT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`category_id`)
+) ENGINE=InnoDB;
+
+-- 3. crop 테이블
+CREATE TABLE `crop` (
+	`crop_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`crop_name` VARCHAR(255) NOT NULL,
+	`crop_code` VARCHAR(255) NOT NULL,
+	`status` INT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`category_id` BIGINT NOT NULL,
+	PRIMARY KEY (`crop_id`),
+	CONSTRAINT `FK_crop_categories_TO_crop` FOREIGN KEY (`category_id`) 
+		REFERENCES `crop_categories` (`category_id`)
+) ENGINE=InnoDB;
+
+-- 4. variety_group 테이블
+CREATE TABLE `variety_group` (
+	`variety_group_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`group_name` VARCHAR(255) NOT NULL,
+	`status` INT NOT NULL DEFAULT 1,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`crop_id` BIGINT NOT NULL,
+	PRIMARY KEY (`variety_group_id`),
+	CONSTRAINT `FK_crop_TO_variety_group` FOREIGN KEY (`crop_id`) 
+		REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB;
+
+-- 5. variety 테이블
+CREATE TABLE `variety` (
+	`variety_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`variety_name` VARCHAR(255) NOT NULL,
+	`usage` VARCHAR(255) NULL,
+	`lineage_name` VARCHAR(255) NULL,
+	`mother` VARCHAR(255) NULL,
+	`father` VARCHAR(255) NULL,
+	`adapt_region` VARCHAR(255) NULL,
+	`main_features` TEXT NULL,
+	`variety_group_id` BIGINT NOT NULL,
+	PRIMARY KEY (`variety_id`),
+	CONSTRAINT `FK_variety_group_TO_variety` FOREIGN KEY (`variety_group_id`) 
+		REFERENCES `variety_group` (`variety_group_id`)
+) ENGINE=InnoDB;
+
+-- 6. insect 테이블
+CREATE TABLE `insect` (
+	`insect_key` BIGINT NOT NULL AUTO_INCREMENT,
+	`ncpms_insect_key` VARCHAR(255) NULL,
+	`insect_species_code` VARCHAR(255) NULL,
+	`insect_species_kor` VARCHAR(255) NULL,
+	`insect_species` VARCHAR(255) NULL,
+	`field` VARCHAR(255) NULL,
+	`insect_family` VARCHAR(255) NULL,
+	`insect_order` VARCHAR(255) NULL,
+	`insect_genus` VARCHAR(255) NULL,
+	`tgt_vrmn_name` VARCHAR(255) NULL,
+	`status` INT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`crop_id` BIGINT NOT NULL,
+	PRIMARY KEY (`insect_key`),
+	CONSTRAINT `FK_crop_TO_insect` FOREIGN KEY (`crop_id`) 
+		REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB;
+
+-- 7. insect_detail 테이블
+CREATE TABLE `insect_detail` (
+	`insect_key` BIGINT NOT NULL AUTO_INCREMENT,
+	`distrb_info` TEXT NULL,
+	`stle_info` TEXT NULL,
+	`ecology_info` TEXT NULL,
+	`damage_info` TEXT NULL,
+	`qrant_info` TEXT NULL,
+	`prevent_method` TEXT NULL,
+	`biology_prvnbe_mth` TEXT NULL,
+	`chemical_prvnbe_mth` TEXT NULL,
+	`insect_subspecies` VARCHAR(255) NULL,
+	`insect_subgenus` VARCHAR(255) NULL,
+	`etc` TEXT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`insect_key`),
+	CONSTRAINT `FK_insect_TO_insect_detail` FOREIGN KEY (`insect_key`) 
+		REFERENCES `insect` (`insect_key`)
+) ENGINE=InnoDB;
+
+-- 8. disease 테이블
+CREATE TABLE `disease` (
+	`disease_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`ncpms_sick_key` VARCHAR(255) NULL,
+	`sick_name_kor` VARCHAR(255) NOT NULL,
+	`sick_name_eng` VARCHAR(255) NULL,
+	`sick_name_chn` VARCHAR(255) NULL,
+	`status` INT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`sort_order2` INT NULL,
+	`crop_id` BIGINT NOT NULL,
+	PRIMARY KEY (`disease_id`),
+	CONSTRAINT `FK_crop_TO_disease` FOREIGN KEY (`crop_id`) 
+		REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB;
+
+-- 9. disease_detail 테이블
+CREATE TABLE `disease_detail` (
+	`disease_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`infection_route` VARCHAR(255) NULL,
+	`development_condition` TEXT NULL,
+	`symptoms` TEXT NULL,
+	`prevention_method` TEXT NULL,
+	`biology_prvnbe_mth` TEXT NULL,
+	`chemical_prvnbe_mth` TEXT NULL,
+	`virus_name` VARCHAR(255) NULL,
+	`etc` TEXT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`disease_id`),
+	CONSTRAINT `FK_disease_TO_disease_detail` FOREIGN KEY (`disease_id`) 
+		REFERENCES `disease` (`disease_id`)
+) ENGINE=InnoDB;
+
+-- 10. crop_cultivation 테이블
+CREATE TABLE `crop_cultivation` (
+	`crop_cultivation_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`cultivation_method` TEXT NULL,
+	`harvest_season` TEXT NULL,
+	`notes` TEXT NULL,
+	`standard_ability` TEXT NULL,
+	`crop_id` BIGINT NOT NULL,
+	PRIMARY KEY (`crop_cultivation_id`),
+	CONSTRAINT `FK_crop_TO_crop_cultivation` FOREIGN KEY (`crop_id`) 
+		REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB;
+
+-- 11. wildlife_species 테이블
+CREATE TABLE `wildlife_species` (
+	`ID` BIGINT NOT NULL AUTO_INCREMENT,
+	`common_name` VARCHAR(255) NOT NULL,
+	`scientific_name` VARCHAR(255) NOT NULL,
+	`image_url` VARCHAR(255) NOT NULL,
+	PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+
+-- 12. habitat_records 테이블
+CREATE TABLE `habitat_records` (
+	`ID` BIGINT NOT NULL AUTO_INCREMENT,
+	`species_id` BIGINT NOT NULL,
+	`latitude` DECIMAL(10, 8) NOT NULL,
+	`longitude` DECIMAL(11, 8) NOT NULL,
+	`geometry_layer` TEXT NOT NULL,
+	`trace_evidence` TEXT NOT NULL,
+	`habitat_description` TEXT NOT NULL,
+	`legal_dong_code` VARCHAR(255) NOT NULL,
+	`ID2` BIGINT NOT NULL,
+	PRIMARY KEY (`ID`),
+	CONSTRAINT `FK_wildlife_species_TO_habitat_records` FOREIGN KEY (`species_id`) 
+		REFERENCES `wildlife_species` (`ID`)
+) ENGINE=InnoDB;
+
+-- 13. regional_retail_prices 테이블
+CREATE TABLE `regional_retail_prices` (
+	`ID` INT NOT NULL AUTO_INCREMENT,
+	`region_name` VARCHAR(255) NOT NULL,
+	`item_name` VARCHAR(255) NOT NULL,
+	`variey_name` VARCHAR(255) NOT NULL,
+	`unit` VARCHAR(255) NOT NULL,
+	`current_price` INT NOT NULL,
+	`price_1d_ago` INT NOT NULL,
+	`price_1w_ago` INT NOT NULL,
+	`price_1m_ago` INT NOT NULL,
+	`price_1y_ago` INT NOT NULL,
+	`price_avg_year` INT NOT NULL,
+	`price_normal_day` INT NOT NULL,
+	`inquiry_date` INT NOT NULL,
+	PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+
+-- 14. land_transactions 테이블
+CREATE TABLE `land_transactions` (
+	`land_transactions_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`region_code` INT NOT NULL,
+	`land_category` DECIMAL(10, 8) NOT NULL,
+	`sigungu` DECIMAL(11, 8) NOT NULL,
+	`legal_dong` TEXT NOT NULL,
+	`lot_number` TEXT NOT NULL,
+	`transaction_area` TEXT NOT NULL,
+	`transaction_amount` VARCHAR(255) NOT NULL,
+	`transaction_date` TIMESTAMP NULL,
+	PRIMARY KEY (`land_transactions_id`)
+) ENGINE=InnoDB;
+
+-- 15. soil_analysis 테이블
+CREATE TABLE `soil_analysis` (
+	`soil_analysis_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`land_id` INT NOT NULL,
+	`ph` DECIMAL(10, 8) NOT NULL,
+	`organic_matter` DECIMAL(11, 8) NOT NULL,
+	`available_phosphorus` TEXT NOT NULL,
+	`potassium` TEXT NOT NULL,
+	`calcium` TEXT NOT NULL,
+	`magnesium` VARCHAR(255) NOT NULL,
+	`available_silicate` INT NULL,
+	`analysis_date` TIMESTAMP NULL,
+	`ID2` BIGINT NOT NULL,
+	PRIMARY KEY (`soil_analysis_id`),
+	CONSTRAINT `FK_land_transactions_TO_soil_analysis` FOREIGN KEY (`ID2`) 
+		REFERENCES `land_transactions` (`land_transactions_id`)
+) ENGINE=InnoDB;
 
 
+-- 16. conversations 테이블
+CREATE TABLE `conversations` (
+	`conversation_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`title` VARCHAR(255) NOT NULL,
+	`status` INT NOT NULL,
+	`last_message_at` TIMESTAMP NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`user_id` BIGINT NOT NULL,
+	PRIMARY KEY (`conversation_id`),
+	CONSTRAINT `FK_users_TO_conversations` FOREIGN KEY (`user_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 가구원 관계 테이블
-CREATE TABLE family_relationship (
-                                     family_relationship_code VARCHAR(255) PRIMARY KEY ,
-                                     family_relationship_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '가구원 관계' CHARACTER SET utf8mb4;
+-- 17. conversations_messages 테이블
+CREATE TABLE `conversations_messages` (
+	`conversations_messages_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`role` ENUM('USER','SYSTEM','ASSISTANT') NOT NULL,
+	`content` TEXT NOT NULL,
+	`metadata` JSON NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`status` INT NULL,
+	`conversation_id` BIGINT NOT NULL,
+	PRIMARY KEY (`conversations_messages_id`),
+	CONSTRAINT `FK_conversations_TO_messages` FOREIGN KEY (`conversation_id`) 
+		REFERENCES `conversations` (`conversation_id`)
+) ENGINE=InnoDB;
 
--- 가족 구성원 테이블
-CREATE TABLE family_member (
-                               family_member_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                               name VARCHAR(255) NOT NULL,
-                               birth_date DATETIME NOT NULL,
-                               employee_id BIGINT NOT NULL,
-                               family_relationship_code VARCHAR(255) NOT NULL,
-                               FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                               FOREIGN KEY (family_relationship_code) REFERENCES family_relationship(family_relationship_code)
-) ENGINE=INNODB COMMENT '가족 구성원' CHARACTER SET utf8mb4;
+-- 18. message_pattachments 테이블
+CREATE TABLE `message_pattachments` (
+	`message_attachment_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`sort_order` INT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`message_attachment_id`)
+) ENGINE=InnoDB;
 
--- 학력 테이블
-CREATE TABLE education (
-                           education_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                           school_name VARCHAR(255) NOT NULL,
-                           admission_date TIMESTAMP NOT NULL,
-                           graduation_date TIMESTAMP NOT NULL,
-                           degree VARCHAR(255) NOT NULL,
-                           major VARCHAR(255) NULL,
-                           employee_id BIGINT NOT NULL,
-                           FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '학력' CHARACTER SET utf8mb4;
+-- 19. community_post 테이블
+CREATE TABLE `community_post` (
+	`community_post_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`community_post_title` VARCHAR(50) NOT NULL,
+	`community_post_content` TEXT NOT NULL,
+	`post_type` ENUM('COMMUNITY') NOT NULL,
+	`liked_count` INT NOT NULL DEFAULT 0,
+	`reported_count` INT NOT NULL DEFAULT 0,
+	`view_count` INT NOT NULL DEFAULT 0,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+	`deleted_at` TIMESTAMP NULL,
+	`files_tf` ENUM('Y', 'N') NOT NULL,
+	`writer_id` BIGINT NOT NULL,
+	PRIMARY KEY (`community_post_id`),
+	CONSTRAINT `FK_users_TO_community_post` FOREIGN KEY (`writer_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 경력 테이블
-CREATE TABLE career (
-                        career_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                        company_name VARCHAR(255) NOT NULL,
-                        role_name VARCHAR(255) NOT NULL,
-                        join_date TIMESTAMP NOT NULL,
-                        resignation_date TIMESTAMP NOT NULL,
-                        employee_id BIGINT NOT NULL,
-                        FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '경력' CHARACTER SET utf8mb4;
+-- 20. comment 테이블
+CREATE TABLE `comment` (
+	`comment_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`comment_content` VARCHAR(255) NULL,
+	`created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+	`delete_yn` ENUM('Y', 'N') NULL,
+	`writer_id` BIGINT NOT NULL,
+	`post_id` BIGINT NOT NULL,
+	`parent_id` BIGINT NULL,
+	PRIMARY KEY (`comment_id`),
+	CONSTRAINT `FK_users_TO_comment` FOREIGN KEY (`writer_id`) 
+		REFERENCES `users` (`user_id`),
+	CONSTRAINT `FK_community_post_TO_comment` FOREIGN KEY (`post_id`) 
+		REFERENCES `community_post` (`community_post_id`),
+	CONSTRAINT `FK_comment_TO_comment` FOREIGN KEY (`parent_id`) 
+		REFERENCES `comment` (`comment_id`)
+) ENGINE=InnoDB;
 
--- 계약서 테이블
-CREATE TABLE contract (
-                          contract_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          contract_type VARCHAR(255) NOT NULL CHECK(contract_type IN ('EMPLOYMENT', 'SECURITY')), -- 근로 계약서, 비밀 유지서약서 등 자유롭게 기입
-                          created_at TIMESTAMP NULL,
-                          file_name VARCHAR(255) NULL,
-                          file_url TEXT NULL UNIQUE,
-                          contract_status VARCHAR(255) NOT NULL DEFAULT 'SIGNING'
-                              CHECK(contract_status IN ('SIGNING', 'REGISTERED')), -- 계약서 상태
-                          consent_status VARCHAR(255) NOT NULL DEFAULT 'N'
-                              CHECK(consent_status IN ('Y', 'N')), -- 동의 여부
+-- 21. recomment 테이블 삭제. self join으로 comment table에 병합. ( N + 1 문제 방지 위해. )
+-- CREATE TABLE `recomment` (
+-- 	`recomment_id` BIGINT NOT NULL AUTO_INCREMENT,
+-- 	`recomment_content` TEXT NULL,
+-- 	`created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+-- 	`updated_at` TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+-- 	`delete_yn` ENUM('Y', 'N') NULL,
+-- 	`comment_id` BIGINT NOT NULL,
+-- 	`recomment_writer_id` BIGINT NOT NULL,
+-- 	PRIMARY KEY (`recomment_id`),
+-- 	CONSTRAINT `FK_comment_TO_recomment` FOREIGN KEY (`comment_id`) 
+-- 		REFERENCES `comment` (`comment_id`),
+-- 	CONSTRAINT `FK_users_TO_recomment` FOREIGN KEY (`recomment_writer_id`) 
+-- 		REFERENCES `users` (`user_id`)
+-- ) ENGINE=InnoDB;
 
-                          employee_id BIGINT NOT NULL,
-                          FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '계약서' CHARACTER SET utf8mb4;
+-- 22. post_like 테이블
+CREATE TABLE `post_like` (
+	`post_like_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`post_id` BIGINT NOT NULL,
+	`user_id` BIGINT NOT NULL,
+	PRIMARY KEY (`post_like_id`),
+	CONSTRAINT `FK_community_post_TO_post_like` FOREIGN KEY (`post_id`) 
+		REFERENCES `community_post` (`community_post_id`),
+	CONSTRAINT `FK_users_TO_post_like` FOREIGN KEY (`user_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 자격증 테이블
-CREATE TABLE qualification (
-                               qualification_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                               qualification_name VARCHAR(255) NOT NULL,
-                               qualification_number VARCHAR(255) NOT NULL UNIQUE,
-                               qualified_at TIMESTAMP NOT NULL,
-                               issuer VARCHAR(255) NOT NULL,
-                               grade_score VARCHAR(255) NOT NULL,
-                               employee_id BIGINT NOT NULL,
-                               FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '자격증' CHARACTER SET utf8mb4;
+-- 23. post_report 테이블
+CREATE TABLE `post_report` (
+	`post_report_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`report_type` ENUM('SPAM', 'INAPPROPRIATE_CONTENT', 'ABUSIVE_LANGUAGE', 'POLITICAL_ISSUE', 'OTHER') NULL,
+	`report_title` VARCHAR(50) NULL,
+	`report_content` TEXT NULL,
+	`reported_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`report_user_id` BIGINT NOT NULL,
+	`target_post_id` BIGINT NOT NULL,
+	PRIMARY KEY (`post_report_id`),
+	CONSTRAINT `FK_users_TO_post_report` FOREIGN KEY (`report_user_id`) 
+		REFERENCES `users` (`user_id`),
+	CONSTRAINT `FK_community_post_TO_post_report` FOREIGN KEY (`target_post_id`) 
+		REFERENCES `community_post` (`community_post_id`)
+) ENGINE=InnoDB;
 
--- 어학 테이블
-CREATE TABLE `language` (
-                            language_code VARCHAR(255) PRIMARY KEY,
-                            language_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '어학' CHARACTER SET utf8mb4;
+-- 24. notice 테이블
+CREATE TABLE `notice` (
+	`notice_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`notice_title` VARCHAR(50) NOT NULL,
+	`notice_content` TEXT NOT NULL,
+	`files_tf` ENUM('Y', 'N') NOT NULL,
+	`writer_id` BIGINT NOT NULL,
+	PRIMARY KEY (`notice_id`),
+	CONSTRAINT `FK_users_TO_notice` FOREIGN KEY (`writer_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 어학시험  테이블
-CREATE TABLE language_test (
-                               language_test_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                               language_test_name VARCHAR(255) NOT NULL,
-                               qualification_number VARCHAR(255) NOT NULL UNIQUE,
-                               issuer VARCHAR(255) NOT NULL,
-                               qualified_at TIMESTAMP NOT NULL,
-                               grade_score VARCHAR(255) NOT NULL,
-                               employee_id BIGINT NOT NULL,
-                               language_code VARCHAR(255) NOT NULL,
-                               FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                               FOREIGN KEY (language_code) REFERENCES `language`(language_code)
-) ENGINE=INNODB COMMENT '어학시험' CHARACTER SET utf8mb4;
+-- 25. inquiry 테이블
+CREATE TABLE `inquiry` (
+	`inquiry_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`inquiry_title` VARCHAR(50) NOT NULL,
+	`inquiry_content` TEXT NOT NULL,
+	`inquiry_type` ENUM('ACCOUNT', 'TECHNICAL_ISSUE', 'OTHER') NULL,
+	`inquiry_status` ENUM('PENDING', 'PROCESSING', 'COMPLETED') NOT NULL,
+	`writer_id` BIGINT NOT NULL,
+	PRIMARY KEY (`inquiry_id`),
+	CONSTRAINT `FK_users_TO_inquiry` FOREIGN KEY (`writer_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 징계/포상 테이블
-CREATE TABLE discipline_reward (
-                                   discipline_reward_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                   discipline_reward_name VARCHAR(255) NOT NULL,
-                                   content VARCHAR(255) NOT NULL,
-                                   created_at TIMESTAMP NOT NULL,
-                                   employee_id BIGINT NOT NULL,
-                                   FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '징계/포상' CHARACTER SET utf8mb4;
+-- 26. answer 테이블
+CREATE TABLE `answer` (
+	`answer_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`answer_content` TEXT NOT NULL,
+	`inquiry_id` BIGINT NOT NULL,
+	`answer_user_id` BIGINT NOT NULL,
+	PRIMARY KEY (`answer_id`),
+	CONSTRAINT `FK_inquiry_TO_answer` FOREIGN KEY (`inquiry_id`) 
+		REFERENCES `inquiry` (`inquiry_id`),
+	CONSTRAINT `FK_users_TO_answer` FOREIGN KEY (`answer_user_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 인사발령 항목 테이블
-CREATE TABLE appointment_item (
-                                  appointment_item_code VARCHAR(255) PRIMARY KEY,
-                                  appointment_item_name VARCHAR(255) NOT NULL
-) ENGINE=INNODB COMMENT '인사발령 항목' CHARACTER SET utf8mb4;
+-- 27. farm_log 테이블
+CREATE TABLE `farm_log` (
+	`farm_log_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`field` VARCHAR(255) NULL,
+	`crop_variety` VARCHAR(255) NULL,
+	`crop_type` VARCHAR(255) NULL,
+	`work_content` VARCHAR(255) NULL,
+	`work_stage` VARCHAR(255) NULL,
+	`temperature` INT NOT NULL,
+	`precipitation` INT NOT NULL,
+	`humidity` INT NOT NULL,
+	`start_at` TIMESTAMP NOT NULL,
+	`end_at` TIMESTAMP NOT NULL,
+	`files_tf` ENUM('Y', 'N') NOT NULL,
+	`user_id` BIGINT NOT NULL,
+	PRIMARY KEY (`farm_log_id`),
+	CONSTRAINT `FK_users_TO_farm_log` FOREIGN KEY (`user_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 인사발령 테이블
-CREATE TABLE appointment (
-                             appointment_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                             appointed_at TIMESTAMP NOT NULL,
-                             employee_id BIGINT NOT NULL,
-                             authorizer_id BIGINT NOT NULL, -- 발령권자
-                             department_code VARCHAR(255) NOT NULL,
-                             duty_code VARCHAR(255) NOT NULL,
-                             role_code VARCHAR(255) NOT NULL,
-                             position_code VARCHAR(255) NOT NULL,
-                             appointment_item_code VARCHAR(255) NOT NULL,
-                             FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                             FOREIGN KEY (authorizer_id) REFERENCES employee(employee_id),
-                             FOREIGN KEY (department_code) REFERENCES department(department_code),
-                             FOREIGN KEY (duty_code) REFERENCES duty(duty_code),
-                             FOREIGN KEY (role_code) REFERENCES `role`(role_code),
-                             FOREIGN KEY (position_code) REFERENCES `position`(position_code),
-                             FOREIGN KEY (appointment_item_code) REFERENCES appointment_item(appointment_item_code)
-) ENGINE=INNODB COMMENT '인사발령' CHARACTER SET utf8mb4;
+-- 28. files 테이블
+CREATE TABLE `files` (
+	`file_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`bucket_name` VARCHAR(255) NOT NULL,
+	`object_key` VARCHAR(255) NOT NULL,
+	`original_file_name` VARCHAR(255) NOT NULL,
+	`content_type` VARCHAR(255) NOT NULL,
+	`owner_type` ENUM('COMMUNITY_POST','NOTICE','FARM_LOG') NOT NULL,
+	`owner_id` BIGINT NOT NULL,
+	`file_size` BIGINT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`file_id`)
+) ENGINE=InnoDB;
 
--- 부서 구성원 테이블
-CREATE TABLE department_member (
-                                   department_member_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                   employee_number VARCHAR(255) NOT NULL UNIQUE,
-                                   name VARCHAR(255) NOT NULL,
-                                   role_name VARCHAR(255) NOT NULL,
-                                   email VARCHAR(255) NOT NULL,
-                                   profile_img_url TEXT NOT NULL,
-                                   phone_number VARCHAR(255) NOT NULL,
-                                   attendance_status_type_name VARCHAR(255) NOT NULL,
-                                   manager_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(manager_status IN ('Y', 'N')),
-                                   department_code VARCHAR(255) NOT NULL,
-                                   employee_id BIGINT NOT NULL,
-                                   FOREIGN KEY (department_code) REFERENCES department(department_code),
-                                   FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '부서 구성원' CHARACTER SET utf8mb4;
+-- 29. user_report 테이블
+CREATE TABLE `user_report` (
+	`report_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`report_type` ENUM('SPAM','INAPPROPRIATE_CONTENT','ABUSIVE_LANGUAGE','POLITICAL_ISSUE','OTHER') NOT NULL,
+	`reported_content` TEXT NOT NULL,
+	`evidence_pk_id` BIGINT NOT NULL,
+	`reported_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`report_user_id` BIGINT NOT NULL,
+	`reported_user_id` BIGINT NOT NULL,
+	PRIMARY KEY (`report_id`),
+	CONSTRAINT `FK_users_TO_user_report_reporter` FOREIGN KEY (`report_user_id`) 
+		REFERENCES `users` (`user_id`),
+	CONSTRAINT `FK_users_TO_user_report_reported` FOREIGN KEY (`reported_user_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 휴가 유형 테이블
-CREATE TABLE vacation_type (
-                               vacation_type_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                               vacation_type_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '휴가 유형' CHARACTER SET utf8;
+-- 30. penalty 테이블
+CREATE TABLE `penalty` (
+	`penalty_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`penalty_reason` TEXT NULL,
+	`penalty_type` ENUM('WARNING','TEMP_BAN','PERM_BAN') NOT NULL,
+	`penalized_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`penalized_user_id` BIGINT NOT NULL,
+	`admin_id` BIGINT NOT NULL,
+	PRIMARY KEY (`penalty_id`),
+	CONSTRAINT `FK_users_TO_penalty_penalized` FOREIGN KEY (`penalized_user_id`) 
+		REFERENCES `users` (`user_id`),
+	CONSTRAINT `FK_users_TO_penalty_admin` FOREIGN KEY (`admin_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
--- 휴가 정책 테이블
-CREATE TABLE vacation_policy (
-                                 vacation_policy_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                 vacation_policy_name VARCHAR(255) NOT NULL,
-                                 vacation_policy_description TEXT NOT NULL,
-                                 vacation_policy_status VARCHAR(255) NOT NULL DEFAULT 'NORMAL',
-                                 allocation_days BIGINT NOT NULL,
-                                 paid_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(paid_status IN ('Y', 'N')),
-                                 year INT NOT NULL,
-                                 created_at TIMESTAMP NOT NULL,
-                                 auto_allocation_cycle VARCHAR(255) NULL,
-                                 vacation_type_id BIGINT NOT NULL,
-                                 policy_register_id BIGINT NOT NULL,
-                                 FOREIGN KEY (vacation_type_id) REFERENCES vacation_type(vacation_type_id),
-                                 FOREIGN KEY (policy_register_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '휴가 정책' CHARACTER SET utf8mb4;
-
--- 휴가 테이블
-CREATE TABLE vacation (
-                          vacation_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          vacation_name VARCHAR(255) NOT NULL,
-                          vacation_left BIGINT NOT NULL,
-                          vacation_used BIGINT NOT NULL DEFAULT 0,
-                          created_at TIMESTAMP NOT NULL,
-                          expired_at TIMESTAMP NOT NULL,
-                          expiration_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(expiration_status IN ('Y', 'N')),
-                          employee_id BIGINT NOT NULL,
-                          vacation_policy_id BIGINT NOT NULL,
-                          vacation_type_id BIGINT NOT NULL,
-                          FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                          FOREIGN KEY (vacation_policy_id) REFERENCES vacation_policy(vacation_policy_id),
-                          FOREIGN KEY (vacation_type_id) REFERENCES vacation_type(vacation_type_id)
-) ENGINE=INNODB COMMENT '휴가' CHARACTER SET utf8mb4;
-
--- 휴가 신청 테이블
-CREATE TABLE vacation_request (
-                                  vacation_request_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                  start_date TIMESTAMP NOT NULL,
-                                  end_date TIMESTAMP NOT NULL,
-                                  created_at TIMESTAMP NOT NULL,
-                                  request_reason VARCHAR(255) NOT NULL,
-                                  request_status VARCHAR(255) NOT NULL DEFAULT 'WAIT' CHECK(request_status IN ('WAIT','ACCEPT','REJECT')),
-                                  rejection_reason VARCHAR(255) NULL,
-                                  canceled_at TIMESTAMP NULL,
-                                  cancel_reason VARCHAR(255) NULL,
-                                  cancel_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(cancel_status IN ('Y', 'N')),
-                                  employee_id BIGINT NOT NULL,
-                                  vacation_id BIGINT NOT NULL,
-                                  FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                                  FOREIGN KEY (vacation_id) REFERENCES vacation(vacation_id)
-) ENGINE=INNODB COMMENT '휴가 신청' CHARACTER SET utf8mb4;
-
--- 휴가 신청 파일 테이블
-CREATE TABLE vacation_request_file (
-                                       vacation_request_file_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                       file_name VARCHAR(255) NOT NULL,
-                                       file_url TEXT NOT NULL UNIQUE,
-                                       vacation_request_id BIGINT NOT NULL,
-                                       FOREIGN KEY (vacation_request_id) REFERENCES vacation_request(vacation_request_id)
-) ENGINE=INNODB COMMENT '휴가 신청 파일' CHARACTER SET utf8mb4;
-
--- 연차 촉진 제도 테이블
-CREATE TABLE annual_vacation_promotion_policy (
-                                                  annual_vacation_promotion_policy_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                  month INT NOT NULL,
-                                                  day INT NOT NULL,
-                                                  standard INT NOT NULL
-) ENGINE=INNODB COMMENT '연차 촉진 제도' CHARACTER SET utf8mb4;
-
--- 근로 소득세 테이블
-CREATE TABLE earned_income_tax (
-                                   earned_income_tax_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                   monthly_salary_more BIGINT NOT NULL,
-                                   monthly_salary_under BIGINT NOT NULL,
-                                   child_num INT NOT NULL,
-                                   amount BIGINT NOT NULL
-) ENGINE=INNODB COMMENT '근로 소득세' CHARACTER SET utf8mb4;
-
--- 4대 보험 테이블
-CREATE TABLE major_insurance (
-                                 major_insurance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                 insurance_name VARCHAR(255) NOT NULL,
-                                 tax_rates DOUBLE NOT NULL
-) ENGINE=INNODB COMMENT '4대 보험' CHARACTER SET utf8mb4;
-
--- 비과세 항목 테이블
-CREATE TABLE non_taxable (
-                             non_taxable_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                             non_taxable_name VARCHAR(255) NOT NULL,
-                             amount BIGINT NOT NULL
-) ENGINE=INNODB COMMENT '비과세 항목' CHARACTER SET utf8mb4;
-
--- 세액 공제 테이블
-CREATE TABLE tax_credit (
-                            tax_credit_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                            valid_child_num INT NOT NULL,
-                            base_deductible BIGINT NOT NULL,
-                            additional_deductible_per_child BIGINT NOT NULL
-) ENGINE=INNODB COMMENT '세액 공제' CHARACTER SET utf8mb4;
-
--- 공휴일 테이블
-CREATE TABLE public_holiday (
-                                public_holiday_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                year INT NOT NULL,
-                                month INT NOT NULL,
-                                day_num INT NOT NULL
-) ENGINE=INNODB COMMENT '공휴일' CHARACTER SET utf8mb4;
-
--- 비정기 수당 테이블
-CREATE TABLE irregular_allowance (
-                                     irregular_allowance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                     irregular_allowance_name VARCHAR(255) NOT NULL,
-                                     amount BIGINT NOT NULL
-) ENGINE=INNODB COMMENT '비정기 수당' CHARACTER SET utf8mb4;
-
--- 급여 테이블
-CREATE TABLE payment (
-                         payment_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                         paid_at TIMESTAMP NOT NULL,
-                         monthly_salary BIGINT NOT NULL,
-                         actual_salary BIGINT NOT NULL,
-                         non_taxable_amount BIGINT NOT NULL,
-                         family_member_num INT NOT NULL,
-                         valid_child_num INT NOT NULL,
-                         total_working_day_num INT NOT NULL,
-                         actual_working_day_num INT NOT NULL,
-                         paid_vacation_num INT NOT NULL,
-                         unpaid_vacation_num INT NOT NULL,
-                         public_holiday_num INT NOT NULL,
-                         bonus BIGINT NOT NULL,
-                         annual_vacation_allowance BIGINT NOT NULL,
-                         overtime_allowance BIGINT NOT NULL,
-                         national_pension_deductible BIGINT NOT NULL,
-                         health_insurance_deductible BIGINT NOT NULL,
-                         long_term_care_insurance_deductible BIGINT NOT NULL,
-                         employment_insurance_deductible BIGINT NOT NULL,
-                         income_tax_deductible BIGINT NOT NULL,
-                         local_income_tax_deductible BIGINT NOT NULL,
-                         child_deductible BIGINT NOT NULL,
-                         total_deductible BIGINT NOT NULL,
-                         employee_id BIGINT NOT NULL,
-                         public_holiday_id BIGINT NOT NULL,
-                         earned_income_tax_id BIGINT NOT NULL,
-                         FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                         FOREIGN KEY (public_holiday_id) REFERENCES public_holiday(public_holiday_id),
-                         FOREIGN KEY (earned_income_tax_id) REFERENCES earned_income_tax(earned_income_tax_id)
-) ENGINE=INNODB COMMENT '급여' CHARACTER SET utf8mb4;
-
--- 근태 신청 유형 테이블
-CREATE TABLE attendance_request_type (
-                                         attendance_request_type_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                         attendance_request_type_name VARCHAR(255) NOT NULL UNIQUE,
-                                         attendance_request_type_description TEXT NOT NULL
-) ENGINE=INNODB COMMENT '근태 신청 유형' CHARACTER SET utf8mb4;
-
--- 근태 신청 테이블
-CREATE TABLE attendance_request (
-                                    attendance_request_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                    request_reason VARCHAR(255) NOT NULL,
-                                    start_date TIMESTAMP NOT NULL,
-                                    end_date TIMESTAMP NOT NULL,
-                                    created_at TIMESTAMP NOT NULL,
-                                    rejection_reason VARCHAR(255) NULL,
-                                    request_status VARCHAR(255) NOT NULL DEFAULT 'WAIT' CHECK(request_status IN ('WAIT','ACCEPT','REJECT')),
-                                    canceled_at TIMESTAMP NULL,
-                                    cancel_reason VARCHAR(255) NULL,
-                                    cancel_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(cancel_status IN ('Y', 'N')),
-                                    destination VARCHAR(255) NULL,
-                                    employee_id BIGINT NOT NULL,
-                                    attendance_request_type_id BIGINT NOT NULL,
-                                    FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                                    FOREIGN KEY (attendance_request_type_id) REFERENCES attendance_request_type(attendance_request_type_id)
-) ENGINE=INNODB COMMENT '근태 신청' CHARACTER SET utf8mb4;
-
--- 근태 신청 파일 테이블
-CREATE TABLE attendance_request_file (
-                                         attendance_request_file_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                         file_name VARCHAR(255) NOT NULL,
-                                         file_url TEXT NOT NULL UNIQUE,
-                                         attendance_request_id BIGINT NOT NULL,
-                                         FOREIGN KEY (attendance_request_id) REFERENCES attendance_request(attendance_request_id)
-) ENGINE=INNODB COMMENT '근태 신청 파일' CHARACTER SET utf8mb4;
-
--- 출퇴근 테이블
-CREATE TABLE commute (
-                         commute_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                         start_time TIMESTAMP NULL,
-                         end_time TIMESTAMP NULL,
-                         remote_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(remote_status IN ('Y', 'N')),
-                         overtime_status VARCHAR(255) NOT NULL DEFAULT 'N' CHECK(overtime_status IN ('Y', 'N')),
-                         employee_id BIGINT NOT NULL,
-                         attendance_request_id BIGINT NULL,
-                         FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                         FOREIGN KEY (attendance_request_id) REFERENCES attendance_request(attendance_request_id)
-) ENGINE=INNODB COMMENT '출퇴근' CHARACTER SET utf8mb4;
-
--- 휴복직 테이블
-CREATE TABLE leave_return (
-                              leave_return_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                              start_date TIMESTAMP NOT NULL,
-                              end_date TIMESTAMP NOT NULL,
-                              employee_id BIGINT NOT NULL,
-                              attendance_request_id BIGINT NOT NULL,
-                              FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                              FOREIGN KEY (attendance_request_id) REFERENCES attendance_request(attendance_request_id)
-) ENGINE=INNODB COMMENT '휴복직' CHARACTER SET utf8mb4;
-
--- 출장/파견 테이블
-CREATE TABLE business_trip (
-                               business_trip_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                               start_date TIMESTAMP NOT NULL,
-                               end_date TIMESTAMP NOT NULL,
-                               trip_type VARCHAR(255) NOT NULL CHECK(trip_type IN ('BUSINESS', 'DISPATCH')),
-                               destination VARCHAR(255) NOT NULL,
-                               employee_id BIGINT NOT NULL,
-                               attendance_request_id BIGINT NOT NULL,
-                               FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                               FOREIGN KEY (attendance_request_id) REFERENCES attendance_request(attendance_request_id)
-) ENGINE=INNODB COMMENT '출장/파견' CHARACTER SET utf8mb4;
-
--- 과제 유형 테이블
-CREATE TABLE task_type (
-                           task_type_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                           task_type_name VARCHAR(255) NOT NULL UNIQUE
-) ENGINE=INNODB COMMENT '과제 유형' CHARACTER SET utf8mb4;
-
--- 평가 정책 테이블
-CREATE TABLE evaluation_policy (
-                                   evaluation_policy_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                   start_date TIMESTAMP NOT NULL,
-                                   end_date TIMESTAMP NOT NULL,
-                                   year INT NOT NULL,
-                                   half VARCHAR(255) NOT NULL,
-                                   task_ratio DOUBLE NOT NULL,
-                                   min_rel_eval_count BIGINT NOT NULL,
-                                   created_at TIMESTAMP NOT NULL,
-                                   modifiable_date TIMESTAMP NOT NULL,
-                                   policy_description TEXT NOT NULL,
-                                   policy_register_id BIGINT NOT NULL,
-                                   task_type_id BIGINT NOT NULL,
-                                   FOREIGN KEY (policy_register_id) REFERENCES employee(employee_id),
-                                   FOREIGN KEY (task_type_id) REFERENCES task_type(task_type_id)
-) ENGINE=INNODB COMMENT '평가 정책' CHARACTER SET utf8mb4;
-
--- 과제 항목 테이블
-CREATE TABLE task_item (
-                           task_item_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                           task_name VARCHAR(255) NOT NULL,
-                           task_content TEXT NOT NULL,
-                           assigned_employee_count BIGINT NOT NULL,
-                           is_manager_written BOOLEAN DEFAULT FALSE,
-                           task_type_id BIGINT NOT NULL,
-                           employee_id BIGINT NOT NULL,
-                           department_code VARCHAR(255) NOT NULL,
-                           evaluation_policy_id BIGINT NOT NULL,
-                           FOREIGN KEY (task_type_id) REFERENCES task_type(task_type_id),
-                           FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
-                           FOREIGN KEY (department_code) REFERENCES department(department_code),
-                           FOREIGN KEY (evaluation_policy_id) REFERENCES evaluation_policy(evaluation_policy_id)
-) ENGINE=INNODB COMMENT '과제 항목' CHARACTER SET utf8mb4;
+-- 31. blacklist 테이블
+CREATE TABLE `blacklist` (
+	`black_id` BIGINT NOT NULL AUTO_INCREMENT,
+	`blacked_user_id` BIGINT NOT NULL,
+	`admin_id` BIGINT NOT NULL,
+	`create_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`black_id`),
+	CONSTRAINT `FK_users_TO_blacklist_blacked` FOREIGN KEY (`blacked_user_id`) 
+		REFERENCES `users` (`user_id`),
+	CONSTRAINT `FK_users_TO_blacklist_admin` FOREIGN KEY (`admin_id`) 
+		REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB;
 
 
--- 평가 테이블
-CREATE TABLE evaluation (
-                            evaluation_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                            evaluation_type VARCHAR(255) NOT NULL,
-                            fin_grade VARCHAR(255) NULL,
-                            fin_score DOUBLE NULL,
-                            year INT NOT NULL,
-                            half VARCHAR(255) NOT NULL,
-                            created_at TIMESTAMP NOT NULL,
-                            evaluator_id BIGINT NOT NULL,
-                            employee_id BIGINT NOT NULL,
-                            FOREIGN KEY (evaluator_id) REFERENCES employee(employee_id),
-                            FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
-) ENGINE=INNODB COMMENT '평가' CHARACTER SET utf8mb4;
-
--- 평가정책별평가 테이블
-CREATE TABLE task_type_eval (
-                                task_type_eval_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                task_type_total_score DOUBLE NOT NULL,
-                                created_at TIMESTAMP NOT NULL,
-                                evaluation_id BIGINT NOT NULL,
-                                evaluation_policy_id BIGINT NOT NULL,
-                                FOREIGN KEY (evaluation_id) REFERENCES evaluation(evaluation_id),
-                                FOREIGN KEY (evaluation_policy_id) REFERENCES evaluation_policy(evaluation_policy_id)
-) ENGINE=INNODB COMMENT '평가 정책별 평가' CHARACTER SET utf8mb4;
-
--- 등급 테이블
-CREATE TABLE grade (
-                       grade_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                       grade_name VARCHAR(255) NOT NULL,
-                       start_ratio DOUBLE NOT NULL,
-                       end_ratio DOUBLE NOT NULL,
-                       absolute_grade_ratio Double NOT NULL,
-                       evaluation_policy_id BIGINT NOT NULL,
-                       FOREIGN KEY (evaluation_policy_id) REFERENCES evaluation_policy(evaluation_policy_id)
-) ENGINE=INNODB COMMENT '등급' CHARACTER SET utf8mb4;
-
--- 피드백 테이블
-CREATE TABLE feedback (
-                          feedback_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          content TEXT NOT NULL,
-                          created_at TIMESTAMP NOT NULL,
-                          evaluation_id BIGINT NOT NULL,
-                          FOREIGN KEY (evaluation_id) REFERENCES evaluation(evaluation_id)
-) ENGINE=INNODB COMMENT '피드백' CHARACTER SET utf8mb4;
-
--- 과제별 평가 테이블
-CREATE TABLE task_eval (
-                           task_eval_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                           task_eval_name VARCHAR(255) NOT NULL,
-                           task_eval_content TEXT NOT NULL,
-                           score DOUBLE NOT NULL,
-                           set_ratio DOUBLE NOT NULL,
-                           task_grade VARCHAR(255) NULL,
-                           performance_input TEXT NOT NULL,
-                           created_at TIMESTAMP NOT NULL,
-                           rel_eval_status BOOLEAN NOT NULL,
-                           evaluation_id BIGINT NOT NULL,
-                           modifiable_date TIMESTAMP NOT NULL,
-                           task_type_id BIGINT NOT NULL,
-                           task_item_id BIGINT NOT NULL,
-                           FOREIGN KEY (evaluation_id) REFERENCES evaluation(evaluation_id),
-                           FOREIGN KEY (task_type_id) REFERENCES task_type(task_type_id),
-                           FOREIGN KEY (task_item_id) REFERENCES task_item(task_item_id)
-) ENGINE=INNODB COMMENT '과제별 평가' CHARACTER SET utf8mb4;
-
--- 반기별 부서 평가 통계 테이블
-CREATE TABLE semiannual_department_performance_ratio_statistics (
-                                                                    statistics_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                                    year INT NOT NULL,
-                                                                    half VARCHAR(255) NOT NULL,
-                                                                    created_at TIMESTAMP NOT NULL,
-                                                                    department_code VARCHAR(255) NOT NULL,
-                                                                    task_eval_id BIGINT NOT NULL,
-                                                                    FOREIGN KEY (department_code) REFERENCES department(department_code),
-                                                                    FOREIGN KEY (task_eval_id) REFERENCES task_eval(task_eval_id)
-) ENGINE=INNODB COMMENT '반기별 부서 평가 통계' CHARACTER SET utf8mb4;
-
--- 월별 부서 초과 근무 수당 통계 테이블
-CREATE TABLE monthly_department_overtime_allowance_statistics (
-                                                                  statistics_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                                  year INT NOT NULL,
-                                                                  month INT NOT NULL,
-                                                                  total_amount BIGINT NOT NULL,
-                                                                  created_at TIMESTAMP NOT NULL,
-                                                                  department_code VARCHAR(255) NOT NULL,
-                                                                  FOREIGN KEY (department_code) REFERENCES department(department_code)
-) ENGINE=INNODB COMMENT '월별 부서 초과 근무 수당 통계' CHARACTER SET utf8mb4;
-
--- 월별 사원수 통계 테이블
-CREATE TABLE monthly_employee_num_statistics (
-                                                 statistics_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                 year INT NOT NULL,
-                                                 month INT NOT NULL,
-                                                 half VARCHAR(255) NOT NULL,
-                                                 total_employee_num BIGINT NOT NULL,
-                                                 joined_employee_num BIGINT NOT NULL,
-                                                 lefted_employee_num BIGINT NOT NULL,
-                                                 created_at TIMESTAMP NOT NULL
-) ENGINE=INNODB COMMENT '월별 사원수 통계' CHARACTER SET utf8mb4;
-
-CREATE TABLE BATCH_JOB_INSTANCE  (
-                                     JOB_INSTANCE_ID BIGINT  NOT NULL PRIMARY KEY ,
-                                     VERSION BIGINT ,
-                                     JOB_NAME VARCHAR(100) NOT NULL,
-                                     JOB_KEY VARCHAR(32) NOT NULL,
-                                     constraint JOB_INST_UN unique (JOB_NAME, JOB_KEY)
-) ENGINE=InnoDB CHARACTER SET utf8mb4;
-
-CREATE TABLE BATCH_JOB_EXECUTION  (
-                                      JOB_EXECUTION_ID BIGINT  NOT NULL PRIMARY KEY ,
-                                      VERSION BIGINT  ,
-                                      JOB_INSTANCE_ID BIGINT NOT NULL,
-                                      CREATE_TIME DATETIME(6) NOT NULL,
-                                      START_TIME DATETIME(6) DEFAULT NULL ,
-                                      END_TIME DATETIME(6) DEFAULT NULL ,
-                                      STATUS VARCHAR(10) ,
-                                      EXIT_CODE VARCHAR(2500) ,
-                                      EXIT_MESSAGE VARCHAR(2500) ,
-                                      LAST_UPDATED DATETIME(6),
-                                      constraint JOB_INST_EXEC_FK foreign key (JOB_INSTANCE_ID)
-                                          references BATCH_JOB_INSTANCE(JOB_INSTANCE_ID)
-) ENGINE=InnoDB CHARACTER SET utf8mb4;
-
-CREATE TABLE BATCH_JOB_EXECUTION_PARAMS  (
-                                             JOB_EXECUTION_ID BIGINT NOT NULL ,
-                                             PARAMETER_NAME VARCHAR(100) NOT NULL ,
-                                             PARAMETER_TYPE VARCHAR(100) NOT NULL ,
-                                             PARAMETER_VALUE VARCHAR(2500) ,
-                                             IDENTIFYING CHAR(1) NOT NULL ,
-                                             constraint JOB_EXEC_PARAMS_FK foreign key (JOB_EXECUTION_ID)
-                                                 references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
-) ENGINE=InnoDB CHARACTER SET utf8mb4;
-
-CREATE TABLE BATCH_STEP_EXECUTION  (
-                                       STEP_EXECUTION_ID BIGINT  NOT NULL PRIMARY KEY ,
-                                       VERSION BIGINT NOT NULL,
-                                       STEP_NAME VARCHAR(100) NOT NULL,
-                                       JOB_EXECUTION_ID BIGINT NOT NULL,
-                                       CREATE_TIME DATETIME(6) NOT NULL,
-                                       START_TIME DATETIME(6) DEFAULT NULL ,
-                                       END_TIME DATETIME(6) DEFAULT NULL ,
-                                       STATUS VARCHAR(10) ,
-                                       COMMIT_COUNT BIGINT ,
-                                       READ_COUNT BIGINT ,
-                                       FILTER_COUNT BIGINT ,
-                                       WRITE_COUNT BIGINT ,
-                                       READ_SKIP_COUNT BIGINT ,
-                                       WRITE_SKIP_COUNT BIGINT ,
-                                       PROCESS_SKIP_COUNT BIGINT ,
-                                       ROLLBACK_COUNT BIGINT ,
-                                       EXIT_CODE VARCHAR(2500) ,
-                                       EXIT_MESSAGE VARCHAR(2500) ,
-                                       LAST_UPDATED DATETIME(6),
-                                       constraint JOB_EXEC_STEP_FK foreign key (JOB_EXECUTION_ID)
-                                           references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
-) ENGINE=InnoDB CHARACTER SET utf8mb4;
-
-CREATE TABLE BATCH_STEP_EXECUTION_CONTEXT  (
-                                               STEP_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY,
-                                               SHORT_CONTEXT VARCHAR(2500) NOT NULL,
-                                               SERIALIZED_CONTEXT TEXT ,
-                                               constraint STEP_EXEC_CTX_FK foreign key (STEP_EXECUTION_ID)
-                                                   references BATCH_STEP_EXECUTION(STEP_EXECUTION_ID)
-) ENGINE=InnoDB CHARACTER SET utf8mb4;
-
-CREATE TABLE batch_job_execution_context  (
-                                              JOB_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY,
-                                              SHORT_CONTEXT VARCHAR(2500) NOT NULL,
-                                              SERIALIZED_CONTEXT TEXT ,
-                                              constraint JOB_EXEC_CTX_FK foreign key (JOB_EXECUTION_ID)
-                                                  references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
-) ENGINE=InnoDB CHARACTER SET utf8mb4;
-
-CREATE SEQUENCE BATCH_STEP_EXECUTION_SEQ START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775806 INCREMENT BY 1 NOCACHE NOCYCLE ENGINE=InnoDB;
-CREATE SEQUENCE BATCH_JOB_EXECUTION_SEQ START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775806 INCREMENT BY 1 NOCACHE NOCYCLE ENGINE=InnoDB;
-CREATE SEQUENCE BATCH_JOB_SEQ START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775806 INCREMENT BY 1 NOCACHE NOCYCLE ENGINE=InnoDB;
+ 

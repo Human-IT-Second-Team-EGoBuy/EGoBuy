@@ -390,10 +390,3 @@ public class EmailService {
     }
 
 }
-
-
-
-/*
- google Id : mingeunstmp@gmail.com
- pwd : smtpmingeun!
- */

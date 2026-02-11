@@ -32,5 +32,5 @@ public class FilesResponseDTO {
     private long fileSize;
 
     @JsonProperty("cloudfront_url")
-    private String cloudFrontUrl;   // CloudFront URL
+    private String cloudfrontUrl;   // CloudFront URL
 }
