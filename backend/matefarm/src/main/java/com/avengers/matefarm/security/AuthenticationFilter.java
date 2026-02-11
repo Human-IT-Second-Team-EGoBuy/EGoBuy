@@ -34,7 +34,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// 필기. 인증에 관련된 Filter를 Custom 할 수 있음.
+// 필기. 인증에 관련된 Filter를 Custom 할 수 있음. 로그인 성공 시 Token 발급
 @Slf4j
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -132,12 +132,17 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         // 사용자 인증 정보 및 식별자 생성
         String userAuthId = ((User) authResult.getPrincipal()).getUsername();
 
+        // Claims에 UserId를 넣기 위해 추가
+        UserEntity userEntity = userService.findByUserAuthId(userAuthId);
+        Long userId = userEntity.getUserId();
+
         // Claims 및 역할 정보 설정
         Claims claims = Jwts.claims().setSubject(userAuthId);
         List<String> roles = authResult.getAuthorities().stream()
                 .map(role -> role.getAuthority())
                 .collect(Collectors.toList());
         claims.put("auth", roles);
+        claims.put("userId", userId);
 
         // 만료 시간 설정
         long accessExpiration = System.currentTimeMillis() + getExpirationTime(env.getProperty("token.access-expiration-time"));
