@@ -87,4 +87,14 @@ public class CommunityPostEntity {
         this.reportedCount = 0;
         this.viewCount = 0;
     }
+
+    public void increaseLikeCount() {
+        this.likedCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likedCount > 0) {
+            this.likedCount--;
+        }
+    }
 }

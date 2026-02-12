@@ -46,24 +46,5 @@ public class NoticeEntity {
     private LocalDateTime updatedAt;
 
 
-
-    /* Builder 패턴 전용 생성자 */
-    public NoticeEntity(
-            String noticeTitle,
-            String noticeContent,
-            FileExist filesTf,
-            UserEntity writerId,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
-        this.noticeTitle = noticeTitle;
-        this.noticeContent = noticeContent;
-        this.filesTf = filesTf;
-        this.writerId = writerId;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-
-    }
-
 }
 
