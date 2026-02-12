@@ -17,4 +17,6 @@ public interface InquiryService {
     PageResponseDTO<InquiryResponseDTO> getInquiryList(Pageable pageable,Long userId);
 
     PageResponseDTO<InquiryResponseDTO> getInquiryListForAdmin(Long userId, Pageable pageable);
+
+    InquiryResponseDTO updateInquiry(Long inquiryId, Long userId, InquiryRequestDTO inquiryRequestDTO);
 }

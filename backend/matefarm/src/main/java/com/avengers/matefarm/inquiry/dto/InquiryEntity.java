@@ -59,6 +59,13 @@ public class InquiryEntity {
     public void ChangeStatusToCompleted() {
         this.inquiryStatus = InquiryStatus.COMPLETED;
     }
+
+    /* 영속성 컨텍스트가 관리하는 엔티티의 스냅샷을 업데이트 하기 위한 메소드 */
+    public void updateInquiry(String inquiryTitle, String inquiryContent, InquiryType inquiryType) {
+        this.inquiryTitle = inquiryTitle;
+        this.inquiryContent = inquiryContent;
+        this.inquiryType = inquiryType;
+    }
 }
 
 

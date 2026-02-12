@@ -179,4 +179,35 @@ public class InquiryServiceImpl implements InquiryService{
                 (int) inquiries.getTotalElements()    // 토탈 요소의 수;
         );
     }
+
+    /* 문의 수정 ( 사용자용 ) */
+    @Override
+    @Transactional
+    public InquiryResponseDTO updateInquiry(Long inquiryId, Long userId, InquiryRequestDTO inquiryRequestDTO) {
+
+        // 문의 존재 여부 확인
+        InquiryEntity inquiryEntity = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_INQUIRY));
+
+        // 문의 상태가 Pending인지 확인
+        if (inquiryEntity.getInquiryStatus() != InquiryStatus.PENDING) {
+            throw new CommonException(ErrorCode.INQUIRY_STATUS_NOT_PENDING);
+        }
+
+        // 사용자 본인의 문의인지 확인
+        if(!inquiryEntity.getWriterId().getUserId().equals(userId)) {
+            throw new CommonException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 수정
+        inquiryEntity.updateInquiry(
+                inquiryRequestDTO.getInquiryTitle(),
+                inquiryRequestDTO.getInquiryContent(),
+                inquiryRequestDTO.getInquiryType()
+        );
+
+//        inquiryRepository.save(inquiryEntity); // Transaction 종료 시점에 자동 반영
+
+        return InquiryResponseDTO.from(inquiryEntity);
+    }
 }

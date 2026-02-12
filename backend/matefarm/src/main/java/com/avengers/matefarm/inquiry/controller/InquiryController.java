@@ -51,6 +51,28 @@ public class InquiryController {
 
     }
 
+    /* 문의 수정 - InquiryStatus가 Pending인 경우메만 가능 */
+    @PatchMapping("/{inquiryId}/update")
+    public ResponseDTO<InquiryResponseDTO> updateInquiry(
+            @PathVariable("inquiryId") Long inquiryId,
+            @RequestBody InquiryRequestDTO inquiryRequestDTO,
+            @RequestHeader("Authorization") String bearerToken
+    ) {
+
+        // 토큰에서 userId 추출
+        String token = bearerToken.substring(7);
+        Long userId = jwtUtil.getUserIdFromToken(token);
+
+        InquiryResponseDTO responseDTO =
+                inquiryService.
+                        updateInquiry(
+                                inquiryId,
+                                userId,
+                                inquiryRequestDTO);
+
+        return ResponseDTO.ok(responseDTO);
+    }
+
     /* 문의 상태 수정 - PROCESSING으로 상태 변경 ( 관리자용 ) */
     @PatchMapping("/{inquiryId}")
     public ResponseDTO<Void> updateInquiryStatus(
