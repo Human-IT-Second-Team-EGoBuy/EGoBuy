@@ -1,4 +1,3 @@
-// src/component/page/aichat/components/CropSelector.jsx
 import CropCard from "./CropCard";
 
 export default function CropSelector({ cropId, cropName, items, onSelect }) {

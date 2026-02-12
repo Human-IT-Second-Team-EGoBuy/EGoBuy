@@ -1,5 +1,3 @@
-// src/component/page/aichat/components/ResultPanel.jsx
-
 // 0~1 확률을 %로 변환 (NaN 방지)
 const toPercent = (n) => {
   const v = Number(n);
@@ -69,7 +67,7 @@ export default function ResultPanel({ crop, result }) {
           ) : (
             <ul className="rp-tip-list">
               {advice.map((t, idx) => (
-                <li key={`${idx}-${t}`}>{t}</li>
+                <li key={idx}>{t}</li>
               ))}
             </ul>
           )}

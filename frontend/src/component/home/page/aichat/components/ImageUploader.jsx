@@ -1,4 +1,3 @@
-// src/component/page/aichat/components/ImageUploader.jsx
 export default function ImageUploader({
   file,
   fileInputRef,
@@ -12,7 +11,8 @@ export default function ImageUploader({
   onDrop,
 }) {
   const handleReset = (e) => {
-    e.stopPropagation(); // drop onClick 방지
+    e.preventDefault();
+    e.stopPropagation();
     onReset();
   };
 

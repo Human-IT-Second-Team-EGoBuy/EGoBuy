@@ -1,4 +1,3 @@
-// src/component/page/aichat/components/HeaderBar.jsx
 import ModeToggle from "./ModeToggle";
 
 export default function HeaderBar({ mode, onChangeMode }) {

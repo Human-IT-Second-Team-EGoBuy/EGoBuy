@@ -1,4 +1,3 @@
-// src/component/page/aichat/components/VisionPanel.jsx
 import CropSelector from "./CropSelector";
 import ImageUploader from "./ImageUploader";
 import ImagePreview from "./ImagePreview";
@@ -88,7 +87,7 @@ export default function VisionPanel({
 
       {result ? (
         <div className="lg:col-span-7">
-          <ResultPanel crop={cropName} result={result} />
+          <ResultPanel crop={result?.cropName ?? cropName} result={result} />
         </div>
       ) : null}
     </div>
