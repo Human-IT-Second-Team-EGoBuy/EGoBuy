@@ -7,5 +7,6 @@ public record VisionDiagnosisResponse(
         String modelKey,
         BestResponse best,
         List<BestResponse> topK,
-        MetaResponse meta
+        MetaResponse meta,
+        String ragAnswer 
 ) {}

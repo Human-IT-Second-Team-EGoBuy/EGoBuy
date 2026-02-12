@@ -131,6 +131,20 @@ const mapApiConversationDetailToUi = (data) => {
   };
 };
 
+axios.defaults.headers.common["Content-Type"] = "application/json";
+
+axios.interceptors.request.use((config) => {
+  const isFormData = config.data instanceof FormData;
+
+  if (!isFormData) {
+    config.headers["Content-Type"] = "application/json";
+  } else {
+    // FormData면 Content-Type을 지워서 axios가 boundary 포함해 자동 설정하도록
+    delete config.headers["Content-Type"];
+  }
+  return config;
+});
+
 /** ====== 전송 응답 파서 ====== */
 const pickFromSendResponseV3 = (data, fallbackUserText, fallbackClientMessageId) => {
   const umRaw = data?.userMessage ?? data?.user_message;
@@ -163,8 +177,6 @@ const pickFromSendResponseV3 = (data, fallbackUserText, fallbackClientMessageId)
 
   return { userMsg, botMsg, title, lastMessageAt };
 };
-
-axios.defaults.headers.common["Content-Type"] = "application/json";
 
 export default function ChatPanel() {
   /* =========================================================
