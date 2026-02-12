@@ -58,6 +58,7 @@ public enum ErrorCode {
     // 409: 중복 데이터 (Conflict)
     DUPLICATE_NICKNAME(40900,  HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.."),
     DUPLICATE_PASSWORD(40901, HttpStatus.CONFLICT,"현재 사용중인 비밀번호로 변경할 수 없습니다."),
+    DUPLICATE_ANSWER(40902, HttpStatus.CONFLICT, "이미 해당 문의에 대한 답변이 완료되었습니다."),
 
     // 429: 요청 과다 (Too Many Requests)
     TOO_MANY_REQUESTS(42900, HttpStatus.TOO_MANY_REQUESTS, "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요."),

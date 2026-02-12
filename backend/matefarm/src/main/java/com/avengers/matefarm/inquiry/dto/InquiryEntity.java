@@ -66,6 +66,16 @@ public class InquiryEntity {
         this.inquiryContent = inquiryContent;
         this.inquiryType = inquiryType;
     }
+
+    /* 중복 답변 방지를 위한 검증용 메소드 */
+    public boolean isCompleted() {
+        return this.inquiryStatus == InquiryStatus.COMPLETED;
+    }
+
+    /* 문의의 최종 답변 완료 상태를 변경하기 위한 인스턴스 메소드 */
+    public void changeStatusToCompleted() {
+        this.inquiryStatus = InquiryStatus.COMPLETED;
+    }
 }
 
 

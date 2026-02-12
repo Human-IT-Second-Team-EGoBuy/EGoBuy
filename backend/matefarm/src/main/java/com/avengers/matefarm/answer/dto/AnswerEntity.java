@@ -31,7 +31,7 @@ public class AnswerEntity {
     // 문의와의 관계 (1:1)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inquiry_id", nullable = false)
-    private InquiryEntity inquiry;
+    private InquiryEntity inquiryId;
 
     // 답변자와의 관계 (N:1)
     @ManyToOne(fetch = FetchType.LAZY)
