@@ -62,19 +62,6 @@ public class CommentEntity {
 
 
 
-    /* from 메소드 */
-    public static CommentEntity from(String content, UserEntity writer, CommunityPostEntity post, CommentEntity parent) {
-        return CommentEntity.builder()
-                .commentContent(content)
-                .writerId(writer)
-                .postId(post)
-                .parent(parent)     // 추가. parent == null 이면 부모, 값이 있으면 대댓글.
-                .deleteYn(DeleteYN.N)
-                .createdAt(LocalDateTime.now().withNano(0))
-                .build();
-    }
-
-
     /* @Setter 사용하지 않고 특정 필드에만 접근하도록 사용 */
 
     // 댓글 수정
