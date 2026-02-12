@@ -106,6 +106,20 @@ const pickMessagesFromSendResponse = (data, fallbackUserText) => {
   };
 };
 
+
+axios.interceptors.request.use((config) => {
+  const isFormData = config.data instanceof FormData;
+
+  if (!isFormData) {
+    config.headers["Content-Type"] = "application/json";
+  } else {
+    // FormData면 Content-Type을 지워서 axios가 boundary 포함해 자동 설정하도록
+    delete config.headers["Content-Type"];
+  }
+  return config;
+});
+
+
 export default function ChatPanel() {
   const [chats, setChats] = useState([]);
   const [activeId, setActiveId] = useState(null);
