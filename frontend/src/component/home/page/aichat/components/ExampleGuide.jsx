@@ -1,4 +1,3 @@
-// src/component/page/aichat/components/ExampleGuide.jsx
 import { useState } from "react";
 
 // S3 URL은 나중에 여기만 바꾸면 됨(또는 constants로 이동)

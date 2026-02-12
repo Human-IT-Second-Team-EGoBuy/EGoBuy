@@ -7,6 +7,9 @@ import CropsPage from "./page/crops/CropsPage"
 import CommunityPage from "./page/community/CommunityPage"
 import AiChatPage from "./page/aichat/AiChatPage";
 import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
+import InsectDetailPage from "./page/informationhub/InsectDetailPage";
+import DiseaseDetailPage from "./page/informationhub/DiseaseDetailPage";
+
 
 
 /**
@@ -28,9 +31,11 @@ export default function PageRouter() {
                 <Route path="/pests" element={<PestsPage />} />
                 <Route path="/crops" element={<CropsPage />} />
                 <Route path="/community" element={<CommunityPage />} />
-                <Route path="/insectPestsInfo" element={<InsectPestsInfoPage/>} />
-                <Route path="/aiChat" element={<AiChatPage />} />
-            </Route>
+                <Route path="/insect-pests-info" element={<InsectPestsInfoPage />} />
+                <Route path="/insect-pests-info/insects/:insectId" element={<InsectDetailPage />}/>
+                <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />}/>
+                <Route path="/ai-chat" element={<AiChatPage />} /></Route>
+            
         </Routes>
     )
 }

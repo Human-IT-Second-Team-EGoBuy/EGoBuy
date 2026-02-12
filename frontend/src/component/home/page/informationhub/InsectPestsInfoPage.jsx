@@ -68,7 +68,7 @@ export default function InsectPestsInfoPage() {
       pest_type: "insect",
       pest_id: x.insect_id,
       crop_id: x.crop_id,
-      pest_name: x.pest_name,
+      pest_name: x.tgt_vrmn_name,
       updated_at: x.updated_at,
     }));
 
@@ -76,7 +76,7 @@ export default function InsectPestsInfoPage() {
       pest_type: "disease",
       pest_id: x.disease_id,
       crop_id: x.crop_id,
-      pest_name: x.pest_name,
+      pest_name: x.sick_name_kor,
       updated_at: x.updated_at,
     }));
 
@@ -148,7 +148,7 @@ export default function InsectPestsInfoPage() {
   }, []);
 
   return (
-    <div className="bpi-wrap">
+    <div className="bpi-wrap select-none">
       <div className="bpi-container">
         <div className="bpi-card">
           <div className="bpi-head">
