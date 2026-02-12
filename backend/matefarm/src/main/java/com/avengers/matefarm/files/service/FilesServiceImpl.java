@@ -174,7 +174,7 @@ public class FilesServiceImpl implements FilesService {
                         .bucketName(S3bucket)
                         .objectKey(fileUploadResponseDTO.getObjectKey())
                         .originalFileName(file.getOriginalFilename())
-                        .contentType(file.getContentType())
+                        .contentType(file.getContentType())     // 추후 ValidationCheck에서 넘어온 DetectedType을 사용하도록 리펙토링
                         .fileSize(file.getSize())
                         .ownerType(ownerType)
                         .ownerId(ownerId)

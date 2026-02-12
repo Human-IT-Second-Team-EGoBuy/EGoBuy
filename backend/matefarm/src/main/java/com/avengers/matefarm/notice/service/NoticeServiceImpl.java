@@ -130,7 +130,7 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     public PageResponseDTO<NoticeResponseDTO> getNoticeList(Pageable pageable) {
 
-        // Data 조회 ( Page 타입으로 반환 ) -
+        // Data 조회 ( Page 타입으로 반환 )
         // findAll(Pagealbe)의 경우 일반적인 FindAll()과 다르게 ORDER BY 설정을 두었으므로 LIMIT 10 OFFSET 0 과 같은 쿼리를 추가로 날려 모든 요소가 한 번에 반환되지 않도록 해준다.
         Page<NoticeEntity> notices = noticeRepository.findAll(pageable);
 

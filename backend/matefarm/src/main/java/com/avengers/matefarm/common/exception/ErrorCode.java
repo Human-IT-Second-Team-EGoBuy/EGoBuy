@@ -22,6 +22,7 @@ public enum ErrorCode {
     INVALID_FILE_TYPE(40013, HttpStatus.BAD_REQUEST, "허용되지 않는 파일 형식입니다."),  // S3에 업로드 전 Validation 체크 과정에서 Mime WhiteList에 등록되지 않은 타입으로 업로드를 시도할 경우
     EXCEEDED_FILE_SIZE(40014, HttpStatus.BAD_REQUEST, "개별 파일 용량의 제한 크기를 초과하였습니다."), // 단일 파일의 용량 (10MB)를 초과하는 파일을 업로드 시도 하는 경우.
     CANNOT_REPLY_TO_RECOMMENT(40015, HttpStatus.BAD_REQUEST, "대대댓글은 허용되지 않습니다."),
+    INQUIRY_STATUS_NOT_PENDING(40016, HttpStatus.BAD_REQUEST, "대기중인 요청만 삭제할 수 있습니다."),
 
     // 401: 인증 실패 (Unauthorized)
     INVALID_HEADER_VALUE(40100, HttpStatus.UNAUTHORIZED, "올바르지 않은 헤더값입니다."), // 헤더 값이 잘못되었거나 누락된 경우
@@ -52,6 +53,8 @@ public enum ErrorCode {
     NOT_FOUND_NOTICE(40403, HttpStatus.NOT_FOUND, "공지사항이 존재하지 않습니다."),
     NOT_FOUND_POST(40404, HttpStatus.NOT_FOUND,"게시글이 존재하지 않습니다."),
     NOT_FOUND_COMMENT(40405, HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
+    NOT_FOUND_INQUIRY(40406, HttpStatus.NOT_FOUND, "상태를 변경할 문의사항이 존재하지 않습니다."),
+
     // 409: 중복 데이터 (Conflict)
     DUPLICATE_NICKNAME(40900,  HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.."),
     DUPLICATE_PASSWORD(40901, HttpStatus.CONFLICT,"현재 사용중인 비밀번호로 변경할 수 없습니다."),
