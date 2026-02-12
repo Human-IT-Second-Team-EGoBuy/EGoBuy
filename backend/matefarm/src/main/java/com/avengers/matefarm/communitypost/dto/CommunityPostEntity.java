@@ -59,25 +59,6 @@ public class CommunityPostEntity {
     @JoinColumn(name = "writer_id", nullable = false)
     private UserEntity writerId;
 
-    /* from 메소드 */
-    public static CommunityPostEntity from(
-            String title,
-            String content,
-            PostType postType,
-            FileExist filesTf,
-            UserEntity writerId
-    ) {
-        return CommunityPostEntity.builder()
-                .communityPostTitle(title)
-                .communityPostContent(content)
-                .postType(postType)
-                .likedCount(0)
-                .reportedCount(0)
-                .viewCount(0)
-                .filesTf(filesTf)
-                .writerId(writerId)
-                .build();
-    }
 
     /* 생성 시 기본값 세팅 */
     @PrePersist
