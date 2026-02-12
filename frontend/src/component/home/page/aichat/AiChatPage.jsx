@@ -140,6 +140,8 @@ export default function AiChatPage() {
       if (DEV_USE_MOCK) {
         const selected = cropItems.find((x) => Number(x.crop_id) === Number(cropId));
         const model = selected?.model ?? "model-liriope";
+        const cropNameLocal = selected?.crop_name ?? ""; 
+
 
         //  constants.js의 MOCK_RESULTS에서 해당 모델 결과 가져오기
         const list = Array.isArray(MOCK_RESULTS?.[model]) ? MOCK_RESULTS[model] : [];
@@ -155,11 +157,11 @@ export default function AiChatPage() {
 
         setResult({
           cropId,
-          cropName,
+          cropName: cropNameLocal,
           model,
           top1,
           topK,
-          summary: `${cropName}에서 ${top1.name} 가능성이 높아요.`,
+          summary: `${cropNameLocal}에서 ${top1.name} 가능성이 높아요.`,
           advice: DEFAULT_ADVICE,
         });
         return;
