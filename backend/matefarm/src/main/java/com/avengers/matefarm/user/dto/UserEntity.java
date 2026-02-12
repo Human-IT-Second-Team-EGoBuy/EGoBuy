@@ -80,4 +80,10 @@ public class UserEntity {
         this.userStatus = ActiveStatus.DELETED;
         // this.deletedAt =  LocalDateTime.now().withNano(0);
     }
+
+
+    /* 관리자 전용 조회 메서드에 사용하기 위해 추가 */
+    public boolean isAdmin() {
+        return this.userRole == UserRole.ADMIN;
+    }
 }

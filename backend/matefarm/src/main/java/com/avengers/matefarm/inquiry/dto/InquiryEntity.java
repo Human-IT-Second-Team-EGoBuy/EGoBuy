@@ -49,6 +49,16 @@ public class InquiryEntity {
 
     @Column(name = "answered_at")
     private LocalDateTime answeredAt;
+
+    /* Entity객체 상태 변경용 메소드 */
+    public void ChangeStatusToProcessing() {
+        this.inquiryStatus = InquiryStatus.PROCESSING;
+    }
+
+    /* Entity객체 상태 변경용 메소드 */
+    public void ChangeStatusToCompleted() {
+        this.inquiryStatus = InquiryStatus.COMPLETED;
+    }
 }
 
 
