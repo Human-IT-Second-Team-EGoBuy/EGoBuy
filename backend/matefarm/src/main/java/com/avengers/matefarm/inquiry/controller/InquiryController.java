@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController("InquiryController")
-@RequestMapping("/api/inquiries/")
+@RequestMapping("/api/inquiries")
 public class InquiryController {
 
     private final JwtUtil jwtUtil;
