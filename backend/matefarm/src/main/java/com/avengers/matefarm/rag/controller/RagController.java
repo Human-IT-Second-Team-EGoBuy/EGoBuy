@@ -20,6 +20,6 @@ public class RagController {
             @RequestBody MessageSendRequest req
     ) {
         SendMessageData data = ragService.sendMessage(conversationId, req.getContent());
-        return ResponseDTO.ok(data); // 너희 공통 응답 포맷
+        return ResponseDTO.ok(data);
     }
 }

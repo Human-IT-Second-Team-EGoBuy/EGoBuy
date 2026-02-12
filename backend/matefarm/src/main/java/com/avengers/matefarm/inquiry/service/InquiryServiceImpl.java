@@ -210,4 +210,12 @@ public class InquiryServiceImpl implements InquiryService{
 
         return InquiryResponseDTO.from(inquiryEntity);
     }
+
+
+    /* Answer에서 사용할 목적으로 만든 Service 계층에만 존재하는 메소드 */
+    @Override
+    public InquiryEntity findInquiryByInquiryId(Long inquiryId) {
+        return inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_INQUIRY));
+    }
 }

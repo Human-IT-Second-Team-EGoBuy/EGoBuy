@@ -1,6 +1,7 @@
 package com.avengers.matefarm.inquiry.service;
 
 import com.avengers.matefarm.common.PageResponseDTO;
+import com.avengers.matefarm.inquiry.dto.InquiryEntity;
 import com.avengers.matefarm.inquiry.dto.request.InquiryRequestDTO;
 import com.avengers.matefarm.inquiry.dto.response.InquiryResponseDTO;
 import org.springframework.data.domain.Pageable;
@@ -19,4 +20,6 @@ public interface InquiryService {
     PageResponseDTO<InquiryResponseDTO> getInquiryListForAdmin(Long userId, Pageable pageable);
 
     InquiryResponseDTO updateInquiry(Long inquiryId, Long userId, InquiryRequestDTO inquiryRequestDTO);
+
+    InquiryEntity findInquiryByInquiryId(Long inquiryId);
 }
