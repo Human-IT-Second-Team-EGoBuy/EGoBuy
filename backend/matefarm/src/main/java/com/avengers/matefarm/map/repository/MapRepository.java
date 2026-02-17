@@ -3,7 +3,6 @@ package com.avengers.matefarm.map.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.avengers.matefarm.map.entity.LandInfoEntity;
 import com.avengers.matefarm.map.entity.RegCodeEntity;
 
 import io.lettuce.core.dynamic.annotation.Param;
@@ -23,5 +22,19 @@ public interface MapRepository extends JpaRepository<RegCodeEntity, String> {
 
     List<RegCodeEntity> findByRegionCdIn(List<String> regionCodes);
 
+    @Query(value = "SELECT * FROM lawd_code " +
+                   "WHERE sido_cd = '41' " +
+                   "AND SUBSTR(lawd_cd, 5, 1) = '0' " +
+                   "AND umd_cd = '000' " +
+                   "AND region_cd != '4100000000' " +
+                   "ORDER BY locat_order ASC", nativeQuery = true)
+    List<RegCodeEntity> findCitiesByGyeonggi();
+
+    @Query(value = "SELECT * FROM lawd_code " +
+                   "WHERE lawd_cd LIKE CONCAT(:cityPrefix, '%') " +
+                   "AND SUBSTR(lawd_cd, 5, 1) != '0' " +
+                   "AND umd_cd = '000' " +
+                   "ORDER BY locat_order ASC", nativeQuery = true)
+    List<RegCodeEntity> findDistrictsByCity(@Param("cityPrefix") String cityPrefix);
    
 }

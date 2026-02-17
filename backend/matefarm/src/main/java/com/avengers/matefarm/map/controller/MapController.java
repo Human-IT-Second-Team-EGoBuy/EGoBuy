@@ -46,21 +46,20 @@ public class MapController {
     public ResponseDTO<List<MapRegionResponseDTO>> getRiData(@RequestParam String parentRegionCd) {
         return ResponseDTO.ok(mapService.childOpen(parentRegionCd));
     }
-    
+
     @GetMapping("/landinfo-search")
-    public ResponseDTO<Map<String,String>> getLandInfo(@RequestParam String locatadd_nm) {
-        Map<String, String> result = mapService.regCodeSelect(locatadd_nm);
-        return ResponseDTO.ok(result);
+    public ResponseDTO<Map<String, Object>> getLandInfo(
+            @RequestParam String locatadd_nm,
+            @RequestParam(defaultValue = "false") boolean hasRi) {
+        return ResponseDTO.ok(mapService.regCodeSelect(locatadd_nm, hasRi));
     }
 
     @GetMapping("/landprice-search")
-    public Mono<ResponseDTO<List<TradeHistoryEntity>>> getLandPrice(@RequestParam String locatadd_nm) {
-         System.out.println(">>>>>contorller start=====");
-        System.out.println(">>>>>>>>locatadd_nm=" + locatadd_nm);
-         
-        return mapService.lawdCodeSelect(locatadd_nm)
-            .map(ResponseDTO::ok);
+    public Mono<ResponseDTO<Map<String, Object>>> getLandPrice(
+            @RequestParam String locatadd_nm,
+            @RequestParam(defaultValue = "false") boolean hasRi) {
+        return mapService.lawdCodeSelect(locatadd_nm, hasRi)
+                .map(ResponseDTO::ok);
     }
-    
-    
+
 }

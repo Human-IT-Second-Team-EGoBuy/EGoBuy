@@ -3,13 +3,11 @@ package com.avengers.matefarm.map.api;
 import java.io.StringReader;
 import java.net.URI;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -31,254 +29,254 @@ public class LandInfoAPI {
     private static final Logger log = LoggerFactory.getLogger(LandInfoAPI.class);
 
     private final WebClient webClient;
-
-    /**
-     * Mapper는 thread-safe로 알려져 있고(일반적 사용), 재사용이 성능상 유리함.
-     * - 요청마다 new로 만들지 말고 필드로 두는게 일반적
-     */
     private final XmlMapper xmlMapper = new XmlMapper();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${FARM_SOILINFO_API_URL}")
+    private String soilUrl;
+
+    @Value("${DATAPORTAL_API_KEY}")
+    private String serviceKey;
 
     public LandInfoAPI(WebClient webClient) {
         this.webClient = webClient;
     }
 
-    @Value("${FARM_OMINFO_API_URL}")
-    private String ominfoUrl;
+    // ==========================================
+    // 1. Public Entry Points (공개 API)
+    // ==========================================
 
-    @Value("${FARM_APINFO_API_URL}")
-    private String apiinfoUrl;
-
-    @Value("${FARM_KALINFO_API_URL}")
-    private String kalinfoUrl;
-
-    @Value("${FARM_PHINFO_API_URL}")
-    private String phinfoUrl;
-
-    @Value("${FARM_MGINFO_API_URL}")
-    private String mginfoUrl;
-
-    @Value("${FARM_SAINFO_API_URL}")
-    private String sainfoUrl;
-
-    @Value("${FARM_CALINFO_API_URL}")
-    private String calinfoUrl;
-
-    @Value("${DATAPORTAL_API_KEY}")
-    private String serviceKey;
-
-    /**
-     * ✅ 데드록/스레드 홀딩 리스크를 줄이기 위해 block() 제거
-     * - WebFlux 컨트롤러/서비스에서는 이 Mono를 그대로 반환/조합하는게 정석
-     */
     public Mono<Map<String, String>> getLandInfoData(String lawdCode) {
-
-        List<ApiTarget> targets = List.of(
-                new ApiTarget("examOmInfo", ominfoUrl),
-                new ApiTarget("examApInfo", apiinfoUrl),
-                new ApiTarget("examKalInfo", kalinfoUrl),
-                new ApiTarget("examPhInfo", phinfoUrl),
-                new ApiTarget("examMgInfo", mginfoUrl),
-                new ApiTarget("examSalInfo", sainfoUrl),
-                new ApiTarget("examCalInfo", calinfoUrl)
-        );
-
-        int concurrency = 5;
+        List<ApiTarget> targets = List.of(new ApiTarget("soilUrl", soilUrl));
 
         return Flux.fromIterable(targets)
-                .flatMap(target ->
-                        requestsOneWithRetry(target.name(), target.url(), lawdCode)
-                                .map(body -> Map.entry(target.name(), body))
-                        , concurrency)
-                .collectMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        LinkedHashMap::new
-                );
+                .flatMap(target -> requestsOneWithRetry(target.name(), target.url(), lawdCode)
+                        .map(body -> Map.entry(target.name(), body)), 5)
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue, LinkedHashMap::new);
     }
 
-    /**
-     * ✅ “꼭 동기 Map”이 필요한 legacy/MVC 지점에서만 사용
-     * - WebFlux 체인(reactor thread)에서 호출하면 안 됨
-     * - boundedElastic으로 격리해서 데드락/이벤트루프 블로킹을 피함
-     */
     public Map<String, String> getLandInfoDataBlocking(String lawdCode) {
         return getLandInfoData(lawdCode)
                 .subscribeOn(Schedulers.boundedElastic())
                 .block(Duration.ofSeconds(45));
     }
 
-    /**
-     * ✅ 정책:
-     * - 4xx는 재시도 금지(즉시 실패)
-     * - XML header 단계에서 성공/실패 판단
-     * - item 없으면 데이터 없음으로 간주하고 재시도
-     * - 전체 상한 timeout 40초(재시도 포함)
-     */
+    // ==========================================
+    // 2. Core Business Logic (핵심 비즈니스 로직 - 페이징/결합)
+    // ==========================================
+
     private Mono<String> requestsOneWithRetry(String label, String baseUrl, String lawdCode) {
-        return requestsOneRawXml(label, baseUrl, lawdCode)
-                // 1) XML 단계에서 header.resultCode 검사 + item 추출(성공이면 item JSON 반환)
-                .map(xml -> parseXmlToItemJsonOrThrow(label, xml))
-
-                // 2) 재시도(일시적 오류만)
-                .retryWhen(
-                        Retry.backoff(5, Duration.ofMillis(500))
-                                .maxBackoff(Duration.ofSeconds(8))
-                                .filter(this::isRetryable)
-                                .doBeforeRetry(rs -> {
-                                    log.warn("{} retry={} cause={} msg={}",
-                                            label,
-                                            rs.totalRetries() + 1,
-                                            rs.failure().getClass().getSimpleName(),
-                                            safe(rs.failure().getMessage()));
-                                })
-                )
-
-                // 3) ✅ 전체 상한 40초 (재시도 포함)
-                .timeout(Duration.ofSeconds(40))
-
-                // 4) 최종 실패시: 호출한 쪽에서 map에 ERROR로 남기기
+        return fetchAllPages(label, baseUrl, lawdCode)
+                .collectList() // 모든 페이지의 아이템들을 하나의 List로 수집
+                .map(allNodes -> {
+                    try {
+                        // List<JsonNode>를 JSON Array 문자열로 변환
+                        return objectMapper.writeValueAsString(allNodes);
+                    } catch (Exception e) {
+                        return "[]";
+                    }
+                })
+                .timeout(Duration.ofSeconds(60))
                 .onErrorResume(e -> Mono.just("ERROR: " + e.getClass().getSimpleName() + ": " + safe(e.getMessage())));
     }
 
-    /**
-     * ✅ “원본 XML”을 가져오는 단계
-     * - HTTP 4xx/5xx 구분해서 예외 타입을 다르게 던짐
-     * - 여기서는 XML 파싱/업무판단 안 함(순수 transport)
-     */
-    private Mono<String> requestsOneRawXml(String label, String baseUrl, String lawdCode) {
-
-        URI uri = UriComponentsBuilder
-                .fromUriString(baseUrl)
-                .queryParam("serviceKey", serviceKey)
-                .queryParam("STDG_CD", lawdCode)
-                .build(true)
-                .toUri();
-
-        return webClient.get()
-                .uri(uri)
-                .retrieve()
-
-                // ✅ HTTP 에러는 여기서 명확히 분류
-                .onStatus(HttpStatusCode::isError, resp ->
-                        resp.bodyToMono(String.class)
-                                .defaultIfEmpty("")
-                                .flatMap(body -> {
-                                    int status = resp.statusCode().value();
-                                    String msg = "HTTP " + status + " body=" + shrink(body);
-                                    if (status >= 400 && status < 500) {
-                                        // 4xx는 재시도 금지
-                                        return Mono.error(new NonRetryableHttpException(msg));
-                                    }
-                                    // 5xx는 재시도 가능
-                                    return Mono.error(new RetryableHttpException(msg));
-                                })
-                )
-
-                .bodyToMono(String.class)
-
-                // 개별 호출 타임아웃(네가 이미 10초를 쓰고 있었고, 유지)
-                .timeout(Duration.ofSeconds(10))
-
-                .doOnSubscribe(s -> log.info(">>> [API 호출 시작] label={} url={} lawdCode={}", label, baseUrl, lawdCode))
-                .doOnNext(xml -> log.info("<<< [API 호출 성공] label={} url={} xml(일부)={}", label, baseUrl, shrink(xml)))
-                .doOnError(e -> log.error("!!! [API 호출 에러] label={} url={} lawdCode={} err={}",
-                        label, baseUrl, lawdCode, e.toString()));
+    private Flux<JsonNode> fetchAllPages(String label, String baseUrl, String lawdCode) {
+        return getPageAsNode(label, baseUrl, lawdCode, 1)
+                .expand(rootNode -> {
+                    PageInfo info = extractPageInfo(rootNode);
+                    if (info.currentPage() < info.lastPage()) {
+                        return getPageAsNode(label, baseUrl, lawdCode, info.currentPage() + 1);
+                    }
+                    return Mono.empty();
+                })
+                .flatMapIterable(this::extractItems); // 각 페이지의 item 노드들을 Flux의 개별 요소로 평탄화
     }
 
-    /**
-     * ✅ XML 단계에서 판단:
-     * 1) header.resultCode 확인 (성공코드: 000 또는 00)
-     * 2) 성공이면 body/items/item 추출
-     * 3) item이 없으면 "데이터 없음"으로 간주하고 예외(NoDataException) -> retry 트리거
-     * 4) 최종적으로 item을 JSON 문자열로 반환
-     */
-    private String parseXmlToItemJsonOrThrow(String label, String xml) {
-        try {
-            JsonNode root = xmlMapper.readTree(new StringReader(xml));
+    // ==========================================
+    // 3. Transport Layer (네트워크 통신 및 1차 가공)
+    // ==========================================
 
-            // 응답이 <response>로 감싸진 케이스 / 바로 header, body가 최상위인 케이스 모두 대응
-            JsonNode responseNode = root.has("response") ? root.path("response") : root;
+    private Mono<JsonNode> getPageAsNode(String label, String baseUrl, String lawdCode, int pageNo) {
+        return requestsOneRawXml(label, baseUrl, lawdCode, pageNo)
+                .map(xml -> {
+                    try {
+                        // XML을 JsonNode로 한 번만 파싱
+                        JsonNode root = xmlMapper.readTree(new StringReader(xml));
+                        validateResponse(label, root);
+                        return root;
+                    } catch (Exception e) {
+                        if (e instanceof BizErrorException || e instanceof NoDataException)
+                            throw (RuntimeException) e;
+                        throw new XmlParsingFailedException(label + " 파싱 실패", e);
+                    }
+                })
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(500)).filter(this::isRetryable));
+    }
 
-            String resultCode = responseNode.path("header").path("resultCode").asText(null);
-            String resultMsg = responseNode.path("header").path("resultMsg").asText(null);
+    private Mono<String> requestsOneRawXml(String label, String baseUrl, String lawdCode, int pageNo) {
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("Page_Size", 200)
+                .queryParam("Page_No", pageNo)
+                .queryParam("STDG_CD", lawdCode)
+                .build(true).toUri();
 
-            // ✅ 성공코드 허용(요구사항: XML 단계에서 판단)
-            if (resultCode != null && !("000".equals(resultCode) || "00".equals(resultCode))) {
-                // “업무 실패”는 재시도 가능/불가능이 섞일 수 있어 일단 retryable로 둠
-                // 특정 코드만 재시도하고 싶으면 여기서 분기 가능
-                throw new BizErrorException(label + " resultCode=" + resultCode + " resultMsg=" + safe(resultMsg));
-            }
+        log.info(">>> [API URI] {}", uri.toString());
 
-            JsonNode itemNode = responseNode.path("body").path("items").path("item");
+        return webClient.get().uri(uri).retrieve()
+                .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
+                        .flatMap(body -> {
+                            int status = resp.statusCode().value();
+                            return Mono.error(status >= 500 ? new RetryableHttpException("HTTP " + status)
+                                    : new NonRetryableHttpException("HTTP " + status));
+                        }))
+                .bodyToMono(String.class)
+                .doOnNext(body -> log.info("<<< [API 응답] {} page {}\n{}", label, pageNo, shrink(body)))
+                .timeout(Duration.ofSeconds(10))
+                .doOnSubscribe(s -> log.info(">>> [API 시작] {} - page {}", label, pageNo));
+    }
 
-            // ✅ 데이터 없음이어도 재시도(요구사항)
-            if (itemNode.isMissingNode() || itemNode.isNull()
-                    || (itemNode.isArray() && itemNode.size() == 0)
-                    || (itemNode.isObject() && itemNode.size() == 0)) {
-                throw new NoDataException(label + " no item in response");
-            }
+    // ==========================================
+    // 4. Helper Methods (데이터 추출 및 유틸리티)
+    // ==========================================
 
-            return objectMapper.writeValueAsString(itemNode);
+    private void validateResponse(String label, JsonNode root) {
+        JsonNode header = root.has("response")
+                ? root.path("response").path("header")
+                : root.path("header");
 
-        } catch (NonRetryableHttpException e) {
-            // 혹시 parse 단계에 섞여 들어오면 그대로 던짐
-            throw e;
-        } catch (BizErrorException | NoDataException e) {
-            // 정책상 retry 트리거하려고 예외 유지
-            throw e;
-        } catch (Exception e) {
-            // 파싱 실패는 보통 스키마 변경/비정상 응답이라 retry 가치가 애매함
-            // 요구사항에 “데이터 없음도 재시도”는 있지만 파싱 실패는 케이스가 달라서 기본은 retryable로 두지 않음
-            throw new XmlParsingFailedException(label + " XML_PARSING_FAILED: " + e.getMessage(), e);
+        // 네 응답 스키마
+        String resultCode = header.path("Result_Code").asText(null);
+        String resultMsg = header.path("Result_Msg").asText(null);
+
+        // 혹시 다른 스키마도 대비 (기존 호환)
+        if (resultCode == null)
+            resultCode = header.path("resultCode").asText(null);
+        if (resultMsg == null)
+            resultMsg = header.path("resultMsg").asText(null);
+
+        boolean ok = "200".equals(resultCode) || "000".equals(resultCode) || "00".equals(resultCode);
+
+        if (!ok) {
+            String msg = (resultMsg != null && !resultMsg.isBlank()) ? resultMsg : "API error";
+            throw new BizErrorException(label + " API 응답 오류: code=" + resultCode + ", msg=" + msg);
         }
     }
 
-    /**
-     * ✅ 재시도 대상만 선별:
-     * - 4xx(NonRetryableHttpException) 절대 재시도 금지
-     * - timeout, 5xx(RetryableHttpException), BizErrorException, NoDataException은 재시도
-     * - XmlParsingFailedException은 기본은 재시도하지 않음(원하면 true로 바꿔도 됨)
-     */
-    private boolean isRetryable(Throwable e) {
-        if (e instanceof NonRetryableHttpException) return false;
-        if (e instanceof java.util.concurrent.TimeoutException) return true;
-        if (e instanceof RetryableHttpException) return true;
-        if (e instanceof BizErrorException) return true;
-        if (e instanceof NoDataException) return true;
-        if (e instanceof XmlParsingFailedException) return false;
-        return false;
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> safeMap(Object o) {
+        if (o instanceof Map<?, ?> m)
+            return (Map<String, Object>) m;
+        return java.util.Collections.emptyMap();
     }
 
-    private String shrink(String s) {
-        if (s == null) return "";
-        return s.length() > 200 ? s.substring(0, 200) + "..." : s;
+    private String getAsString(Object o) {
+        return (o == null) ? null : String.valueOf(o).trim();
+    }
+
+    private PageInfo extractPageInfo(JsonNode root) {
+        JsonNode body = root.has("response")
+                ? root.path("response").path("body")
+                : root.path("body");
+
+        int rcdCnt = body.path("Rcdcnt").asInt(0);
+        if (rcdCnt == 0)
+            rcdCnt = body.path("rcdcnt").asInt(0);
+
+        int currentPage = body.path("Page_No").asInt(1);
+        if (currentPage == 1)
+            currentPage = body.path("pageNo").asInt(1);
+
+        int totalCount = body.path("Total_Count").asInt(0);
+        if (totalCount == 0)
+            totalCount = body.path("totalCount").asInt(0);
+
+        int lastPage = (rcdCnt <= 0) ? currentPage : (int) Math.ceil((double) totalCount / rcdCnt);
+        return new PageInfo(currentPage, lastPage);
+    }
+
+    private Object firstNonNull(Object... values) {
+        for (Object v : values)
+            if (v != null)
+                return v;
+        return null;
+    }
+
+    private int getAsInt(Object o, int defaultValue) {
+        if (o == null)
+            return defaultValue;
+        try {
+            return Integer.parseInt(String.valueOf(o).trim());
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    private Iterable<JsonNode> extractItems(JsonNode root) {
+        JsonNode itemsNode = root.has("response") ? root.path("response").path("body").path("items").path("item")
+                : root.path("body").path("items").path("item");
+
+        if (itemsNode.isMissingNode() || itemsNode.isNull()) {
+            log.info("<<< [API 파싱] items 없음");
+            return Collections.emptyList();
+        }
+
+        int size = itemsNode.isArray() ? itemsNode.size() : 1;
+        log.info("<<< [API 파싱] items count={}", size);
+        
+        // 단일 객체인 경우와 배열인 경우 모두 대응
+        return itemsNode.isArray() ? itemsNode : Collections.singletonList(itemsNode);
+    }
+
+    private boolean isRetryable(Throwable e) {
+        return e instanceof RetryableHttpException || e instanceof java.util.concurrent.TimeoutException
+                || e instanceof BizErrorException || e instanceof NoDataException;
     }
 
     private String safe(String s) {
         return s == null ? "" : s;
     }
 
-    private record ApiTarget(String name, String url) {}
+    private String shrink(String s) {
+        return (s != null && s.length() > 200) ? s.substring(0, 200) + "..." : s;
+    }
 
-    // ---- 예외 타입(정책 구분용) ----
+    private record ApiTarget(String name, String url) {
+    }
+
+    private record PageInfo(int currentPage, int lastPage) {
+    }
+
+    // ==========================================
+    // 5. Custom Exceptions
+    // ==========================================
     private static class RetryableHttpException extends RuntimeException {
-        RetryableHttpException(String message) { super(message); }
+        RetryableHttpException(String m) {
+            super(m);
+        }
     }
 
     private static class NonRetryableHttpException extends RuntimeException {
-        NonRetryableHttpException(String message) { super(message); }
+        NonRetryableHttpException(String m) {
+            super(m);
+        }
     }
 
     private static class BizErrorException extends RuntimeException {
-        BizErrorException(String message) { super(message); }
+        BizErrorException(String m) {
+            super(m);
+        }
     }
 
     private static class NoDataException extends RuntimeException {
-        NoDataException(String message) { super(message); }
+        NoDataException(String m) {
+            super(m);
+        }
     }
 
     private static class XmlParsingFailedException extends RuntimeException {
-        XmlParsingFailedException(String message, Throwable cause) { super(message, cause); }
+        XmlParsingFailedException(String m, Throwable c) {
+            super(m, c);
+        }
     }
 }
