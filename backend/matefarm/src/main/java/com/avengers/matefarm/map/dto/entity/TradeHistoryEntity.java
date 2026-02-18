@@ -1,4 +1,4 @@
-package com.avengers.matefarm.map.entity;
+package com.avengers.matefarm.map.dto.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -39,10 +39,10 @@ public class NoticeEntity {
     @JoinColumn(name = "writer_id", nullable = false)
     private UserEntity writerId;
 
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
 

@@ -1,13 +1,11 @@
 package com.avengers.matefarm.map.api;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +27,7 @@ public class VworldWfsAPI {
      */
     public List<Map<String, Double>> getWfsData(String regionName, boolean hasRi) {
         try {
-            // ✅ 0) regionName에 개행/중복공백 섞이면 100% 터짐 → 먼저 정리
+            // 0) regionName에 개행/중복공백 섞이면 100% 터짐 → 먼저 정리
             String normalizedRegionName = (regionName == null ? "" : regionName)
                     .replaceAll("\\s+", " ") // \n, \t 포함 모든 공백을 한 칸으로
                     .trim();
@@ -37,7 +35,7 @@ public class VworldWfsAPI {
             String typeName = hasRi ? "lt_c_adri_info" : "lt_c_ademd_info";
             String propertyName = hasRi ? "full_nm,li_kor_nm,ag_geom" : "full_nm,emd_kor_nm,ag_geom";
 
-            // ✅ 1. 필터 문자열 작성 (쌍따옴표 대신 홀따옴표 ' 사용 권장)
+            // 1. 필터 문자열 작성 (쌍따옴표 대신 홀따옴표 ' 사용 권장)
             String filter = "<ogc:Filter xmlns:ogc='http://www.opengis.net/ogc'>" +
                     "<ogc:PropertyIsEqualTo matchCase='true'>" +
                     "<ogc:PropertyName>full_nm</ogc:PropertyName>" +
@@ -45,7 +43,7 @@ public class VworldWfsAPI {
                     "</ogc:PropertyIsEqualTo>" +
                     "</ogc:Filter>";
 
-            // ✅ 2. 미리 인코딩(encodeQueryParam) 하지 마세요!
+            // 2. 미리 인코딩(encodeQueryParam) 하지 마세요!
             // UriComponentsBuilder가 내부적으로 가장 적합한 인코딩을 수행합니다.
 
             String url = UriComponentsBuilder.fromUriString(vworldApiUrl)
@@ -58,8 +56,8 @@ public class VworldWfsAPI {
                     .queryParam("OUTPUTFORMAT", "application/json")
                     .queryParam("KEY", vworldApiKey)
                     .queryParam("DOMAIN", "localhost:8081")
-                    .queryParam("FILTER", filter) // ✅ 인코딩 안 된 생(raw) 문자열 주입
-                    .build() // ✅ build(true)가 아니라 그냥 build() 사용
+                    .queryParam("FILTER", filter) // 인코딩 안 된 생(raw) 문자열 주입
+                    .build() // build(true)가 아니라 그냥 build() 사용
                     .toUriString();
 
             System.out.println(">>>>>> 요청 URL: " + url);
@@ -68,7 +66,7 @@ public class VworldWfsAPI {
             System.out.println(">>>>>>normalizedRegionName = [" + normalizedRegionName + "]");
             System.out.println(">>>>>>rawFilter = " + filter);
 
-            // ✅ 3) JSON/ XML 구분을 "Content-Type + 첫글자"로 처리
+            // 3) JSON/ XML 구분을 "Content-Type + 첫글자"로 처리
             ResponseEntity<String> res = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
 
             String body = res.getBody();

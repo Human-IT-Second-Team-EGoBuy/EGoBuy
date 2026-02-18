@@ -1,4 +1,4 @@
-package com.avengers.matefarm.map.entity;
+package com.avengers.matefarm.map.dto.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.math3.exception.NoDataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.avengers.matefarm.common.exception.CommonException;
+import com.avengers.matefarm.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -105,9 +108,9 @@ public class LandInfoAPI {
                         validateResponse(label, root);
                         return root;
                     } catch (Exception e) {
-                        if (e instanceof BizErrorException || e instanceof NoDataException)
-                            throw (RuntimeException) e;
-                        throw new XmlParsingFailedException(label + " 파싱 실패", e);
+                        if (e instanceof CommonException)
+                            throw (CommonException) e;
+                        throw new CommonException(ErrorCode.MAP_PARSING_ERROR);
                     }
                 })
                 .retryWhen(Retry.backoff(3, Duration.ofMillis(500)).filter(this::isRetryable));
@@ -127,8 +130,7 @@ public class LandInfoAPI {
                 .onStatus(HttpStatusCode::isError, resp -> resp.bodyToMono(String.class)
                         .flatMap(body -> {
                             int status = resp.statusCode().value();
-                            return Mono.error(status >= 500 ? new RetryableHttpException("HTTP " + status)
-                                    : new NonRetryableHttpException("HTTP " + status));
+                            return Mono.error(new CommonException(ErrorCode.MAP_API_ERROR));
                         }))
                 .bodyToMono(String.class)
                 .doOnNext(body -> log.info("<<< [API 응답] {} page {}\n{}", label, pageNo, shrink(body)))
@@ -159,7 +161,7 @@ public class LandInfoAPI {
 
         if (!ok) {
             String msg = (resultMsg != null && !resultMsg.isBlank()) ? resultMsg : "API error";
-            throw new BizErrorException(label + " API 응답 오류: code=" + resultCode + ", msg=" + msg);
+            throw new CommonException(ErrorCode.MAP_API_ERROR);
         }
     }
 
@@ -223,14 +225,17 @@ public class LandInfoAPI {
 
         int size = itemsNode.isArray() ? itemsNode.size() : 1;
         log.info("<<< [API 파싱] items count={}", size);
-        
+
         // 단일 객체인 경우와 배열인 경우 모두 대응
         return itemsNode.isArray() ? itemsNode : Collections.singletonList(itemsNode);
     }
 
     private boolean isRetryable(Throwable e) {
-        return e instanceof RetryableHttpException || e instanceof java.util.concurrent.TimeoutException
-                || e instanceof BizErrorException || e instanceof NoDataException;
+        if (e instanceof CommonException ce) {
+            // 500번대 에러(MAP_API_ERROR 등)일 때만 재시도하도록 설정 가능
+            return ce.getErrorCode().getHttpStatus().is5xxServerError();
+        }
+        return e instanceof java.util.concurrent.TimeoutException;
     }
 
     private String safe(String s) {
@@ -247,36 +252,4 @@ public class LandInfoAPI {
     private record PageInfo(int currentPage, int lastPage) {
     }
 
-    // ==========================================
-    // 5. Custom Exceptions
-    // ==========================================
-    private static class RetryableHttpException extends RuntimeException {
-        RetryableHttpException(String m) {
-            super(m);
-        }
-    }
-
-    private static class NonRetryableHttpException extends RuntimeException {
-        NonRetryableHttpException(String m) {
-            super(m);
-        }
-    }
-
-    private static class BizErrorException extends RuntimeException {
-        BizErrorException(String m) {
-            super(m);
-        }
-    }
-
-    private static class NoDataException extends RuntimeException {
-        NoDataException(String m) {
-            super(m);
-        }
-    }
-
-    private static class XmlParsingFailedException extends RuntimeException {
-        XmlParsingFailedException(String m, Throwable c) {
-            super(m, c);
-        }
-    }
 }

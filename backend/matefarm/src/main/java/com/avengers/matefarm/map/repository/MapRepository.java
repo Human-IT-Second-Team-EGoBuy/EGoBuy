@@ -3,7 +3,7 @@ package com.avengers.matefarm.map.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.avengers.matefarm.map.entity.RegCodeEntity;
+import com.avengers.matefarm.map.dto.entity.RegCodeEntity;
 
 import io.lettuce.core.dynamic.annotation.Param;
 

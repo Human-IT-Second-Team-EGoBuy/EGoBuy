@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.avengers.matefarm.map.entity.LandSoilExamEntity;
+import com.avengers.matefarm.map.dto.entity.LandSoilExamEntity;
 
 public interface LandSoilExamRepository extends JpaRepository<LandSoilExamEntity, Long> {
 

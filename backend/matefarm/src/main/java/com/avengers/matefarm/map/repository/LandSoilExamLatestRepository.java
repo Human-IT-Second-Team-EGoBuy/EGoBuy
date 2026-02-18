@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.avengers.matefarm.map.entity.LandSoilExamLatestEntity;
+import com.avengers.matefarm.map.dto.entity.LandSoilExamLatestEntity;
 
 public interface LandSoilExamLatestRepository extends JpaRepository<LandSoilExamLatestEntity, Long> {
 

@@ -1,8 +1,9 @@
 package com.avengers.matefarm.map.repository;
 
-import com.avengers.matefarm.map.entity.TradeHistoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.avengers.matefarm.map.dto.entity.TradeHistoryEntity;
 
 import java.util.List;
 

@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.avengers.matefarm.common.exception.CommonException;
 import com.avengers.matefarm.common.exception.ErrorCode;
+import com.avengers.matefarm.map.dto.entity.RegCodeEntity;
 import com.avengers.matefarm.map.dto.response.MapRegionResponseDTO;
-import com.avengers.matefarm.map.entity.RegCodeEntity;
 import com.avengers.matefarm.map.repository.MapRepository;
 
 import lombok.RequiredArgsConstructor;

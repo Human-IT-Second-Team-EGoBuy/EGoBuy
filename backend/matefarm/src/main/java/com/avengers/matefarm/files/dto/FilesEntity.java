@@ -37,7 +37,7 @@ public class FilesEntity {
     @Column(name = "owner_type", nullable = false, length = 255)
     private OwnerType ownerType;     // S3에 업로드 하는 도메인 (COMMUNITY_POST, NOTICE 등)
 
-    @Column(name = "owner_id", nullable = false, length = 255)
+    @Column(name = "owner_id", nullable = true, length = 255)
     private Long ownerId;            // 해당 도메인의 PK
 
     @Column(name = "created_at", nullable = false)

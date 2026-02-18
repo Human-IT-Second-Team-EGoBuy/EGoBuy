@@ -4,9 +4,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avengers.matefarm.common.ResponseDTO;
+import com.avengers.matefarm.map.dto.entity.TradeHistoryEntity;
 import com.avengers.matefarm.map.dto.requests.MapRequestDTO;
 import com.avengers.matefarm.map.dto.response.MapRegionResponseDTO;
-import com.avengers.matefarm.map.entity.TradeHistoryEntity;
 import com.avengers.matefarm.map.service.MapService;
 
 import lombok.RequiredArgsConstructor;
