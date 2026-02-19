@@ -1,0 +1,429 @@
+/* 전체 컨테이너 */
+.map-container {
+  width: 100%;
+  height: calc(100vh - 56px);
+  position: relative;
+}
+
+.map-layout {
+  width: 100%;
+  height: 100%;
+}
+
+/* 부모 패널 */
+.selection-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  width: 320px;
+  background-color: white;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  /* 평상시 높이: 제목과 버튼만 수용 (적절히 조절 가능) */
+  max-height: 125px;
+  transition: max-height 0.4s ease-in-out;
+}
+
+.selection-panel:hover {
+  max-height: 600px;
+}
+
+.select-group {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  /* 호버 전에는 간격을 0으로 만들어야 버튼이 위로 붙음 */
+  gap: 0px;
+  transition: gap 0.4s;
+}
+
+.selection-panel:hover .select-group {
+  gap: 12px;
+  /* 호버 시에만 요소 간 간격 발생 */
+}
+
+.select-group h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: #1f2937;
+}
+
+/* 셀렉트 박스 공통 스타일 */
+.custom-select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  background-color: whitesmoke;
+  color: #000;
+
+  /* [중요] 호버 전 숨기기 설정 */
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border-width: 0;
+  /* 테두리까지 없애야 완벽히 숨겨짐 */
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.selection-panel:hover .custom-select {
+  opacity: 1;
+  height: 40px;
+  /* 원래 높이 */
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border-width: 1px;
+}
+
+.custom-select:hover {
+  opacity: 1;
+}
+
+/* 검색 버튼 */
+.search-button {
+  width: 100%;
+  height: 50px;
+  background-color: #000;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 5px;
+  /* 제목과의 최소 간격 */
+}
+
+.search-button:hover {
+  background-color: #1f2937;
+}
+
+/* 오른쪽 상단 필터 컨테이너 */
+.filter-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  background-color: white;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 필터 버튼 공통 스타일 */
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background-color: #2f5a48;
+  color: white;
+  font-weight: bold;
+}
+
+.filter-btn.inactive {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.info-panel {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  width: 400px;
+  /* 이미지의 비율에 맞춘 너비 */
+  background-color: rgba(255, 255, 255, 0.95);
+  /* 살짝 투명한 백그라운드 */
+  backdrop-filter: blur(8px);
+  /* 배경 흐림 효과 (고급스러움) */
+  border-radius: 24px;
+  /* 모바일 모달 느낌의 큰 라운드 */
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  /* 부드러운 그림자 */
+  padding: 24px;
+  font-family: 'Noto Sans KR', sans-serif;
+
+  /* 등장 애니메이션 */
+  animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #e6f7ed;
+  color: #27ae60;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.update-date {
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.price-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.price-main {
+  font-size: 26px;
+  font-weight: 900;
+  color: #27ae60;
+}
+
+.price-unit {
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
+}
+
+/* 정보 패널 내 리스트 스크롤 영역 */
+.trade-list-container {
+  max-height: 60vh;
+  /* 화면 높이에 따라 조절 */
+  overflow-y: auto;
+  margin-top: 15px;
+  padding-right: 5px;
+}
+
+/* 스크롤바 커스텀 (선택 사항) */
+.trade-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.trade-list-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+/* 개별 거래 카드 디자인 */
+.trade-item-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.trade-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.trade-date {
+  color: #666;
+  font-weight: bold;
+}
+
+.trade-gbn {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #444;
+}
+
+.trade-item-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.trade-loc strong {
+  display: block;
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.trade-loc p {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.trade-price-info {
+  text-align: right;
+}
+
+.price-amount {
+  font-size: 16px;
+  font-weight: 800;
+  color: #2c3e50;
+}
+
+.price-area {
+  font-size: 13px;
+  color: #666;
+}
+
+.price-calc {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #eee;
+  font-size: 12px;
+  color: #007bff;
+  text-align: right;
+  font-weight: bold;
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+}
+
+/* 토양 정보 컨테이너 */
+.soil-info-container {
+  padding: 5px;
+}
+
+.soil-badge {
+  background-color: #27ae60 !important; /* 농업 느낌의 초록색 */
+  color: white;
+}
+
+.info-title {
+  margin: 10px 0 5px 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.region-code {
+  font-size: 11px;
+  color: #95a5a6;
+  margin-bottom: 20px;
+}
+
+/* 2열 그리드 배치 */
+.soil-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* 개별 토양 수치 카드 */
+.soil-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+
+.soil-card:hover {
+  border-color: #27ae60;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.soil-label {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.soil-value-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.soil-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.soil-unit {
+  font-size: 11px;
+  color: #95a5a6;
+}
+
+.soil-footer {
+  margin-top: 20px;
+  font-size: 11px;
+  color: #bdc3c7;
+  text-align: center;
+}
+
+.no-soil-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-color: #fdfdfd;
+  border: 1px dashed #ddd;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.warning-icon {
+  font-size: 40px;
+  margin-bottom: 15px;
+}
+
+.no-soil-data .main-msg {
+  font-size: 16px;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.no-soil-data .sub-msg {
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+}
