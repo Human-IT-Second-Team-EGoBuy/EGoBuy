@@ -21,7 +21,7 @@ public class AnswerController {
         this.jwtUtil = jwtUtil;
     }
 
-    /* 답변 생성 ( 관리자용 ) - 답변 완료 시 Processing으로 Inquiry 상태 변환. 최종 확인 API는 별도로 사용 예정 */
+    /* 답변 생성 ( 관리자용 ) - 답변 완료 시 Completed로 Inquiry 상태 변환. */
     @PostMapping("/{inquiryId}/answer")
     public ResponseDTO<AnswerResponseDTO> createAnswer(
             @PathVariable("inquiryId") Long inquiryId,

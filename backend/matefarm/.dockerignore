@@ -1,0 +1,6 @@
+### DockerIgnore 설정 ###
+.idea
+.env
+.gitignore
+.git
+.dockerignore
