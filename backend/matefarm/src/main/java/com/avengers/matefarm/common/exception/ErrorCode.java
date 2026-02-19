@@ -1,6 +1,5 @@
 package com.avengers.matefarm.common.exception;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -56,8 +55,8 @@ public enum ErrorCode {
     NOT_FOUND_NOTICE(40403, HttpStatus.NOT_FOUND, "공지사항이 존재하지 않습니다."),
     NOT_FOUND_POST(40404, HttpStatus.NOT_FOUND,"게시글이 존재하지 않습니다."),
     NOT_FOUND_COMMENT(40405, HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
-    NOT_FOUND_INQUIRY(40406, HttpStatus.NOT_FOUND, "상태를 변경할 문의사항이 존재하지 않습니다."),
-    NOT_FOUND_CONVERSATION(40407, HttpStatus.NOT_FOUND, "대화가 존재하지 않습니다."),
+    NOT_FOUND_INQUIRY(40407, HttpStatus.NOT_FOUND, "상태를 변경할 문의사항이 존재하지 않습니다."),
+    NOT_FOUND_CONVERSATION(40408, HttpStatus.NOT_FOUND, "챗봇 대화 내용이 존재하지 않습니다."),
 
     // 409: 중복 데이터 (Conflict)
     DUPLICATE_NICKNAME(40900,  HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.."),
@@ -72,11 +71,18 @@ public enum ErrorCode {
     PASSWORD_ENCODING_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "비밀번호 암호화 실패"),
     SmsSendingException(50002, HttpStatus.INTERNAL_SERVER_ERROR, "SMS 전송 실패"),
 
+
     // 502: 외부 API 오류 (Bad Gateway) 
-    EXTERNAL_API_ERROR(50200, HttpStatus.BAD_GATEWAY, "외부 서비스 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    EXTERNAL_API_ERROR(50200, HttpStatus.BAD_GATEWAY, "외부 서비스 호출에 실패했습니다. 잠시 후 다시 시도해 주세요."),
 
 
 
+
+    /* 지도 API 관련 에러 추가 */
+    MAP_API_ERROR(50003, HttpStatus.INTERNAL_SERVER_ERROR, "지도 API 통신 중 오류가 발생했습니다."),
+    MAP_DATA_NOT_FOUND(40406, HttpStatus.NOT_FOUND, "해당하는 토지 정보를 찾을 수 없습니다."),
+    MAP_PARSING_ERROR(50004, HttpStatus.INTERNAL_SERVER_ERROR, "API 응답 데이터 파싱에 실패했습니다.");
+    
     private final Integer code;
     private final HttpStatus httpStatus;
     private final String message;
