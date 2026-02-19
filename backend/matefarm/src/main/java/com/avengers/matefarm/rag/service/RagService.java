@@ -1,88 +1,185 @@
 package com.avengers.matefarm.rag.service;
 
-import com.avengers.matefarm.rag.dto.*;
+import com.avengers.matefarm.common.exception.CommonException;
+import com.avengers.matefarm.common.exception.ErrorCode;
+import com.avengers.matefarm.rag.dto.RagResponse;
+import com.avengers.matefarm.rag.dto.entity.ConversationEntity;
+import com.avengers.matefarm.rag.dto.entity.ConversationMessageEntity;
+import com.avengers.matefarm.rag.dto.enums.MessageRole;
+import com.avengers.matefarm.rag.dto.response.ChatMessageDto;
+import com.avengers.matefarm.rag.dto.response.ConversationDto;
+import com.avengers.matefarm.rag.dto.response.SendMessageData;
+import com.avengers.matefarm.rag.repository.ConversationMessageRepository;
+import com.avengers.matefarm.rag.repository.ConversationRepository;
+import com.avengers.matefarm.user.dto.UserEntity;
+import com.avengers.matefarm.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class RagService {
 
-    private final WebClient fastApiWebClient; // 기존 config Bean 사용
+    private final WebClient fastApiWebClient; // Bean으로 주입되어 있다고 가정
+    private final ConversationRepository conversationRepository;
+    private final ConversationMessageRepository messageRepository;
+    private final UserRepository userRepository;
 
-    // DB 없으니 임시 messageId 생성기
-    private static final AtomicLong ID_GEN = new AtomicLong(5000);
+    private final ObjectMapper om = new ObjectMapper();
 
-    public SendMessageData sendMessage(long conversationId, String content) {
+    /** JWT 로그인 유저(userAuthId) 가져오기 (CommonException 통일) */
+    private UserEntity getLoginUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // 1) USER 메시지(임시 생성)
-        LocalDateTime userTime = LocalDateTime.now();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        String userAuthId = auth.getName();
+        if (userAuthId == null || userAuthId.isBlank() || "anonymousUser".equals(userAuthId)) {
+            throw new CommonException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        return userRepository.findByUserAuthId(userAuthId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
+    }
+
+    @Transactional
+    public SendMessageData sendMessage(long conversationId, String content, String clientMessageId) {
+        UserEntity user = getLoginUser();
+
+        if (conversationId <= 0) {
+            throw new CommonException(ErrorCode.INVALID_CONVERSATION_ID);
+        }
+
+        String userText = (content == null) ? "" : content.trim();
+        if (userText.isEmpty()) {
+            throw new CommonException(ErrorCode.EMPTY_MESSAGE_CONTENT);
+        }
+
+        // 핵심: ACTIVE(status=1) 대화만 조회 → 숨김(status=0)은 404처럼 NOT_FOUND
+        ConversationEntity conv = conversationRepository
+                .findByConversationIdAndUser_UserIdAndStatus(conversationId, user.getUserId(), 1)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_CONVERSATION));
+
+        // 1) USER 메시지 저장
+        ConversationMessageEntity savedUserEntity = messageRepository.save(
+                ConversationMessageEntity.builder()
+                        .conversation(conv)
+                        .role(MessageRole.USER)
+                        .content(userText)
+                        .status(1)
+                        .metadata(null)
+                        .build()
+        );
+
         ChatMessageDto userMsg = ChatMessageDto.builder()
-                .messageId(ID_GEN.incrementAndGet())
+                .messageId(savedUserEntity.getConversationsMessagesId())
                 .role("USER")
-                .content(content)
-                .createdAt(userTime)
-                .status(1)
+                .content(savedUserEntity.getContent())
+                .createdAt(savedUserEntity.getCreatedAt() != null ? savedUserEntity.getCreatedAt() : LocalDateTime.now())
+                .status(savedUserEntity.getStatus())
                 .metadata(null)
+                .clientMessageId(clientMessageId)
                 .build();
 
-        // 2) FastAPI 요청 바디 (최소: message만)
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", content);
+        // 2) FastAPI 호출
+        RagResponse ragRes = callFastApi(userText);
 
-        // history는 없어도 됨(기본 []), 넣고 싶으면 아래 주석 해제
-        // body.put("history", List.of(Map.of("role","USER","content",content)));
-        // body.put("chatroom_id", conversationId);
-        // body.put("crop_id", 0);
+        // 3) ASSISTANT 메시지 저장 (metadata는 DB엔 JSON string)
+        Map<String, Object> metadataMap = new HashMap<>();
+        metadataMap.put("provider", "fastapi");
+        metadataMap.put("intent", ragRes.getIntent());
+        metadataMap.put("citations", ragRes.getCitations());
 
-        // history/chatroom_id/crop_id는 지금은 안 보내도 됨(전부 optional/default)
-        RagResponse ragRes = fastApiWebClient.post()
-                .uri("/chat_rag")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(RagResponse.class)
-                .block();
+        String metadataJson = null;
+        try {
+            metadataJson = om.writeValueAsString(metadataMap);
+        } catch (Exception ignored) {}
 
-        if (ragRes == null) throw new RuntimeException("FastAPI 응답이 비어있음");
-
-        // 3) ASSISTANT 메시지(임시 생성)
-        LocalDateTime assistantTime = LocalDateTime.now();
-
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("provider", "fastapi");
-        // model/latencyMs는 FastAPI가 안 주면 일단 생략 또는 null 처리
-        // metadata.put("model", "gpt-5.2");
-        // metadata.put("latencyMs", 980);
-        metadata.put("intent", ragRes.getIntent());
-        metadata.put("citations", ragRes.getCitations());
+        ConversationMessageEntity savedAssistantEntity = messageRepository.save(
+                ConversationMessageEntity.builder()
+                        .conversation(conv)
+                        .role(MessageRole.ASSISTANT)
+                        .content(ragRes.getAnswer())
+                        .status(1)
+                        .metadata(metadataJson)
+                        .build()
+        );
 
         ChatMessageDto assistantMsg = ChatMessageDto.builder()
-                .messageId(ID_GEN.incrementAndGet())
+                .messageId(savedAssistantEntity.getConversationsMessagesId())
                 .role("ASSISTANT")
-                .content(ragRes.getAnswer())
-                .createdAt(assistantTime)
-                .status(1)
-                .metadata(metadata)
+                .content(savedAssistantEntity.getContent())
+                .createdAt(savedAssistantEntity.getCreatedAt() != null ? savedAssistantEntity.getCreatedAt() : LocalDateTime.now())
+                .status(savedAssistantEntity.getStatus())
+                .metadata(metadataMap) // 응답에서는 Map으로
+                .clientMessageId(clientMessageId)
                 .build();
 
-        // 4) conversation(임시 생성)
-        String title = makeTitleFromContent(content);
-        ConversationDto conv = ConversationDto.builder()
-                .conversationId(conversationId)
-                .title(title)
-                .lastMessageAt(assistantTime)
+        // 4) conversation 업데이트: lastMessageAt + title(초기만)
+        LocalDateTime now = LocalDateTime.now();
+        conv.setLastMessageAt(now);
+
+        if (conv.getTitle() == null || conv.getTitle().isBlank() || "새 대화".equals(conv.getTitle())) {
+            conv.setTitle(makeTitleFromContent(userText));
+        }
+
+        conversationRepository.save(conv);
+
+        ConversationDto convDto = ConversationDto.builder()
+                .conversationId(conv.getConversationId())
+                .title(conv.getTitle())
+                .status(conv.getStatus())
+                .lastMessageAt(conv.getLastMessageAt())
+                .messages(List.of()) // send 응답에는 굳이 전체 메시지 안 넣음
                 .build();
 
         return SendMessageData.builder()
                 .userMessage(userMsg)
                 .assistantMessage(assistantMsg)
-                .conversation(conv)
+                .conversation(convDto)
                 .build();
+    }
+
+    private RagResponse callFastApi(String userText) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", userText);
+
+        try {
+            RagResponse ragRes = fastApiWebClient.post()
+                    .uri("/chat_rag")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(RagResponse.class)
+                    .block();
+
+            if (ragRes == null || ragRes.getAnswer() == null) {
+                throw new CommonException(ErrorCode.EXTERNAL_API_ERROR);
+            }
+            return ragRes;
+
+        } catch (WebClientResponseException e) {
+            // FastAPI가 4xx/5xx를 준 경우
+            throw new CommonException(ErrorCode.EXTERNAL_API_ERROR);
+        } catch (CommonException e) {
+            throw e;
+        } catch (Exception e) {
+            // 타임아웃/네트워크 등
+            throw new CommonException(ErrorCode.EXTERNAL_API_ERROR);
+        }
     }
 
     private String makeTitleFromContent(String content) {

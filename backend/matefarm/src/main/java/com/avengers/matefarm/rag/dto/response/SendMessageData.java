@@ -1,4 +1,4 @@
-package com.avengers.matefarm.rag.dto;
+package com.avengers.matefarm.rag.dto.response;
 
 import lombok.*;
 
@@ -9,4 +9,5 @@ public class SendMessageData {
     private ChatMessageDto userMessage;
     private ChatMessageDto assistantMessage;
     private ConversationDto conversation;
+    
 }

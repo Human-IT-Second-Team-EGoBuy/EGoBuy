@@ -1,4 +1,4 @@
-package com.avengers.matefarm.rag.dto;
+package com.avengers.matefarm.rag.dto.request;
 
 import lombok.*;
 
@@ -6,4 +6,5 @@ import lombok.*;
 @NoArgsConstructor @AllArgsConstructor
 public class MessageSendRequest {
     private String content; // React Body: { content: "..." }
+    private String clientMessageId;
 }
