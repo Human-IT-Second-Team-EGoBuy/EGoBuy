@@ -1,6 +1,9 @@
 package com.avengers.matefarm.security;
 
 import com.avengers.matefarm.user.service.UserService;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,9 +71,20 @@ public class WebSecurity {
         // 요청 API 권한 설정 (추후 역할에 따라 Customizing )
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/login", "/signup").permitAll()
-            .requestMatchers("/**").permitAll()     // security 적용 시점에 수정
-            .anyRequest().authenticated()             // permitAll() 설정 외 모든 api 인증 필요
+            .requestMatchers("/api/ai-chat/vision/**").permitAll()
+            .requestMatchers("/api/ai-chat/**").authenticated()
+            //.requestMatchers("/**").permitAll()     // security 적용 시점에 수정
+            .anyRequest().permitAll()             // permitAll() 설정 외 모든 api 인증 필요
         )
+
+        .exceptionHandling(e -> e
+        .authenticationEntryPoint((req, res, ex) -> {
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        })
+        .accessDeniedHandler((req, res, ex) -> {
+            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        })
+    )
 
         .authenticationManager(authenticationManager)   // 인증 매니저 등록
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))   /* 설명. session 방식을 사용하지 않음(JWT Token 방식 사용 시 설정할 내용) */

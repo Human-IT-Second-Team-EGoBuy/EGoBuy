@@ -1,38 +1,22 @@
 // src/component/page/aichat/components/ChatPanel.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-
-/* =========================================================
-   [MOCK_ZONE_START] 더미(Mock) 데이터/모드 전용 import
-   - 백엔드 완전 연결(실 API 100%) 후 이 블록 삭제
-   ========================================================= */
-import { DEV_USE_MOCK, DUMMY_CHATS } from "../constants";
-/* =========================================================
-   [MOCK_ZONE_END]
-   ========================================================= */
 
 /** ====== UI 문구 ====== */
 const WELCOME_BOT_MSG = "새 대화를 시작할게요. 어떤 도움이 필요하세요?";
+const LOGIN_REQUIRED_TITLE = "로그인이 필요한 기능입니다.";
+const LOGIN_REQUIRED_DESC = "챗봇을 사용하려면 로그인 후 다시 시도해 주세요.";
 
-/* =========================================================
-   [MOCK_ZONE_START] Mock 모드 전용 기본 답변
-   - 백엔드에서 assistantMessage가 내려오면 삭제
-   ========================================================= */
-const DEFAULT_BOT_REPLY =
-  "확인했어요. 증상/사진/재배 환경 정보를 더 주시면 더 정확히 안내할게요.";
-/* =========================================================
-   [MOCK_ZONE_END]
-   ========================================================= */
-
-/** ====== API ====== */
+/** ====== API (백 정책: status=1만 내려줌) ====== */
 const API = {
-  listConversations: "/api/ai-chat/conversations", // GET
+  listConversations: "/api/ai-chat/conversations", // GET (status=1만)
   createConversation: "/api/ai-chat/conversations", // POST
-  getConversation: (conversationId) => `/api/ai-chat/conversations/${conversationId}`, // GET
-  sendMessage: (conversationId) => `/api/ai-chat/conversations/${conversationId}/messages`, // POST
-  // 대화 숨기기(soft delete)
+  getConversation: (conversationId) => `/api/ai-chat/conversations/${conversationId}`, // GET (status=0이면 404)
+  sendMessage: (conversationId) =>
+    `/api/ai-chat/conversations/${conversationId}/messages`, // POST
   patchConversationStatus: (conversationId) =>
-    `/api/ai-chat/conversations/${conversationId}/status`, // PATCH { status:0|1 }
+    `/api/ai-chat/conversations/${conversationId}/status`, // PATCH { status:0 }
 };
 
 /** ====== 유틸 ====== */
@@ -50,31 +34,6 @@ const makeClientMessageId = () => {
   return `cmsg_${Date.now()}_${rand}`;
 };
 
-/* =========================================================
-   [MOCK_ZONE_START] 더미 데이터 안전 복제 유틸
-   - 백엔드 완전 연결 후 삭제
-   ========================================================= */
-const cloneDummyChats = (list) =>
-  (Array.isArray(list) ? list : []).map((c) => ({
-    ...c,
-    id: String(c?.id ?? ""),
-    title: c?.title ?? "",
-    status: c?.status ?? 1, // hide 지원 위해 유지
-    lastMessageAt: null,
-    messages: Array.isArray(c?.messages)
-      ? c.messages.map((m, idx) => ({
-          ...m,
-          messageId: m?.messageId ?? `dm_${c?.id ?? "c"}_${idx}`,
-          status: m?.status ?? 1,
-          createdAt: m?.createdAt ?? new Date().toISOString(),
-          updatedAt: m?.updatedAt ?? null,
-        }))
-      : [],
-  }));
-/* =========================================================
-   [MOCK_ZONE_END]
-   ========================================================= */
-
 /** ====== API ↔ UI 매핑 ====== */
 const mapApiConversationItemToUi = (item) => {
   const id =
@@ -86,7 +45,7 @@ const mapApiConversationItemToUi = (item) => {
   return {
     id: id != null ? String(id) : "",
     title: item?.title ?? "",
-    status: item?.status ?? 1, // 0이면 숨김
+    status: item?.status ?? 1,
     lastMessageAt: item?.lastMessageAt ?? item?.last_message_at ?? null,
     messages: [],
   };
@@ -131,22 +90,12 @@ const mapApiConversationDetailToUi = (data) => {
   };
 };
 
-axios.defaults.headers.common["Content-Type"] = "application/json";
-
-axios.interceptors.request.use((config) => {
-  const isFormData = config.data instanceof FormData;
-
-  if (!isFormData) {
-    config.headers["Content-Type"] = "application/json";
-  } else {
-    // FormData면 Content-Type을 지워서 axios가 boundary 포함해 자동 설정하도록
-    delete config.headers["Content-Type"];
-  }
-  return config;
-});
-
-/** ====== 전송 응답 파서 ====== */
-const pickFromSendResponseV3 = (data, fallbackUserText, fallbackClientMessageId) => {
+/** ====== 전송 응답 파서  ====== */
+const pickFromSendResponseV3 = (
+  data,
+  fallbackUserText,
+  fallbackClientMessageId
+) => {
   const umRaw = data?.userMessage ?? data?.user_message;
   const amRaw =
     data?.assistantMessage ??
@@ -156,7 +105,12 @@ const pickFromSendResponseV3 = (data, fallbackUserText, fallbackClientMessageId)
 
   const userMsg = umRaw
     ? mapApiMessageToUi(umRaw)
-    : { role: "user", text: fallbackUserText, status: 1, clientMessageId: fallbackClientMessageId };
+    : {
+        role: "user",
+        text: fallbackUserText,
+        status: 1,
+        clientMessageId: fallbackClientMessageId,
+      };
 
   if (!userMsg.clientMessageId && fallbackClientMessageId) {
     userMsg.clientMessageId = fallbackClientMessageId;
@@ -165,10 +119,7 @@ const pickFromSendResponseV3 = (data, fallbackUserText, fallbackClientMessageId)
   const botMsg = amRaw ? mapApiMessageToUi(amRaw) : null;
 
   const title =
-    data?.conversation?.title ??
-    data?.conversationTitle ??
-    data?.title ??
-    undefined;
+    data?.conversation?.title ?? data?.conversationTitle ?? data?.title ?? undefined;
 
   const lastMessageAt =
     data?.conversation?.lastMessageAt ??
@@ -178,16 +129,53 @@ const pickFromSendResponseV3 = (data, fallbackUserText, fallbackClientMessageId)
   return { userMsg, botMsg, title, lastMessageAt };
 };
 
-export default function ChatPanel() {
-  /* =========================================================
-     [MOCK_ZONE_START] Mock 모드 상태
-     - 백엔드 완전 연결 후 이 state 자체 삭제
-     ========================================================= */
-  const [useDummy, setUseDummy] = useState(DEV_USE_MOCK);
-  /* =========================================================
-     [MOCK_ZONE_END]
-     ========================================================= */
+const pickPagePayload = (res) => {
+  // ResponseDTO<PageResponseDTO<ConversationDto>> 기준
+  const page =
+    res?.data?.data ?? // ResponseDTO.data
+    res?.data?.content ??
+    res?.data ??
+    {};
 
+  const elements = Array.isArray(page?.elements) ? page.elements : [];
+  const currentPage = Number(page?.current_page ?? page?.currentPage ?? 1);
+
+  // PageResponseDTO의 next(Boolean): 다음 페이지 존재
+  const hasMore = Boolean(page?.next);
+
+  return { elements, currentPage, hasMore };
+};
+
+/** ====== axios 기본 ====== */
+axios.defaults.withCredentials = true;
+
+// 인터셉터 중복 등록 방지 (HMR 대응)
+if (!axios.__MF_INTERCEPTOR__) {
+  axios.__MF_INTERCEPTOR__ = true;
+
+  axios.interceptors.request.use((config) => {
+    const isFormData =
+      typeof FormData !== "undefined" && config.data instanceof FormData;
+
+    config.headers = config.headers ?? {};
+
+    // JSON 바디가 있을 때만 설정
+    if (!isFormData && config.data != null) {
+      config.headers["Content-Type"] = "application/json";
+    } else if (isFormData) {
+      delete config.headers["Content-Type"];
+    }
+
+    return config;
+  });
+}
+
+export default function ChatPanel() {
+  /** ====== 인증 상태 ====== */
+  const [authBlocked, setAuthBlocked] = useState(false);
+  const needLogin = authBlocked;
+
+  /** ====== 상태 ====== */
   const [chats, setChats] = useState([]);
   const [activeId, setActiveId] = useState(null);
 
@@ -197,69 +185,139 @@ export default function ChatPanel() {
   const [loadingList, setLoadingList] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
 
-  // 목록 숨김(soft delete) 토글: OFF면 숨김대화는 목록에서 제외
-  const [showHidden, setShowHidden] = useState(false);
+  const [loginNext, setLoginNext] = useState("");
+  const location = useLocation();
+
+  //무한스크롤
+  const [pageNo, setPageNo] = useState(1);
+  const [hasMoreList, setHasMoreList] = useState(true);
+  const loadingMoreRef = useRef(false); // 중복 호출 방지
+
+  /** ====== 401 공통 처리 ====== */
+  const handleAuthError = useCallback((e) => {
+    const status = e?.response?.status;
+    if (status === 401) {
+      setAuthBlocked(true);
+
+      // 로그인 후 돌아올 위치 저장
+      const next = encodeURIComponent(location.pathname + location.search);
+      setLoginNext(next);
+
+      setSending(false);
+      setLoadingChat(false);
+      setLoadingList(false);
+      loadingMoreRef.current = false;
+
+      return true;
+    }
+    return false;
+  }, [location]);
+
+  useEffect(() => {
+    if (!authBlocked) return;
+    setChats([]);
+    setActiveId(null);
+    setInput("");
+    setPageNo(1);
+    setHasMoreList(true);
+    loadingMoreRef.current = false;
+  }, [authBlocked]);
+
+  /** ====== 목록 재조회 (백이 status=1만 내려줌) ====== */
+  const reloadList = useCallback(async () => {
+    if (needLogin) return;
+    if (loadingList) return;
+
+    setLoadingList(true);
+    try {
+      const res = await axios.get(API.listConversations, {
+        params: { page: 1, size: 50, pageSize: 10 }, 
+      });
+
+      const { elements, currentPage, hasMore } = pickPagePayload(res);
+
+      const uiList = elements
+        .map(mapApiConversationItemToUi)
+        .filter((c) => c.id);
+
+      setChats(uiList);
+      setPageNo(currentPage);       // 보통 1
+      setHasMoreList(hasMore);      // next 기반
+
+      setActiveId((prev) => {
+        const exists = prev && uiList.some((c) => c.id === prev);
+        return exists ? prev : uiList[0]?.id ?? null;
+      });
+    } catch (e) {
+      if (handleAuthError(e)) return;
+      console.error("conversations list error:", e);
+      alert("대화 목록을 불러오는데 실패하셨습니다.");
+    } finally {
+      setLoadingList(false);
+    }
+  }, [needLogin, loadingList, handleAuthError]);
+
+  const loadMoreList = useCallback(async () => {
+    if (needLogin) return;
+    if (!hasMoreList) return;
+    if (loadingList) return;
+    if (loadingMoreRef.current) return;
+
+    loadingMoreRef.current = true;
+    const nextPage = pageNo + 1;
+
+    try {
+      const res = await axios.get(API.listConversations, {
+        params: { page: nextPage, size: 50, pageSize: 10 },
+      });
+
+      const { elements, currentPage, hasMore } = pickPagePayload(res);
+
+      const nextUi = (elements ?? [])
+        .map(mapApiConversationItemToUi)
+        .filter((c) => c.id);
+
+      // 중복 방지하면서 append
+      setChats((prev) => {
+        const map = new Map((prev ?? []).map((c) => [c.id, c]));
+        for (const c of nextUi) {
+          if (!map.has(c.id)) map.set(c.id, c);
+        }
+        return Array.from(map.values());
+      });
+
+      setPageNo(currentPage);
+      setHasMoreList(hasMore);
+    } catch (e) {
+      if (handleAuthError(e)) return;
+      console.error("conversations loadMore error:", e);
+    } finally {
+      loadingMoreRef.current = false;
+    }
+  }, [needLogin, hasMoreList, pageNo, loadingList, handleAuthError]);
 
   /** ====== 최초 로딩 ====== */
   useEffect(() => {
-    let mounted = true;
+    if (needLogin) return;
+    reloadList();
+  }, [needLogin, reloadList]);
 
-    /* =========================================================
-       [MOCK_ZONE_START] Mock 최초 로딩(더미 세팅)
-       ========================================================= */
-    if (useDummy) {
-      const fallback = cloneDummyChats(DUMMY_CHATS);
-      setChats(fallback);
-      setActiveId(fallback.find((c) => (showHidden ? true : (c.status ?? 1) !== 0))?.id ?? null);
-      return () => {
-        mounted = false;
-      };
-    }
-    /* =========================================================
-       [MOCK_ZONE_END]
-       ========================================================= */
-
-    (async () => {
-      setLoadingList(true);
-      try {
-        const res = await axios.get(API.listConversations, {
-          params: { page: 1, size: 50, status: showHidden ? undefined : 1 },
-        });
-        const items = res?.data?.data?.items ?? res?.data?.data ?? res?.data?.items ?? [];
-        const uiList = (Array.isArray(items) ? items : [])
-          .map(mapApiConversationItemToUi)
-          .filter((c) => c.id)
-          .filter((c) => (showHidden ? true : (c.status ?? 1) !== 0));
-
-        if (!mounted) return;
-        setChats(uiList);
-        setActiveId(uiList[0]?.id ?? null);
-      } catch (e) {
-        console.error("conversations list error:", e);
-
-        /* =========================================================
-           [MOCK_ZONE_START] API 실패 시 Mock fallback
-           ========================================================= */
-        if (!mounted) return;
-        setUseDummy(true);
-        const fallback = cloneDummyChats(DUMMY_CHATS);
-        setChats(fallback);
-        setActiveId(fallback[0]?.id ?? null);
-        /* =========================================================
-           [MOCK_ZONE_END]
-           ========================================================= */
-      } finally {
-        if (mounted) setLoadingList(false);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [useDummy, showHidden]);
+  /** ====== Sidebar 스크롤 바닥 감지 ====== */
+  const onSidebarScroll = useCallback(
+    (e) => {
+      const el = e.currentTarget;
+      const nearBottom =
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+      if (nearBottom) loadMoreList();
+    },
+    [loadMoreList]
+  );
 
   /** ====== 활성 대화 ====== */
-  const activeChat = useMemo(() => chats.find((c) => c.id === activeId) ?? null, [chats, activeId]);
+  const activeChat = useMemo(
+    () => chats.find((c) => c.id === activeId) ?? null,
+    [chats, activeId]
+  );
   const messageCount = activeChat?.messages?.length ?? 0;
 
   /** ====== 스크롤 ====== */
@@ -268,18 +326,10 @@ export default function ChatPanel() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeId, messageCount]);
 
-  /** ====== 채팅 선택 시: 상세 로딩 ====== */
+    /** ====== 상세 로딩 (백: status=0이면 404) ====== */
   useEffect(() => {
+    if (needLogin) return;
     if (!activeId) return;
-
-    /* =========================================================
-       [MOCK_ZONE_START] 더미 모드에서는 상세 로딩 불필요
-       ========================================================= */
-    if (useDummy) return;
-    /* =========================================================
-       [MOCK_ZONE_END]
-       ========================================================= */
-
     if ((activeChat?.messages?.length ?? 0) > 0) return;
 
     let mounted = true;
@@ -288,16 +338,27 @@ export default function ChatPanel() {
       setLoadingChat(true);
       try {
         const res = await axios.get(API.getConversation(activeId), {
-          params: { includeMessages: true, limit: 100, includeHidden: showHidden ? true : undefined },
+          params: { includeMessages: true, limit: 100 },
         });
 
         const data = res?.data?.data ?? res?.data ?? {};
         const ui = mapApiConversationDetailToUi(data);
-
         if (!mounted || !ui?.id) return;
-        setChats((prev) => (prev ?? []).map((c) => (c.id === activeId ? { ...c, ...ui } : c)));
+
+        setChats((prev) =>
+          (prev ?? []).map((c) => (c.id === activeId ? { ...c, ...ui } : c))
+        );
       } catch (e) {
+        if (handleAuthError(e)) return;
+
+        if (e?.response?.status === 404) {
+          await reloadList();
+          return;
+        }
+
         console.error("conversation detail error:", e);
+        alert("상세 내용을 불러오는데 실패하셨습니다.");
+        await reloadList();
       } finally {
         if (mounted) setLoadingChat(false);
       }
@@ -306,22 +367,42 @@ export default function ChatPanel() {
     return () => {
       mounted = false;
     };
-  }, [activeId, useDummy, showHidden, activeChat?.messages?.length]);
+  }, [
+    needLogin,
+    activeId,
+    activeChat?.messages?.length,
+    reloadList,
+    handleAuthError,
+  ]);
 
   /** ====== pending bot 유틸 ====== */
   const removePendingBots = (conv) => ({
     ...conv,
-    messages: (conv.messages ?? []).filter((m) => !(m?.role === "bot" && m?._pending)),
+    messages: (conv.messages ?? []).filter(
+      (m) => !(m?.role === "bot" && m?._pending)
+    ),
   });
 
-  const replacePendingBotByClientMessageId = (conv, clientMessageId, nextBotText) => {
+  const replacePendingBotByClientMessageId = (
+    conv,
+    clientMessageId,
+    nextBotText
+  ) => {
     const msgs = [...(conv.messages ?? [])];
 
-    const userIdx = msgs.findIndex((m) => m?.role === "user" && m?.clientMessageId === clientMessageId);
+    const userIdx = msgs.findIndex(
+      (m) => m?.role === "user" && m?.clientMessageId === clientMessageId
+    );
     if (userIdx >= 0) {
       for (let i = userIdx + 1; i < msgs.length; i++) {
         if (msgs[i]?.role === "bot" && msgs[i]?._pending) {
-          msgs[i] = { ...msgs[i], role: "bot", text: nextBotText, _pending: false, status: 1 };
+          msgs[i] = {
+            ...msgs[i],
+            role: "bot",
+            text: nextBotText,
+            _pending: false,
+            status: 1,
+          };
           return { ...conv, messages: msgs };
         }
       }
@@ -329,7 +410,13 @@ export default function ChatPanel() {
 
     for (let i = msgs.length - 1; i >= 0; i--) {
       if (msgs[i]?.role === "bot" && msgs[i]?._pending) {
-        msgs[i] = { ...msgs[i], role: "bot", text: nextBotText, _pending: false, status: 1 };
+        msgs[i] = {
+          ...msgs[i],
+          role: "bot",
+          text: nextBotText,
+          _pending: false,
+          status: 1,
+        };
         break;
       }
     }
@@ -338,29 +425,8 @@ export default function ChatPanel() {
 
   /** ====== 새 대화 ====== */
   const handleNewChat = async () => {
+    if (needLogin) return alert(LOGIN_REQUIRED_TITLE);
     if (sending || loadingList) return;
-
-    /* =========================================================
-       [MOCK_ZONE_START] Mock 새 대화 생성
-       ========================================================= */
-    if (useDummy) {
-      const id = `c${Date.now()}`;
-      const newChat = {
-        id,
-        title: "",
-        status: 1,
-        lastMessageAt: null,
-        messages: [{ role: "bot", text: WELCOME_BOT_MSG, status: 1, messageId: `dm_${id}_0` }],
-      };
-
-      setChats((prev) => [newChat, ...(prev ?? [])]);
-      setActiveId(id);
-      setInput("");
-      return;
-    }
-    /* =========================================================
-       [MOCK_ZONE_END]
-       ========================================================= */
 
     setSending(true);
     try {
@@ -369,73 +435,59 @@ export default function ChatPanel() {
       const ui = mapApiConversationItemToUi(created);
       if (!ui?.id) throw new Error("conversationId missing");
 
-      const uiWithWelcome = { ...ui, messages: [{ role: "bot", text: WELCOME_BOT_MSG, status: 1 }] };
+      const uiWithWelcome = {
+        ...ui,
+        messages: [{ role: "bot", text: WELCOME_BOT_MSG, status: 1 }],
+      };
+
+      // 새 대화는 최상단 prepend
       setChats((prev) => [uiWithWelcome, ...(prev ?? [])]);
       setActiveId(ui.id);
       setInput("");
     } catch (e) {
+      if (handleAuthError(e)) return;
       console.error(e);
-      alert("새 대화 생성 실패");
+      alert("새 대화창을 생성하는데 실패하셨습니다.");
     } finally {
       setSending(false);
     }
   };
 
-  /** ====== 대화 숨기기(soft delete) ====== */
-  const patchConversationStatus = async (conversationId, nextStatus) => {
-    if (!conversationId) return;
-    if (sending) return;
+  /** ====== 대화 숨기기(soft delete): 백에 status=0 요청 ====== */
+  const handleHideConversation = async (conversationId) => {
+    if (needLogin) return alert(LOGIN_REQUIRED_TITLE);
+    if (!conversationId || sending) return;
 
-    // optimistic
-    setChats((prev) =>
-      (prev ?? []).map((c) => (c.id === String(conversationId) ? { ...c, status: nextStatus } : c))
-    );
+    const ok = window.confirm("이 대화를 삭제 하시겠습니까?");
+    if (!ok) return;
 
-    /* =========================================================
-       [MOCK_ZONE_START] 더미면 API 호출 없이 종료
-       ========================================================= */
-    if (useDummy) return;
-    /* =========================================================
-       [MOCK_ZONE_END]
-       ========================================================= */
+    const targetId = String(conversationId);
+    const wasActive = activeId === targetId;
+
+    setChats((prev) => {
+      const next = (prev ?? []).filter((c) => c.id !== targetId);
+      if (wasActive) setActiveId(next[0]?.id ?? null);
+      return next;
+    });
 
     setSending(true);
     try {
-      await axios.patch(API.patchConversationStatus(conversationId), { status: nextStatus });
+      await axios.patch(API.patchConversationStatus(conversationId), {
+        status: 0,
+      });
     } catch (e) {
+      if (handleAuthError(e)) return;
       console.error("patch conversation status error:", e);
-      alert("대화 숨김 실패");
-
-      // rollback
-      setChats((prev) =>
-        (prev ?? []).map((c) =>
-          c.id === String(conversationId) ? { ...c, status: nextStatus === 0 ? 1 : 0 } : c
-        )
-      );
+      alert("대화를 삭제에 실패하셨습니다.");
+      await reloadList();
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleHideConversation = async (conversationId) => {
-    const ok = window.confirm("이 대화를 숨길까요? (목록에서 사라집니다)");
-    if (!ok) return;
-
-    await patchConversationStatus(conversationId, 0);
-
-    // showHidden이 꺼져있으면 목록에서 제거 + activeId 보정
-    if (!showHidden) {
-      setChats((prev) => (prev ?? []).filter((c) => c.id !== String(conversationId)));
-
-      if (activeId === String(conversationId)) {
-        const next = (chats ?? []).find((x) => x.id !== String(conversationId) && (x.status ?? 1) !== 0);
-        setActiveId(next?.id ?? null);
-      }
     }
   };
 
   /** ====== 메시지 전송 ====== */
   const handleSend = async () => {
+    if (needLogin) return;
     if (sending) return;
 
     const text = safeText(input);
@@ -455,7 +507,13 @@ export default function ChatPanel() {
           messages: [
             ...(c.messages ?? []),
             { role: "user", text, status: 1, clientMessageId },
-            { role: "bot", text: "전송중...", _pending: true, status: 1, clientMessageId },
+            {
+              role: "bot",
+              text: "전송중...",
+              _pending: true,
+              status: 1,
+              clientMessageId,
+            },
           ],
         };
       })
@@ -463,24 +521,10 @@ export default function ChatPanel() {
     setInput("");
 
     try {
-      /* =========================================================
-         [MOCK_ZONE_START] Mock 전송 응답 (백엔드 연결 후 삭제)
-         ========================================================= */
-      if (useDummy) {
-        setChats((prev) =>
-          (prev ?? []).map((c) =>
-            c.id === activeId
-              ? replacePendingBotByClientMessageId(c, clientMessageId, DEFAULT_BOT_REPLY)
-              : c
-          )
-        );
-        return;
-      }
-      /* =========================================================
-         [MOCK_ZONE_END]
-         ========================================================= */
-
-      const res = await axios.post(API.sendMessage(activeId), { content: text, clientMessageId });
+      const res = await axios.post(API.sendMessage(activeId), {
+        content: text,
+        clientMessageId,
+      });
       const data = res?.data?.data ?? res?.data ?? {};
 
       const { userMsg, botMsg, title, lastMessageAt } = pickFromSendResponseV3(
@@ -498,7 +542,9 @@ export default function ChatPanel() {
 
           if (userMsg?.clientMessageId) {
             const idx = nextMessages.findIndex(
-              (m) => m?.role === "user" && m?.clientMessageId === userMsg.clientMessageId
+              (m) =>
+                m?.role === "user" &&
+                m?.clientMessageId === userMsg.clientMessageId
             );
             if (idx >= 0) nextMessages[idx] = { ...nextMessages[idx], ...userMsg };
             else nextMessages.push(userMsg);
@@ -508,13 +554,22 @@ export default function ChatPanel() {
 
           return {
             ...cleaned,
-            title: safeText(cleaned.title) ? cleaned.title : title ?? makeTitle(text),
+            title: safeText(cleaned.title)
+              ? cleaned.title
+              : title ?? makeTitle(text),
             lastMessageAt: lastMessageAt ?? cleaned.lastMessageAt ?? null,
             messages: nextMessages,
           };
         })
       );
     } catch (e) {
+      if (handleAuthError(e)) return;
+
+      if (e?.response?.status === 404) {
+        await reloadList();
+        return;
+      }
+
       console.error("send message error:", e);
 
       setChats((prev) =>
@@ -541,7 +596,7 @@ export default function ChatPanel() {
     handleSend();
   };
 
-  /** ====== 복사(유일 기능) ====== */
+  /** ====== 복사 ====== */
   const handleCopyMessage = async (message) => {
     const text = safeText(message?.text);
     if (!text) return;
@@ -558,36 +613,55 @@ export default function ChatPanel() {
     }
   };
 
-  /** ====== Sidebar 목록(숨김 포함 토글 반영) ====== */
-  const sidebarChats = useMemo(() => {
-    const arr = chats ?? [];
-    return showHidden ? arr : arr.filter((c) => (c.status ?? 1) !== 0);
-  }, [chats, showHidden]);
+  /** ====== Sidebar 목록 ====== */
+  const sidebarChats = useMemo(() => chats ?? [], [chats]);
 
+  /** ====== 로그인 필요 화면 ====== */
+  if (needLogin) {
+    return (
+      <div className="cp-shell">
+        <section className="cp-main" style={{ width: "100%" }}>
+          <div className="cp-empty" style={{ padding: 24 }}>
+            <b>{LOGIN_REQUIRED_TITLE}</b>
+            <div style={{ marginTop: 8, fontSize: 13, opacity: 0.8 }}>
+              {LOGIN_REQUIRED_DESC}
+            </div>
+
+            <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+              <a className="cp-btn" href={`/login?next=${loginNext || encodeURIComponent("/ai-chat")}`}>
+                로그인 하러가기
+              </a>
+              <button
+                className="cp-btn"
+                type="button"
+                onClick={() => setAuthBlocked(false)}
+              >
+                다시 시도
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  /** ====== 정상 채팅 UI ====== */
   return (
     <div className="cp-shell">
       {/* Sidebar */}
       <aside className="cp-side">
-        <button className="cp-new" onClick={handleNewChat} disabled={sending || loadingList}>
+        <button
+          className="cp-new"
+          onClick={handleNewChat}
+          disabled={sending || loadingList}
+        >
           + 새 대화
         </button>
 
-        <div className="cp-side-tools">
-          <label className="cp-toggle">
-            <input
-              type="checkbox"
-              checked={showHidden}
-              onChange={(e) => setShowHidden(e.target.checked)}
-              disabled={sending || loadingList}
-            />
-            <span>숨김 포함</span>
-          </label>
-        </div>
-
-        <nav className="cp-nav cp-scroll">
+        <nav className="cp-nav cp-scroll" onScroll={onSidebarScroll}>
           <div className="cp-nav-title">
             내 대화
-            {!useDummy && loadingList && (
+            {loadingList && (
               <span style={{ marginLeft: 8, fontSize: 12 }}>불러오는 중…</span>
             )}
           </div>
@@ -602,12 +676,11 @@ export default function ChatPanel() {
               const rawLastText = c.messages?.[c.messages.length - 1]?.text ?? "";
               const lastText = makePreview(rawLastText, 12);
               const isActive = c.id === activeId;
-              const hidden = (c.status ?? 1) === 0;
 
               return (
                 <div
                   key={c.id}
-                  className={`cp-chat-row ${isActive ? "is-active" : ""} ${hidden ? "is-hidden" : ""}`}
+                  className={`cp-chat-row ${isActive ? "is-active" : ""}`}
                 >
                   <button
                     className={`cp-chat-item ${isActive ? "is-active" : ""}`}
@@ -615,29 +688,30 @@ export default function ChatPanel() {
                     onClick={() => !sending && setActiveId(c.id)}
                     title={title}
                   >
-                    <span className="cp-chat-title">
-                      {title}
-                      {hidden && <em className="cp-badge-hidden">숨김</em>}
-                    </span>
+                    <span className="cp-chat-title">{title}</span>
                     <span className="cp-chat-sub" title={rawLastText}>
                       {lastText}
                     </span>
                   </button>
 
-                  {/* 숨김 버튼(✕): 숨김 포함 OFF일 때도 가능 */}
-                  {!hidden && (
-                    <button
-                      className="cp-chat-del"
-                      disabled={sending}
-                      title="대화 숨기기"
-                      onClick={() => handleHideConversation(c.id)}
-                    >
-                      ✕
-                    </button>
-                  )}
+                  <button
+                    className="cp-chat-del"
+                    disabled={sending}
+                    title="대화 숨기기"
+                    onClick={() => handleHideConversation(c.id)}
+                  >
+                    ✕
+                  </button>
                 </div>
               );
             })
+          )}
+
+          {/* 다음 페이지가 있으면(=next=true) 아래 문구가 보이며, 스크롤 바닥에서 자동 로드 */}
+          {hasMoreList && sidebarChats.length > 0 && (
+            <div style={{ padding: 12, fontSize: 12, opacity: 0.7 }}>
+              아래로 스크롤하면 더 불러와요…
+            </div>
           )}
         </nav>
       </aside>
@@ -651,47 +725,54 @@ export default function ChatPanel() {
             </div>
           ) : (
             <div className="cp-msg-list">
-              {!useDummy && loadingChat && (
+              {loadingChat && (
                 <div className="cp-empty" style={{ opacity: 0.8 }}>
                   대화 내용을 불러오는 중…
                 </div>
               )}
 
-              {(activeChat.messages ?? [])
-                .filter((m) => (showHidden ? true : (m?.status ?? 1) !== 0))
-                .map((m, idx) => {
-                  const messageKey = m.messageId ?? m.clientMessageId ?? `idx_${idx}`;
-                  const isUser = m.role === "user";
+              {(activeChat.messages ?? []).map((m, idx) => {
+                const messageKey =
+                  m.messageId ?? m.clientMessageId ?? `idx_${idx}`;
+                const isUser = m.role === "user";
 
-                  return (
-                    <div
-                      key={messageKey}
-                      className={[
-                        "cp-bubble",
-                        isUser ? "is-user" : "is-bot",
-                        m?._pending ? "is-pending" : "",
-                      ].join(" ")}
-                    >
-                      {!m?._pending && (
-                        <div className={`cp-msg-actions ${isUser ? "is-user" : "is-bot"}`}>
-                          <button className="cp-menu-btn" title="복사" onClick={() => handleCopyMessage(m)}>
-                            ⧉
-                          </button>
-                        </div>
-                      )}
+                return (
+                  <div
+                    key={messageKey}
+                    className={[
+                      "cp-bubble",
+                      isUser ? "is-user" : "is-bot",
+                      m?._pending ? "is-pending" : "",
+                    ].join(" ")}
+                  >
+                    {!m?._pending && (
+                      <div
+                        className={`cp-msg-actions ${
+                          isUser ? "is-user" : "is-bot"
+                        }`}
+                      >
+                        <button
+                          className="cp-menu-btn"
+                          title="복사"
+                          onClick={() => handleCopyMessage(m)}
+                        >
+                          ⧉
+                        </button>
+                      </div>
+                    )}
 
-                      <span className="cp-text">{m.text}</span>
+                    <span className="cp-text">{m.text}</span>
 
-                      {m?._pending && (
-                        <span className="cp-dots" aria-label="loading">
-                          <i />
-                          <i />
-                          <i />
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
+                    {m?._pending && (
+                      <span className="cp-dots" aria-label="loading">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
 
               <div ref={bottomRef} />
             </div>
@@ -708,7 +789,11 @@ export default function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
           />
-          <button className="cp-btn" onClick={handleSend} disabled={sending || !activeId}>
+          <button
+            className="cp-btn"
+            onClick={handleSend}
+            disabled={sending || !activeId}
+          >
             {sending ? "전송중..." : "전송"}
           </button>
         </div>
@@ -716,14 +801,3 @@ export default function ChatPanel() {
     </div>
   );
 }
-
-/* =========================================================
-   [MOCK_CLEANUP_CHECKLIST]
-   백엔드 완전 연결 후 "검색/삭제" 기준
-   ---------------------------------------------------------
-   1) [MOCK_ZONE_START] ~ [MOCK_ZONE_END] 블록 통째로 삭제
-   2) useDummy 관련 분기 제거 후:
-      - useDummy state 삭제
-      - useEffect deps에서 useDummy 제거
-      - sidebar 로딩 표시의 (MOCK) 제거
-   ========================================================= */
