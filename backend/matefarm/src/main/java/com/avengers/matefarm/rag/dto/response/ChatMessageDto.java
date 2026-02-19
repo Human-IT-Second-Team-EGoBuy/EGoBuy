@@ -1,4 +1,4 @@
-package com.avengers.matefarm.rag.dto;
+package com.avengers.matefarm.rag.dto.response;
 
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,4 +14,5 @@ public class ChatMessageDto {
     private LocalDateTime createdAt;
     private int status;           // 1 임시
     private Map<String, Object> metadata; // assistant만 사용
+    private String clientMessageId;
 }
