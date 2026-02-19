@@ -404,7 +404,8 @@ CREATE TABLE `post_like` (
 	CONSTRAINT `FK_community_post_TO_post_like` FOREIGN KEY (`post_id`) 
 		REFERENCES `community_post` (`community_post_id`),
 	CONSTRAINT `FK_users_TO_post_like` FOREIGN KEY (`user_id`) 
-		REFERENCES `users` (`user_id`)
+		REFERENCES `users` (`user_id`),
+		CONSTRAINT `UK_POST_USER` UNIQUE (`post_id`, `user_id`)
 ) ENGINE=InnoDB;
 
 -- 23. post_report 테이블
@@ -442,6 +443,8 @@ CREATE TABLE `inquiry` (
 	`inquiry_content` TEXT NOT NULL,
 	`inquiry_type` ENUM('ACCOUNT', 'TECHNICAL_ISSUE', 'OTHER') NULL,
 	`inquiry_status` ENUM('PENDING', 'PROCESSING', 'COMPLETED') NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`answered_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
 	`writer_id` BIGINT NOT NULL,
 	PRIMARY KEY (`inquiry_id`),
 	CONSTRAINT `FK_users_TO_inquiry` FOREIGN KEY (`writer_id`) 
@@ -452,8 +455,12 @@ CREATE TABLE `inquiry` (
 CREATE TABLE `answer` (
 	`answer_id` BIGINT NOT NULL AUTO_INCREMENT,
 	`answer_content` TEXT NOT NULL,
+	`is_deleted` ENUM('Y', 'N') NOT NULL,
 	`inquiry_id` BIGINT NOT NULL,
 	`answer_user_id` BIGINT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (`answer_id`),
 	CONSTRAINT `FK_inquiry_TO_answer` FOREIGN KEY (`inquiry_id`) 
 		REFERENCES `inquiry` (`inquiry_id`),

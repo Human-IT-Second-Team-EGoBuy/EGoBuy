@@ -1,7 +1,7 @@
 // src/component/page/aichat/AiChatPage.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./aichat.css";
-// import axios from "axios"; //  실API 붙일 때만 주석 해제
+import axios from "axios"; //  실API 붙일 때만 주석 해제
 
 import HeaderBar from "./components/HeaderBar";
 import ChatPanel from "./components/ChatPanel";
@@ -168,33 +168,57 @@ export default function AiChatPage() {
       }
 
       // ===== 실API 모드 (현재 주석) =====
-      // const form = new FormData();
-      // form.append("cropId", String(cropId));
-      // form.append("image", file);
-      //
-      // const res = await axios.post("/api/ai-chat/vision/diagnose", form, {
-      //   headers: { "Content-Type": "multipart/form-data" },
-      // });
-      //
-      // const data = res.data?.data;
-      // const advice =
-      //   Array.isArray(data?.advice) && data.advice.length > 0 ? data.advice : DEFAULT_ADVICE;
-      //
-      // setResult({
-      //   cropId,
-      //   cropName,
-      //   model: data?.model,
-      //   top1: data?.best,
-      //   topK: data?.topK ?? data?.topk,
-      //   summary: data?.summary ?? data?.oneLine ?? "",
-      //   advice,
-      //   raw: data,
-      // });
+      const form = new FormData();
+      form.append("cropId", String(cropId));
+      form.append("topK", "5");
+      form.append("image", file);
+      
+      const res = await axios.post("/api/ai-chat/vision/diagnose", form);
+      
+const data = res.data?.content;
+
+// best(Top-1) 구조를 ResultPanel이 읽기 쉬운 형태로 정규화
+const best = data?.best
+  ? {
+      // ResultPanel은 label_ko를 우선으로 보니까 그 키로 맞춰줌
+      label_ko: data.best.labelKo ?? data.best.label_ko ?? null,
+      // 기존 키도 보존(디버깅/호환)
+      label: data.best.label ?? null,
+      prob: Number(data.best.prob ?? 0),
+    }
+  : null;
+
+    const topK = Array.isArray(data?.topK)
+      ? data.topK.map((x) => ({
+          label_ko: x.labelKo ?? x.label_ko ?? null,
+          label: x.label ?? null,
+          prob: Number(x.prob ?? 0),
+        }))
+      : [];
+
+    setResult({
+      cropId: data?.cropId ?? cropId,
+      cropName,
+      model: data?.modelKey ?? null,
+
+      // ResultPanel은 result.top1 또는 result.best를 보니까
+      // top1으로 best 객체를 넣어주면 pickTop1이 그대로 읽음
+      top1: best,
+
+      // topK도 정규화된 배열로
+      topK,
+
+      // summary는 문자열이니까 그대로
+      summary: data?.ragAnswer ?? "",
+
+      advice: DEFAULT_ADVICE,
+      raw: data,
+    });
     } catch (e) {
-      console.error(e);
+      console.error("status:", e.response?.status);
+      console.error("response:", e.response?.data);
       alert("진단 중 오류가 발생했어요.");
     } finally {
-      // 성공/실패/return 여부와 관계 없이 반드시 복구
       setDiagnosing(false);
     }
   };

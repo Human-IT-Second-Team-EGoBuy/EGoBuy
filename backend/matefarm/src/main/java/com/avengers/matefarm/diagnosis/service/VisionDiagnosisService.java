@@ -11,7 +11,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.http.HttpStatusCode;
+
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -109,7 +109,8 @@ public class VisionDiagnosisService {
                 modelKey,
                 best,
                 topK,
-                new MetaResponse(inferenceMs)
+                new MetaResponse(inferenceMs),
+                fast.ragAnswer()
         );
     }
 }

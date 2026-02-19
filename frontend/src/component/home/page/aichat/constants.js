@@ -13,18 +13,18 @@ export const MODEL_BY_CROP = {
 
 
 export const CROP_ITEMS = [
-  { crop_id: 11, crop_name: "딸기", emoji: "🍓", model: "model-liriope" },
-  { crop_id: 20, crop_name: "사과", emoji: "🍎", model: "model-liriope" },
-  { crop_id: 21, crop_name: "포도", emoji: "🍇", model: "model-liriope" },
-  { crop_id: 10, crop_name: "토마토", emoji: "🍅", model: "model-liriope" },
-  { crop_id: 30, crop_name: "감자", emoji: "🥔", model: "model-wambugu" },
-  { crop_id: 40, crop_name: "쌀", emoji: "🌾", model: "model-wambugu" },
-  { crop_id: 41, crop_name: "밀", emoji: "🌿", model: "model-wambugu" },
-  { crop_id: 42, crop_name: "옥수수", emoji: "🌽", model: "model-wambugu" },
+  { crop_id: 4, crop_name: "딸기", emoji: "🍓", model: "model-liriope" },
+  { crop_id: 2, crop_name: "사과", emoji: "🍎", model: "model-liriope" },
+  { crop_id: 1, crop_name: "포도", emoji: "🍇", model: "model-liriope" },
+  { crop_id: 3, crop_name: "토마토", emoji: "🍅", model: "model-liriope" },
+  { crop_id: 102, crop_name: "감자", emoji: "🥔", model: "model-wambugu" },
+  { crop_id: 101, crop_name: "쌀", emoji: "🌾", model: "model-wambugu" },
+  { crop_id: 104, crop_name: "밀", emoji: "🌿", model: "model-wambugu" },
+  { crop_id: 103, crop_name: "옥수수", emoji: "🌽", model: "model-wambugu" },
 ];
 
 
-export const DEV_USE_MOCK = true;
+export const DEV_USE_MOCK = false;
 
 
 // UI 테스트용 더미 결과

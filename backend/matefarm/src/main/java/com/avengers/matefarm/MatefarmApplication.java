@@ -9,10 +9,14 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import java.util.TimeZone;
 
 
+
+
 @Slf4j
 @EnableAsync    // 비동기 처리를 위해 추가
 @SpringBootApplication
 public class MatefarmApplication {
+
+    
 
     public static void main(String[] args) {
         SpringApplication.run(MatefarmApplication.class, args);

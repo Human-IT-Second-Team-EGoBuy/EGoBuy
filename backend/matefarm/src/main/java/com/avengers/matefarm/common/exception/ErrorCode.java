@@ -1,6 +1,5 @@
 package com.avengers.matefarm.common.exception;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -66,10 +65,13 @@ public enum ErrorCode {
     // 500: 서버 내부 오류 (Internal Server Error)
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다"),
     PASSWORD_ENCODING_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "비밀번호 암호화 실패"),
-    SmsSendingException(50002, HttpStatus.INTERNAL_SERVER_ERROR, "SMS 전송 실패");
+    SmsSendingException(50002, HttpStatus.INTERNAL_SERVER_ERROR, "SMS 전송 실패"),
 
-
-
+    /* 지도 API 관련 에러 추가 */
+    MAP_API_ERROR(50003, HttpStatus.INTERNAL_SERVER_ERROR, "지도 API 통신 중 오류가 발생했습니다."),
+    MAP_DATA_NOT_FOUND(40406, HttpStatus.NOT_FOUND, "해당하는 토지 정보를 찾을 수 없습니다."),
+    MAP_PARSING_ERROR(50004, HttpStatus.INTERNAL_SERVER_ERROR, "API 응답 데이터 파싱에 실패했습니다.");
+    
     private final Integer code;
     private final HttpStatus httpStatus;
     private final String message;

@@ -70,7 +70,7 @@ public class Oauth2LoginService {
     }
     /* 카카오 로그인을 위한 메소드 */
     public ResponseOAuthLoginVO kakaoLogin(String code, String state) {
-        log.info("2-1 네이버 로그인에서 넘어온 임시 토큰 값 확인 :{}", state);
+        log.info("2-1 카카오 로그인에서 넘어온 임시 토큰 값 확인 :{}", state);
 
         // csrf 공격 방지를 위해 Url에서 추출한 state 값 확인.
         String redisStateValue = stringRedisTemplate.opsForValue().get("oauth:state:" + state);
@@ -118,7 +118,7 @@ public class Oauth2LoginService {
                 .build();
     }
 
-    /* Kakaor 로그인 유저 로그인 Or 회원가입 메소드 */
+    /* Kakao 유저 로그인 Or 회원가입 메소드 */
     private UserEntity getOrCreateKakaoLoginUser(KakaoUserProfile kakaoUserProfile, String userIdentifier) {
 
         // 사용자 조회 ( Optional을 직접 받아 로직 분기 )
@@ -231,15 +231,19 @@ public class Oauth2LoginService {
         // 4. code를 통해 Access Token을 발급받아 사용자의 프로필을 조회.
         String naverAccessToken = getNaverAccessToken(code, state);
         log.info("4. 종료:{}", naverAccessToken);
+
         // 5. 발급받은 naverAccessToken을 통해 사용자 프로필 조회.
         NaverUserProfile NaverUserProfile = getNaverUserProfile(naverAccessToken);
         log.info("5. 종료:{}", NaverUserProfile);
+
         // 6. 회원가입 및 로그인 정보에 활용될 식별자 생성.
         String userIdentifier = SignupPath.NAVER + "_" + NaverUserProfile.getId();
         log.info("6. 종료:{}", userIdentifier);
+
         // 7. 조회한 Profile 정보를 토대로 회원가입 및 로그인 처리
         UserEntity naverUser = getOrCreateNaverLoginUser(NaverUserProfile,userIdentifier);
         log.info("7. 회원가입 or 로그인 처리 종료:{}", naverUser);
+
         // 8. MateFarm 서비스 이용을 위한 AccessToken 및 RefreshToken 발급.
         String accessToken  = jwtUtil.generateToken(naverUser, List.of("USER"));
         String refreshToken = jwtUtil.generateRefreshToken(naverUser, List.of("USER"));
@@ -260,7 +264,7 @@ public class Oauth2LoginService {
     private UserEntity getOrCreateNaverLoginUser(NaverUserProfile userProfile, String userIdentifier) {
 
         // 사용자 조회 ( Optional을 직접 받아 로직 분기 )
-        // 사용자 존재 -> UsserEntity 객체 반환
+        // 사용자 존재 -> UserEntity 객체 반환
         // 사용자 없으면 -> orElseGet() 을 통해 객체 생성 후 반환.
         return userService.findOptionalByUserIdentifier(userIdentifier)
                 // orElseGet() : 값이 존재하지 않을 경우 대체할 값 생성
@@ -341,6 +345,7 @@ public class Oauth2LoginService {
         // state 값을 Redis에 임시 보관. TTL( 5분 )
         String state = UUID.randomUUID().toString();
 //        String redirectUrl = "http://localhost:8080/api/users/oauth2/naver-login";
+
         // Value는 존재 유무만 확인하면 되므로 유의미한 값일 필요 없음.
         stringRedisTemplate.opsForValue()
                 .set("oauth:state:" + state, "NAVER", 5, TimeUnit.MINUTES);
