@@ -1,5 +1,6 @@
 // src/component/page/aichat/components/ChatPanel.jsx
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 /** ====== UI 문구 ====== */
@@ -89,7 +90,7 @@ const mapApiConversationDetailToUi = (data) => {
   };
 };
 
-/** ====== 전송 응답 파서(v3) ====== */
+/** ====== 전송 응답 파서  ====== */
 const pickFromSendResponseV3 = (
   data,
   fallbackUserText,
@@ -128,22 +129,42 @@ const pickFromSendResponseV3 = (
   return { userMsg, botMsg, title, lastMessageAt };
 };
 
+const pickPagePayload = (res) => {
+  // ResponseDTO<PageResponseDTO<ConversationDto>> 기준
+  const page =
+    res?.data?.data ?? // ResponseDTO.data
+    res?.data?.content ??
+    res?.data ??
+    {};
+
+  const elements = Array.isArray(page?.elements) ? page.elements : [];
+  const currentPage = Number(page?.current_page ?? page?.currentPage ?? 1);
+
+  // PageResponseDTO의 next(Boolean): 다음 페이지 존재
+  const hasMore = Boolean(page?.next);
+
+  return { elements, currentPage, hasMore };
+};
+
 /** ====== axios 기본 ====== */
-axios.defaults.headers.common["Content-Type"] = "application/json";
+axios.defaults.withCredentials = true;
 
 // 인터셉터 중복 등록 방지 (HMR 대응)
 if (!axios.__MF_INTERCEPTOR__) {
   axios.__MF_INTERCEPTOR__ = true;
 
   axios.interceptors.request.use((config) => {
-    const isFormData = config.data instanceof FormData;
+    const isFormData =
+      typeof FormData !== "undefined" && config.data instanceof FormData;
 
     config.headers = config.headers ?? {};
-    if (!isFormData) config.headers["Content-Type"] = "application/json";
-    else delete config.headers["Content-Type"];
 
-    const token = localStorage.getItem("accessToken");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    // JSON 바디가 있을 때만 설정
+    if (!isFormData && config.data != null) {
+      config.headers["Content-Type"] = "application/json";
+    } else if (isFormData) {
+      delete config.headers["Content-Type"];
+    }
 
     return config;
   });
@@ -152,9 +173,7 @@ if (!axios.__MF_INTERCEPTOR__) {
 export default function ChatPanel() {
   /** ====== 인증 상태 ====== */
   const [authBlocked, setAuthBlocked] = useState(false);
-  const token = localStorage.getItem("accessToken");
-  const isLoggedIn = !!token;
-  const needLogin = !isLoggedIn || authBlocked;
+  const needLogin = authBlocked;
 
   /** ====== 상태 ====== */
   const [chats, setChats] = useState([]);
@@ -166,34 +185,64 @@ export default function ChatPanel() {
   const [loadingList, setLoadingList] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
 
+  const [loginNext, setLoginNext] = useState("");
+  const location = useLocation();
+
+  //무한스크롤
+  const [pageNo, setPageNo] = useState(1);
+  const [hasMoreList, setHasMoreList] = useState(true);
+  const loadingMoreRef = useRef(false); // 중복 호출 방지
+
   /** ====== 401 공통 처리 ====== */
   const handleAuthError = useCallback((e) => {
     const status = e?.response?.status;
     if (status === 401) {
       setAuthBlocked(true);
-      localStorage.removeItem("accessToken");
+
+      // 로그인 후 돌아올 위치 저장
+      const next = encodeURIComponent(location.pathname + location.search);
+      setLoginNext(next);
+
+      setSending(false);
+      setLoadingChat(false);
+      setLoadingList(false);
+      loadingMoreRef.current = false;
+
       return true;
     }
     return false;
-  }, []);
+  }, [location]);
+
+  useEffect(() => {
+    if (!authBlocked) return;
+    setChats([]);
+    setActiveId(null);
+    setInput("");
+    setPageNo(1);
+    setHasMoreList(true);
+    loadingMoreRef.current = false;
+  }, [authBlocked]);
 
   /** ====== 목록 재조회 (백이 status=1만 내려줌) ====== */
   const reloadList = useCallback(async () => {
     if (needLogin) return;
+    if (loadingList) return;
 
     setLoadingList(true);
     try {
       const res = await axios.get(API.listConversations, {
-        params: { page: 1, size: 50 },
+        params: { page: 1, size: 50, pageSize: 10 }, 
       });
 
-      const items =
-        res?.data?.data?.items ?? res?.data?.data ?? res?.data?.items ?? [];
-      const uiList = (Array.isArray(items) ? items : [])
+      const { elements, currentPage, hasMore } = pickPagePayload(res);
+
+      const uiList = elements
         .map(mapApiConversationItemToUi)
         .filter((c) => c.id);
 
       setChats(uiList);
+      setPageNo(currentPage);       // 보통 1
+      setHasMoreList(hasMore);      // next 기반
 
       setActiveId((prev) => {
         const exists = prev && uiList.some((c) => c.id === prev);
@@ -202,16 +251,67 @@ export default function ChatPanel() {
     } catch (e) {
       if (handleAuthError(e)) return;
       console.error("conversations list error:", e);
+      alert("대화 목록을 불러오는데 실패하셨습니다.");
     } finally {
       setLoadingList(false);
     }
-  }, [needLogin, handleAuthError]);
+  }, [needLogin, loadingList, handleAuthError]);
+
+  const loadMoreList = useCallback(async () => {
+    if (needLogin) return;
+    if (!hasMoreList) return;
+    if (loadingList) return;
+    if (loadingMoreRef.current) return;
+
+    loadingMoreRef.current = true;
+    const nextPage = pageNo + 1;
+
+    try {
+      const res = await axios.get(API.listConversations, {
+        params: { page: nextPage, size: 50, pageSize: 10 },
+      });
+
+      const { elements, currentPage, hasMore } = pickPagePayload(res);
+
+      const nextUi = (elements ?? [])
+        .map(mapApiConversationItemToUi)
+        .filter((c) => c.id);
+
+      // 중복 방지하면서 append
+      setChats((prev) => {
+        const map = new Map((prev ?? []).map((c) => [c.id, c]));
+        for (const c of nextUi) {
+          if (!map.has(c.id)) map.set(c.id, c);
+        }
+        return Array.from(map.values());
+      });
+
+      setPageNo(currentPage);
+      setHasMoreList(hasMore);
+    } catch (e) {
+      if (handleAuthError(e)) return;
+      console.error("conversations loadMore error:", e);
+    } finally {
+      loadingMoreRef.current = false;
+    }
+  }, [needLogin, hasMoreList, pageNo, loadingList, handleAuthError]);
 
   /** ====== 최초 로딩 ====== */
   useEffect(() => {
     if (needLogin) return;
     reloadList();
   }, [needLogin, reloadList]);
+
+  /** ====== Sidebar 스크롤 바닥 감지 ====== */
+  const onSidebarScroll = useCallback(
+    (e) => {
+      const el = e.currentTarget;
+      const nearBottom =
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+      if (nearBottom) loadMoreList();
+    },
+    [loadMoreList]
+  );
 
   /** ====== 활성 대화 ====== */
   const activeChat = useMemo(
@@ -226,7 +326,7 @@ export default function ChatPanel() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeId, messageCount]);
 
-  /** ====== 상세 로딩 (백: status=0이면 404) ====== */
+    /** ====== 상세 로딩 (백: status=0이면 404) ====== */
   useEffect(() => {
     if (needLogin) return;
     if (!activeId) return;
@@ -243,7 +343,6 @@ export default function ChatPanel() {
 
         const data = res?.data?.data ?? res?.data ?? {};
         const ui = mapApiConversationDetailToUi(data);
-
         if (!mounted || !ui?.id) return;
 
         setChats((prev) =>
@@ -252,13 +351,13 @@ export default function ChatPanel() {
       } catch (e) {
         if (handleAuthError(e)) return;
 
-        // 404면: 숨김/삭제된 것으로 보고 목록을 서버 기준으로 재정렬
         if (e?.response?.status === 404) {
           await reloadList();
           return;
         }
 
         console.error("conversation detail error:", e);
+        alert("상세 내용을 불러오는데 실패하셨습니다.");
         await reloadList();
       } finally {
         if (mounted) setLoadingChat(false);
@@ -268,7 +367,13 @@ export default function ChatPanel() {
     return () => {
       mounted = false;
     };
-  }, [needLogin, activeId, activeChat?.messages?.length, reloadList, handleAuthError]);
+  }, [
+    needLogin,
+    activeId,
+    activeChat?.messages?.length,
+    reloadList,
+    handleAuthError,
+  ]);
 
   /** ====== pending bot 유틸 ====== */
   const removePendingBots = (conv) => ({
@@ -335,6 +440,7 @@ export default function ChatPanel() {
         messages: [{ role: "bot", text: WELCOME_BOT_MSG, status: 1 }],
       };
 
+      // 새 대화는 최상단 prepend
       setChats((prev) => [uiWithWelcome, ...(prev ?? [])]);
       setActiveId(ui.id);
       setInput("");
@@ -358,7 +464,6 @@ export default function ChatPanel() {
     const targetId = String(conversationId);
     const wasActive = activeId === targetId;
 
-    // optimistic: 목록에서 즉시 제거 + active 전환
     setChats((prev) => {
       const next = (prev ?? []).filter((c) => c.id !== targetId);
       if (wasActive) setActiveId(next[0]?.id ?? null);
@@ -367,12 +472,14 @@ export default function ChatPanel() {
 
     setSending(true);
     try {
-      await axios.patch(API.patchConversationStatus(conversationId), { status: 0 });
+      await axios.patch(API.patchConversationStatus(conversationId), {
+        status: 0,
+      });
     } catch (e) {
       if (handleAuthError(e)) return;
       console.error("patch conversation status error:", e);
-      alert("대화 삭제에 실패하셨습니다.");
-      await reloadList(); // 실패 시 서버 기준으로 복구
+      alert("대화를 삭제에 실패하셨습니다.");
+      await reloadList();
     } finally {
       setSending(false);
     }
@@ -380,7 +487,7 @@ export default function ChatPanel() {
 
   /** ====== 메시지 전송 ====== */
   const handleSend = async () => {
-    if (needLogin) return alert(LOGIN_REQUIRED_TITLE);
+    if (needLogin) return;
     if (sending) return;
 
     const text = safeText(input);
@@ -389,7 +496,6 @@ export default function ChatPanel() {
     setSending(true);
     const clientMessageId = makeClientMessageId();
 
-    // optimistic UI
     setChats((prev) =>
       (prev ?? []).map((c) => {
         if (c.id !== activeId) return c;
@@ -448,7 +554,9 @@ export default function ChatPanel() {
 
           return {
             ...cleaned,
-            title: safeText(cleaned.title) ? cleaned.title : title ?? makeTitle(text),
+            title: safeText(cleaned.title)
+              ? cleaned.title
+              : title ?? makeTitle(text),
             lastMessageAt: lastMessageAt ?? cleaned.lastMessageAt ?? null,
             messages: nextMessages,
           };
@@ -457,7 +565,6 @@ export default function ChatPanel() {
     } catch (e) {
       if (handleAuthError(e)) return;
 
-      // status=0이면 404 처리되므로: 전송 중 404면 목록 재조회
       if (e?.response?.status === 404) {
         await reloadList();
         return;
@@ -506,7 +613,7 @@ export default function ChatPanel() {
     }
   };
 
-  /** ====== Sidebar 목록 (백이 status=1만 내려줌) ====== */
+  /** ====== Sidebar 목록 ====== */
   const sidebarChats = useMemo(() => chats ?? [], [chats]);
 
   /** ====== 로그인 필요 화면 ====== */
@@ -521,7 +628,7 @@ export default function ChatPanel() {
             </div>
 
             <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-              <a className="cp-btn" href="/login">
+              <a className="cp-btn" href={`/login?next=${loginNext || encodeURIComponent("/ai-chat")}`}>
                 로그인 하러가기
               </a>
               <button
@@ -551,7 +658,7 @@ export default function ChatPanel() {
           + 새 대화
         </button>
 
-        <nav className="cp-nav cp-scroll">
+        <nav className="cp-nav cp-scroll" onScroll={onSidebarScroll}>
           <div className="cp-nav-title">
             내 대화
             {loadingList && (
@@ -599,6 +706,13 @@ export default function ChatPanel() {
               );
             })
           )}
+
+          {/* 다음 페이지가 있으면(=next=true) 아래 문구가 보이며, 스크롤 바닥에서 자동 로드 */}
+          {hasMoreList && sidebarChats.length > 0 && (
+            <div style={{ padding: 12, fontSize: 12, opacity: 0.7 }}>
+              아래로 스크롤하면 더 불러와요…
+            </div>
+          )}
         </nav>
       </aside>
 
@@ -618,7 +732,8 @@ export default function ChatPanel() {
               )}
 
               {(activeChat.messages ?? []).map((m, idx) => {
-                const messageKey = m.messageId ?? m.clientMessageId ?? `idx_${idx}`;
+                const messageKey =
+                  m.messageId ?? m.clientMessageId ?? `idx_${idx}`;
                 const isUser = m.role === "user";
 
                 return (
@@ -631,7 +746,11 @@ export default function ChatPanel() {
                     ].join(" ")}
                   >
                     {!m?._pending && (
-                      <div className={`cp-msg-actions ${isUser ? "is-user" : "is-bot"}`}>
+                      <div
+                        className={`cp-msg-actions ${
+                          isUser ? "is-user" : "is-bot"
+                        }`}
+                      >
                         <button
                           className="cp-menu-btn"
                           title="복사"
@@ -670,7 +789,11 @@ export default function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
           />
-          <button className="cp-btn" onClick={handleSend} disabled={sending || !activeId}>
+          <button
+            className="cp-btn"
+            onClick={handleSend}
+            disabled={sending || !activeId}
+          >
             {sending ? "전송중..." : "전송"}
           </button>
         </div>

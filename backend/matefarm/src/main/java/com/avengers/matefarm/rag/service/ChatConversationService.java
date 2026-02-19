@@ -1,5 +1,6 @@
 package com.avengers.matefarm.rag.service;
 
+import com.avengers.matefarm.common.PageResponseDTO;
 import com.avengers.matefarm.common.exception.CommonException;
 import com.avengers.matefarm.common.exception.ErrorCode;
 import com.avengers.matefarm.rag.dto.entity.ConversationEntity;
@@ -10,7 +11,9 @@ import com.avengers.matefarm.rag.repository.ConversationMessageRepository;
 import com.avengers.matefarm.rag.repository.ConversationRepository;
 import com.avengers.matefarm.user.dto.UserEntity;
 import com.avengers.matefarm.user.repository.UserRepository;
+import org.springframework.data.domain.*;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,13 +50,27 @@ public class ChatConversationService {
 
     /** 0) 대화 목록: 무조건 ACTIVE(status=1)만 */
     @Transactional(readOnly = true)
-    public List<ConversationDto> list() {
+    public PageResponseDTO<ConversationDto> list(int pageNo, int pageSize, int elementsPerPage) {
         UserEntity user = getLoginUser();
 
-        List<ConversationEntity> list = conversationRepository.findList(user.getUserId());
-        if (list == null) list = Collections.emptyList();
+        // 방어
+        if (pageNo < 1) pageNo = 1;
+        if (pageSize < 1) pageSize = 10;               // 페이지 버튼 블록 기본 10
+        if (elementsPerPage < 1) elementsPerPage = 50; // 목록 row 기본 50
 
-        return list.stream()
+        // 정렬: lastMessageAt desc nulls last + conversationId desc
+        // (Spring Data Sort에서 nullsLast 지원)
+        Sort sort = Sort.by(
+                Sort.Order.desc("lastMessageAt"),
+                Sort.Order.desc("conversationId")
+        );
+
+        Pageable pageable = PageRequest.of(pageNo - 1, elementsPerPage, sort);
+
+        Page<ConversationEntity> page = conversationRepository
+                .findByUser_UserIdAndStatus(user.getUserId(), 1, pageable);
+
+        List<ConversationDto> elements = page.getContent().stream()
                 .map(c -> ConversationDto.builder()
                         .conversationId(c.getConversationId())
                         .title(c.getTitle())
@@ -62,8 +79,12 @@ public class ChatConversationService {
                         .messages(null) // 목록은 메시지 미포함
                         .build())
                 .toList();
-    }
 
+        int totalElements = (int) page.getTotalElements();
+
+        // 네 PageResponseDTO 생성자: (elements, pageNo, pageSize, elementsPerPage, total)
+        return new PageResponseDTO<>(elements, pageNo, pageSize, elementsPerPage, totalElements);
+    }
     /** 1) 대화 상세 조회: ACTIVE(status=1)만 (숨김은 404처럼 NOT_FOUND) */
     @Transactional(readOnly = true)
     public ConversationDto getConversation(long conversationId, boolean includeMessages) {

@@ -1,12 +1,12 @@
 package com.avengers.matefarm.rag.controller;
 
+import com.avengers.matefarm.common.PageResponseDTO;
 import com.avengers.matefarm.common.ResponseDTO;
 import com.avengers.matefarm.rag.dto.response.ConversationDto;
 import com.avengers.matefarm.rag.service.ChatConversationService;
 import com.avengers.matefarm.rag.dto.request.StatusPatchRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,9 +16,14 @@ public class ChatConversationController {
     private final ChatConversationService chatConversationService;
 
     @GetMapping("/conversations")
-    public ResponseDTO<List<ConversationDto>> list() {
-    return ResponseDTO.ok(chatConversationService.list());
-}
+    public ResponseDTO<PageResponseDTO<ConversationDto>> list(
+        @RequestParam(name = "page", defaultValue = "1") int pageNo,
+        @RequestParam(name = "size", defaultValue = "50") int elementsPerPage,
+        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize
+    ) {
+    return ResponseDTO.ok(chatConversationService.list(pageNo, pageSize, elementsPerPage));
+    }
+    
     @PostMapping("/conversations")
     public ResponseDTO<ConversationDto> create() {
         return ResponseDTO.ok(chatConversationService.createConversation());
