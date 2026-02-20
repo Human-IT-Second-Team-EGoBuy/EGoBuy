@@ -1,26 +1,23 @@
-.home-layout{
-  width: 100vw;
+.home-layout {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
-  display: grid;
-  grid-template-rows: 56px 1fr; /* header / body */
+  width: 100vw;
 }
 
-.header-layout{
+.header-layout {
   border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
-.body-layout{
+.body-layout {
   display: grid;
-  grid-template-columns: 240px 1fr; /* sidebar / main */
-  min-height: 0; /* 스크롤 꼬임 방지 */
+  grid-template-columns: 240px 1fr;
+  height: 100%;
+  min-height: 0; /* 자식 높이가 부모를 뚫고 나가는 것 방지 */
 }
 
-.sidebar-layout{
-  background: #4f8f5c;
-  overflow: auto;
-}
-
-.page-layout{
-  overflow: auto;
-  background: #fff;
+.page-layout {
+  flex: 1; /* 남은 공간 다 쓰기 */
+  width: 100%;
+  min-height: 0; /* 중요: 내부 지도가 높이를 가질 수 있게 함 */
 }

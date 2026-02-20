@@ -226,7 +226,7 @@ const best = data?.best
   return (
     <div className="ap-wrap">
       <div className="ap-card">
-        <HeaderBar mode={mode} onChangeMode={setMode} />
+        <HeaderBar mode={mode} setMode={setMode} />
 
         <div className="ap-body">
           {mode === "chat" ? (

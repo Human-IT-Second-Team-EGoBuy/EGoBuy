@@ -8,7 +8,6 @@ export default function Home() {
             <div className="header-layout">
                 <Header />
             </div>
-
             <div className="page-layout">
                 <Outlet />
             </div>

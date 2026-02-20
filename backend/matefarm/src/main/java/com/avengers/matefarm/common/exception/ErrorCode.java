@@ -1,6 +1,5 @@
 package com.avengers.matefarm.common.exception;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -23,6 +22,9 @@ public enum ErrorCode {
     EXCEEDED_FILE_SIZE(40014, HttpStatus.BAD_REQUEST, "개별 파일 용량의 제한 크기를 초과하였습니다."), // 단일 파일의 용량 (10MB)를 초과하는 파일을 업로드 시도 하는 경우.
     CANNOT_REPLY_TO_RECOMMENT(40015, HttpStatus.BAD_REQUEST, "대대댓글은 허용되지 않습니다."),
     INQUIRY_STATUS_NOT_PENDING(40016, HttpStatus.BAD_REQUEST, "대기중인 요청만 삭제할 수 있습니다."),
+    INVALID_CONVERSATION_ID(40017, HttpStatus.BAD_REQUEST, "잘못된 대화 ID 입니다."),
+    INVALID_STATUS_VALUE(40018, HttpStatus.BAD_REQUEST, "잘못된 상태 값입니다."), 
+    EMPTY_MESSAGE_CONTENT(40019, HttpStatus.BAD_REQUEST, "메시지 내용은 비어 있을 수 없습니다."),
 
     // 401: 인증 실패 (Unauthorized)
     INVALID_HEADER_VALUE(40100, HttpStatus.UNAUTHORIZED, "올바르지 않은 헤더값입니다."), // 헤더 값이 잘못되었거나 누락된 경우
@@ -53,11 +55,13 @@ public enum ErrorCode {
     NOT_FOUND_NOTICE(40403, HttpStatus.NOT_FOUND, "공지사항이 존재하지 않습니다."),
     NOT_FOUND_POST(40404, HttpStatus.NOT_FOUND,"게시글이 존재하지 않습니다."),
     NOT_FOUND_COMMENT(40405, HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
-    NOT_FOUND_INQUIRY(40406, HttpStatus.NOT_FOUND, "상태를 변경할 문의사항이 존재하지 않습니다."),
+    NOT_FOUND_INQUIRY(40407, HttpStatus.NOT_FOUND, "상태를 변경할 문의사항이 존재하지 않습니다."),
+    NOT_FOUND_CONVERSATION(40408, HttpStatus.NOT_FOUND, "챗봇 대화 내용이 존재하지 않습니다."),
 
     // 409: 중복 데이터 (Conflict)
     DUPLICATE_NICKNAME(40900,  HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.."),
     DUPLICATE_PASSWORD(40901, HttpStatus.CONFLICT,"현재 사용중인 비밀번호로 변경할 수 없습니다."),
+    DUPLICATE_ANSWER(40902, HttpStatus.CONFLICT, "이미 해당 문의에 대한 답변이 완료되었습니다."),
 
     // 429: 요청 과다 (Too Many Requests)
     TOO_MANY_REQUESTS(42900, HttpStatus.TOO_MANY_REQUESTS, "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요."),
@@ -65,10 +69,20 @@ public enum ErrorCode {
     // 500: 서버 내부 오류 (Internal Server Error)
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다"),
     PASSWORD_ENCODING_FAILED(50001, HttpStatus.INTERNAL_SERVER_ERROR, "비밀번호 암호화 실패"),
-    SmsSendingException(50002, HttpStatus.INTERNAL_SERVER_ERROR, "SMS 전송 실패");
+    SmsSendingException(50002, HttpStatus.INTERNAL_SERVER_ERROR, "SMS 전송 실패"),
+
+
+    // 502: 외부 API 오류 (Bad Gateway) 
+    EXTERNAL_API_ERROR(50200, HttpStatus.BAD_GATEWAY, "외부 서비스 호출에 실패했습니다. 잠시 후 다시 시도해 주세요."),
 
 
 
+
+    /* 지도 API 관련 에러 추가 */
+    MAP_API_ERROR(50003, HttpStatus.INTERNAL_SERVER_ERROR, "지도 API 통신 중 오류가 발생했습니다."),
+    MAP_DATA_NOT_FOUND(40406, HttpStatus.NOT_FOUND, "해당하는 토지 정보를 찾을 수 없습니다."),
+    MAP_PARSING_ERROR(50004, HttpStatus.INTERNAL_SERVER_ERROR, "API 응답 데이터 파싱에 실패했습니다.");
+    
     private final Integer code;
     private final HttpStatus httpStatus;
     private final String message;

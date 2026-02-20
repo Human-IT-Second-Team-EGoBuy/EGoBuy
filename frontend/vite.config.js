@@ -11,8 +11,9 @@ export default defineConfig({
     //  backend에서 받을 포트 지정
     proxy: {
       '/api':{
-        target: 'http://localhost:8080',
-        changeOrigin: true
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   }

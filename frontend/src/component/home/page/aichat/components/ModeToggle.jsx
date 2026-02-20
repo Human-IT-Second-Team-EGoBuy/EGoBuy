@@ -1,10 +1,10 @@
 // src/component/page/aichat/components/ModeToggle.jsx
-export default function ModeToggle({ mode, onChange }) {
+export default function ModeToggle({ mode, setMode }) {
   return (
     <div className="mt-wrap">
       <button
         type="button"
-        onClick={() => onChange("chat")}
+        onClick={() => setMode("chat")}
         className={`mt-btn ${mode === "chat" ? "mt-active" : "mt-idle"}`}
       >
         챗봇
@@ -12,7 +12,7 @@ export default function ModeToggle({ mode, onChange }) {
 
       <button
         type="button"
-        onClick={() => onChange("vision")}
+        onClick={() => setMode("vision")}
         className={`mt-btn ${mode === "vision" ? "mt-active" : "mt-idle"}`}
       >
         이미지 진단
