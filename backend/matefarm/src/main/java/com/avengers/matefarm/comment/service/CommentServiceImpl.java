@@ -56,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
             checkedParent = commentRepository.findById(requestDTO.getParentId())
                     .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_COMMENT));
 
-            if( checkedParent.getParent() != null ) {
+            if( checkedParent.getParentId() != null ) {
                 throw new CommonException(ErrorCode.CANNOT_REPLY_TO_RECOMMENT);
             }
         }

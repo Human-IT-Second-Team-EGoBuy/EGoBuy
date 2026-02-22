@@ -52,11 +52,12 @@ public class CommentEntity {
 
     // 추가 : 대댓글의 경우 부모 댓글의 Id를 가짐 | 주체(대댓글) -> 대상(부모)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonProperty("parent")
-    private CommentEntity parent;
+    @JsonProperty("parent_id")
+    private CommentEntity parentId;
 
     // 추가 : 댓글과의 관계 1:N  | 주체(댓글) -> 대상(대댓글)
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @Builder.Default    // builder로 생성될 때 여기서 설정한 초기화 식이 제대로 먹히지 않아 null 값이 생기는 것을 방지하기 위해 추가
+    @OneToMany(mappedBy = "parentId", cascade = CascadeType.ALL)
     private List<CommentEntity> children = new ArrayList<>();
 
 
