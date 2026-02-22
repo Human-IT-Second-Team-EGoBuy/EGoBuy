@@ -431,6 +431,8 @@ CREATE TABLE `notice` (
 	`notice_content` TEXT NOT NULL,
 	`files_tf` ENUM('Y', 'N') NOT NULL,
 	`writer_id` BIGINT NOT NULL,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP NULL,
 	PRIMARY KEY (`notice_id`),
 	CONSTRAINT `FK_users_TO_notice` FOREIGN KEY (`writer_id`) 
 		REFERENCES `users` (`user_id`)
@@ -441,9 +443,9 @@ CREATE TABLE `inquiry` (
 	`inquiry_id` BIGINT NOT NULL AUTO_INCREMENT,
 	`inquiry_title` VARCHAR(50) NOT NULL,
 	`inquiry_content` TEXT NOT NULL,
-	`inquiry_type` ENUM('ACCOUNT', 'TECHNICAL_ISSUE', 'OTHER') NULL,
+	`inquiry_type` ENUM('ACCOUNT', 'TECHNICAL_ISSUE', 'OTHER') NOT NULL,
 	`inquiry_status` ENUM('PENDING', 'PROCESSING', 'COMPLETED') NOT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	`answered_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
 	`writer_id` BIGINT NOT NULL,
 	PRIMARY KEY (`inquiry_id`),

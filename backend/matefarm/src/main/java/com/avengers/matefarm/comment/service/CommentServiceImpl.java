@@ -70,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
                 .writerId(userEntity)
                 .postId(postEntity)
                 .deleteYn(DeleteYN.N)
-                .parent(checkedParent)  // parent인 경우 null
+                .parentId(checkedParent)  // parent인 경우 null
                 .createdAt(LocalDateTime.now().withNano(0))
                 .build();
 
@@ -88,7 +88,7 @@ public class CommentServiceImpl implements CommentService {
         CommunityPostEntity postEntity = communityPostService.getPostInfo(postId);
 
         // 댓글 반환. 부모 객체에 List로 담긴 자식 댓글이 추가로 조회되지 않도록 ParentIsNull 조건을 추가.
-        List<CommentEntity> savedEntities = commentRepository.findAllByPostIdAndParentIsNull(postEntity);
+        List<CommentEntity> savedEntities = commentRepository.findAllByPostIdAndParentIdIsNull(postEntity);
 
         // Entity를 List로 반환.
         return savedEntities.stream()
