@@ -13,7 +13,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 @Slf4j
 //필기. 해당 패키지에서 에러 발생시 작동하는 CustomHandler
-@RestControllerAdvice(basePackages = "com.learn.securitytest")
+@RestControllerAdvice(basePackages = "com.avengers.matefarm")
 
 public class GlobalExceptionHandler {
 

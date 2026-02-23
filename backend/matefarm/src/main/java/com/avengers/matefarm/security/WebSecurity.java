@@ -71,10 +71,10 @@ public class WebSecurity {
         // 요청 API 권한 설정 (추후 역할에 따라 Customizing )
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/login", "/signup").permitAll()
-            .requestMatchers("/api/ai-chat/vision/**").permitAll()
-            .requestMatchers("/api/ai-chat/**").authenticated()
-            //.requestMatchers("/**").permitAll()     // security 적용 시점에 수정
-            .anyRequest().permitAll()             // permitAll() 설정 외 모든 api 인증 필요
+            //.requestMatchers("/api/ai-chat/vision/**").permitAll()
+            //.requestMatchers("/api/ai-chat/**").authenticated()
+            .requestMatchers("/**").permitAll()     // security 적용 시점에 수정
+            //.anyRequest().permitAll()             // permitAll() 설정 외 모든 api 인증 필요
         )
 
         .exceptionHandling(e -> e
