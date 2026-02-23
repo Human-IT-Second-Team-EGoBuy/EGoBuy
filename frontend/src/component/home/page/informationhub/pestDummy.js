@@ -1,5 +1,5 @@
 // src/component/home/page/informationhub/pestDummy.js
-export const DEV_USE_MOCK = true;
+export const DEV_USE_MOCK = false;
 
 export const DUMMY_CATEGORIES = [
   { category_id: 1, category_name: "식량작물" },

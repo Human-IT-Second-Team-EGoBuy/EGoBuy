@@ -1,151 +1,61 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./insectpestsinfo.css";
-import { DUMMY_CATEGORIES, DUMMY_CROPS, DUMMY_INSECTS, DUMMY_DISEASES } from "./pestDummy";
-// import axios from "axios";
+import axios from "axios";
 
 const PAGE_SIZE = 10;
-
-const cropNameMap = new Map(DUMMY_CROPS.map((c) => [c.crop_id, c.crop_name]));
 
 export default function InsectPestsInfoPage() {
   const nav = useNavigate();
 
   /* 필터 상태 */
-  const [categoryId, setCategoryId] = useState("all"); // crop_categories
-  const [ptype, setPtype] = useState("all");           // UI 필터: all | insect | disease
-  const [q, setQ] = useState("");                      // 검색어 (작물/병해충명)
+  const [categoryId, setCategoryId] = useState("all");
+  const [ptype, setPtype] = useState("all");
+  const [q, setQ] = useState("");
 
   /* 데이터 상태 */
   const [categories, setCategories] = useState([]);
   const [rows, setRows] = useState([]);
 
-  /* 페이지 */
+  /* 서버 페이징 */
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  /* 1) 카테고리 로드 (더미) */
+  /* 1) 카테고리 로드 */
   useEffect(() => {
-    // ===== 실제 백엔드 연결 시 (axios 예시) =====
-    // (async () => {
-    //   const res = await axios.get("/api/information-hub/crop-categories");
-    //   // 예: { code, message, data: [...] }
-    //   setCategories(res.data.data);
-    // })();
-
-    setCategories(DUMMY_CATEGORIES);
+    (async () => {
+      const res = await axios.get("/api/information-hub/crop-categories");
+      setCategories(res.data?.content ?? []);
+    })();
   }, []);
 
-  /* 2) categoryId / ptype / q / page 바뀌면 -> 통합목록 로드(axios 자리) */
+  /* 2) 필터/검색/페이지 바뀌면 -> 서버에서 목록 다시 받기 */
   useEffect(() => {
-    // 지금은 더미 기반이라 API 호출 안 함.
-
-    // ===== 실제 백엔드 연결 시 (axios 예시) =====
-    // (async () => {
-    //   const res = await axios.get("/api/information-hub/pest-issues", {
-    //     params: {
-    //       categoryId: categoryId === "all" ? undefined : categoryId,
-    //       ptype: ptype === "all" ? undefined : ptype,
-    //       q: q.trim() ? q.trim() : undefined, // 검색어
-    //       page,
-    //       size: PAGE_SIZE,
-    //     },
-    //   });
-    //
-    //   // 예: { code, message, data: { items, total, ... } }
-    //   // items = [{ pest_type, pest_id, crop_id, pest_name, updated_at }, ...]
-    //   const items = res.data?.data?.items ?? [];
-    //   setRows(items);
-    // })();
-  }, [categoryId, ptype, q, page]);
-
-  /* 3) 통합 rows 만들기 (여기서 pest_type을 "프론트에서" 붙임) */
-  const mergedAll = useMemo(() => {
-    // API로 setRows()가 들어오면, 그걸 그대로 사용
-    if (rows && rows.length > 0) return rows;
-
-    // 더미 fallback
-    const insects = DUMMY_INSECTS.map((x) => ({
-      pest_type: "insect",
-      pest_id: x.insect_id,
-      crop_id: x.crop_id,
-      pest_name: x.tgt_vrmn_name,
-      updated_at: x.updated_at,
-    }));
-
-    const diseases = DUMMY_DISEASES.map((x) => ({
-      pest_type: "disease",
-      pest_id: x.disease_id,
-      crop_id: x.crop_id,
-      pest_name: x.sick_name_kor,
-      updated_at: x.updated_at,
-    }));
-
-    return [...insects, ...diseases];
-  }, [rows]);
-
-  /** 4) 필터 적용(카테고리/유형/검색어) */
-  const filtered = useMemo(() => {
-    let list = [...mergedAll];
-
-    // (A) categoryId -> 해당 카테고리 crop_id만
-    if (categoryId !== "all") {
-      const cropIdsInCategory = new Set(
-        DUMMY_CROPS
-          .filter((c) => String(c.category_id) === String(categoryId))
-          .map((c) => c.crop_id)
-      );
-      list = list.filter((r) => cropIdsInCategory.has(r.crop_id));
-    }
-
-    // (B) ptype
-    if (ptype !== "all") {
-      list = list.filter((r) => r.pest_type === ptype);
-    }
-
-    //  (C) 검색어 (작물명 or 병해충명)
-    const keyword = q.trim();
-    if (keyword) {
-      list = list.filter((r) => {
-        const cropName = cropNameMap.get(r.crop_id) ?? "";
-        const pestName = String(r.pest_name ?? "");
-        return cropName.includes(keyword) || pestName.includes(keyword);
+    (async () => {
+      const res = await axios.get("/api/information-hub/pest-issues", {
+        params: {
+          categoryId: categoryId === "all" ? undefined : categoryId,
+          ptype: ptype === "all" ? undefined : ptype,
+          q: q.trim() ? q.trim() : undefined,
+          page,
+          size: PAGE_SIZE,
+        },
       });
-    }
 
-    // (D) crop_name순 가나다 정렬
-    list.sort((a, b) => {
-      const an = cropNameMap.get(a.crop_id) ?? "";
-      const bn = cropNameMap.get(b.crop_id) ?? "";
-
-      const c = an.localeCompare(bn, "ko-KR");
-      if (c !== 0) return c;
-
-      return (a.pest_name ?? "").localeCompare((b.pest_name ?? ""), "ko-KR");
-    });
-
-    return list;
-  }, [mergedAll, categoryId, ptype, q]);
-
-  /* 5) 페이징 */
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+      const data = res.data?.content ?? {};
+      setRows(data.items ?? []);
+      setTotalPages(data.totalPages ?? 1);
+    })();
+  }, [categoryId, ptype, q, page]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  /* 6) 행 클릭 -> 상세 이동 */
   const onRowClick = (r) => {
     if (r.pest_type === "insect") nav(`/insect-pests-info/insects/${r.pest_id}`);
     else nav(`/insect-pests-info/diseases/${r.pest_id}`);
   };
-
-  /* crop_name 표시용 */
-  const cropNameById = useMemo(() => {
-    const m = new Map(DUMMY_CROPS.map((c) => [c.crop_id, c.crop_name]));
-    return (id) => m.get(id) || "-";
-  }, []);
 
   return (
     <div className="bpi-wrap select-none">
@@ -158,7 +68,6 @@ export default function InsectPestsInfoPage() {
           <div className="bpi-divider" />
 
           <div className="bpi-body">
-            {/* 필터 */}
             <div className="bpi-filter-row">
               <SelectLike
                 value={categoryId}
@@ -175,7 +84,6 @@ export default function InsectPestsInfoPage() {
                 ]}
               />
 
-              {/*  검색 인풋 (SelectLike 스타일 톤 그대로) */}
               <input
                 className="bpi-input"
                 value={q}
@@ -210,21 +118,18 @@ export default function InsectPestsInfoPage() {
                       <th className="bpi-th w-[140px]">작물</th>
                       <th className="bpi-th">병해충명</th>
                       <th className="bpi-th w-[120px]">유형</th>
-                      <th className="bpi-th w-[140px] hidden sm:table-cell">
-                        업데이트
-                      </th>
                     </tr>
                   </thead>
 
                   <tbody className="bpi-tbody">
-                    {pageRows.length === 0 ? (
+                    {rows.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="bpi-empty">
+                        <td colSpan={4} className="bpi-empty">
                           조건에 맞는 데이터가 없어요.
                         </td>
                       </tr>
                     ) : (
-                      pageRows.map((r, idx) => (
+                      rows.map((r, idx) => (
                         <tr
                           key={`${r.pest_type}-${r.pest_id}`}
                           className="bpi-tr"
@@ -234,13 +139,10 @@ export default function InsectPestsInfoPage() {
                           <td className="bpi-td-muted">
                             {(page - 1) * PAGE_SIZE + idx + 1}
                           </td>
-                          <td className="bpi-td">{cropNameById(r.crop_id)}</td>
+                          <td className="bpi-td">{r.crop_name ?? "-"}</td>
                           <td className="bpi-td bpi-name">{r.pest_name}</td>
                           <td className="bpi-td">
                             <TypeBadge type={r.pest_type} />
-                          </td>
-                          <td className="bpi-td-muted hidden sm:table-cell">
-                            {String(r.updated_at).slice(0, 10)}
                           </td>
                         </tr>
                       ))
@@ -249,7 +151,6 @@ export default function InsectPestsInfoPage() {
                 </table>
               </div>
 
-              {/* 페이지네이션 */}
               <div className="bpi-pager">
                 <PagerButton
                   disabled={page === 1}
@@ -259,11 +160,7 @@ export default function InsectPestsInfoPage() {
                 </PagerButton>
 
                 {getPageNumbers(page, totalPages, 5).map((n) => (
-                  <PagerButton
-                    key={n}
-                    active={n === page}
-                    onClick={() => setPage(n)}
-                  >
+                  <PagerButton key={n} active={n === page} onClick={() => setPage(n)}>
                     {n}
                   </PagerButton>
                 ))}

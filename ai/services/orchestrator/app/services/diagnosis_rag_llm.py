@@ -22,6 +22,7 @@ def build_diagnosis_prompt(label_ko: str, evidence_docs: list[dict]) -> str:
 규칙:
 - 줄바꿈/목록/번호/불릿 사용 금지.
 - 2~3문장 이내로만 답한다.
+- 병명에 건강함이 들어가 있으면 '근거 문서' 참고하지말고 건강하다고 답한다.
 
 [병명]
 {label_ko}
