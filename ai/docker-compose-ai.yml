@@ -14,6 +14,8 @@ services:
       - model-liriope
       - model-wambugu
       - embedder
+    networks: # 추가
+      - matefarm-network
 
   model-liriope:
     build: ./services/model-liriope
@@ -26,6 +28,8 @@ services:
       - HF_HOME=/hf
       - HF_HUB_CACHE=/hf/hub
       - TRANSFORMERS_CACHE=/hf/transformers
+    networks: # 추가
+      - matefarm-network
 
   model-wambugu:
     build: ./services/model-wambugu
@@ -38,6 +42,8 @@ services:
       - HF_HOME=/hf
       - HF_HUB_CACHE=/hf/hub
       - TRANSFORMERS_CACHE=/hf/transformers
+    networks: # 추가
+      - matefarm-network
 
   embedder:
     build: ./services/embedder
@@ -47,3 +53,10 @@ services:
       - ./services/embedder/data/chroma_db:/chroma
     environment:
       - CHROMA_PERSIST_DIR=/chroma
+    networks: # 추가
+      - matefarm-network
+
+# 두 개의 Docker-compose 환경을 이어주기 위한 external Network 를 정의
+networks:
+  matefarm-network:
+    external: true

@@ -115,8 +115,8 @@ public class WebSecurity {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);    // Credentials Allow
-        //        configuration.setAllowedOrigins(List.of("https://example.com")); //  배포 후 도메인 변경
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Allow frontend ( React localhost )
+                configuration.setAllowedOrigins(List.of("https://matefarm.click")); //  배포 후 도메인 변경
+//        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Allow frontend ( React localhost )
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));   // 허용할 HTTP Method 지정
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers
 

@@ -32,7 +32,7 @@ public class InquiryEntity {
     private String inquiryContent;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "inquiry_type")
+    @Column(name = "inquiry_type", nullable = false)
     private InquiryType inquiryType;
 
     @Enumerated(EnumType.STRING)
