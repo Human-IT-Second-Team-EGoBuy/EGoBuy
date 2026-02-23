@@ -85,146 +85,147 @@ CREATE TABLE `users` (
 
 -- 2. crop_categories 테이블
 CREATE TABLE `crop_categories` (
-	`category_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`category_name` VARCHAR(255) NOT NULL,
-	`status` INT NOT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY (`category_id`)
-) ENGINE=InnoDB;
+  `category_id` int NOT NULL AUTO_INCREMENT,
+  `category_name` varchar(100) NOT NULL,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category_id`),
+  UNIQUE KEY `uk_crop_categories_name` (`category_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1157 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. crop 테이블
 CREATE TABLE `crop` (
-	`crop_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`crop_name` VARCHAR(255) NOT NULL,
-	`crop_code` VARCHAR(255) NOT NULL,
-	`status` INT NOT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`category_id` BIGINT NOT NULL,
-	PRIMARY KEY (`crop_id`),
-	CONSTRAINT `FK_crop_categories_TO_crop` FOREIGN KEY (`category_id`) 
-		REFERENCES `crop_categories` (`category_id`)
-) ENGINE=InnoDB;
+  `crop_id` int NOT NULL AUTO_INCREMENT,
+  `category_id` int DEFAULT NULL,
+  `crop_name` varchar(100) NOT NULL,
+  `crop_code` varchar(30) DEFAULT NULL,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`crop_id`),
+  UNIQUE KEY `uk_crop_name` (`crop_name`),
+  UNIQUE KEY `uk_crop_code` (`crop_code`),
+  KEY `idx_crop_category` (`category_id`),
+  CONSTRAINT `fk_crop_category` FOREIGN KEY (`category_id`) REFERENCES `crop_categories` (`category_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1161 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. variety_group 테이블
 CREATE TABLE `variety_group` (
-	`variety_group_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`group_name` VARCHAR(255) NOT NULL,
-	`status` INT NOT NULL DEFAULT 1,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`crop_id` BIGINT NOT NULL,
-	PRIMARY KEY (`variety_group_id`),
-	CONSTRAINT `FK_crop_TO_variety_group` FOREIGN KEY (`crop_id`) 
-		REFERENCES `crop` (`crop_id`)
-) ENGINE=InnoDB;
+  `variety_group_id` int NOT NULL AUTO_INCREMENT,
+  `crop_id` int NOT NULL,
+  `group_name` varchar(255) NOT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`variety_group_id`),
+  UNIQUE KEY `uk_vg_crop_group` (`crop_id`,`group_name`),
+  KEY `idx_vg_crop_id` (`crop_id`),
+  CONSTRAINT `fk_vg_crop` FOREIGN KEY (`crop_id`) REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. variety 테이블
 CREATE TABLE `variety` (
-	`variety_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`variety_name` VARCHAR(255) NOT NULL,
-	`usage` VARCHAR(255) NULL,
-	`lineage_name` VARCHAR(255) NULL,
-	`mother` VARCHAR(255) NULL,
-	`father` VARCHAR(255) NULL,
-	`adapt_region` VARCHAR(255) NULL,
-	`main_features` TEXT NULL,
-	`variety_group_id` BIGINT NOT NULL,
-	PRIMARY KEY (`variety_id`),
-	CONSTRAINT `FK_variety_group_TO_variety` FOREIGN KEY (`variety_group_id`) 
-		REFERENCES `variety_group` (`variety_group_id`)
-) ENGINE=InnoDB;
+  `variety_id` int NOT NULL AUTO_INCREMENT,
+  `variety_group_id` int NOT NULL,
+  `variety_name` varchar(255) NOT NULL,
+  `usage` varchar(255) DEFAULT NULL,
+  `lineage_name` varchar(255) DEFAULT NULL,
+  `mother` varchar(255) DEFAULT NULL,
+  `father` varchar(255) DEFAULT NULL,
+  `adapt_region` varchar(255) DEFAULT NULL,
+  `main_features` text,
+  PRIMARY KEY (`variety_id`),
+  UNIQUE KEY `uk_v_vg_name` (`variety_group_id`,`variety_name`),
+  KEY `idx_v_variety_group_id` (`variety_group_id`),
+  CONSTRAINT `fk_v_vg` FOREIGN KEY (`variety_group_id`) REFERENCES `variety_group` (`variety_group_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1438 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. insect 테이블
 CREATE TABLE `insect` (
-	`insect_key` BIGINT NOT NULL AUTO_INCREMENT,
-	`ncpms_insect_key` VARCHAR(255) NULL,
-	`insect_species_code` VARCHAR(255) NULL,
-	`insect_species_kor` VARCHAR(255) NULL,
-	`insect_species` VARCHAR(255) NULL,
-	`field` VARCHAR(255) NULL,
-	`insect_family` VARCHAR(255) NULL,
-	`insect_order` VARCHAR(255) NULL,
-	`insect_genus` VARCHAR(255) NULL,
-	`tgt_vrmn_name` VARCHAR(255) NULL,
-	`status` INT NOT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`crop_id` BIGINT NOT NULL,
-	PRIMARY KEY (`insect_key`),
-	CONSTRAINT `FK_crop_TO_insect` FOREIGN KEY (`crop_id`) 
-		REFERENCES `crop` (`crop_id`)
-) ENGINE=InnoDB;
+  `insect_id` int NOT NULL AUTO_INCREMENT,
+  `crop_id` int NOT NULL,
+  `ncpms_insect_key` varchar(20) DEFAULT NULL,
+  `insect_species_kor` varchar(150) DEFAULT NULL,
+  `insect_species` varchar(150) DEFAULT NULL,
+  `insect_species_code` varchar(50) DEFAULT NULL,
+  `tgt_vrmn_name` varchar(150) DEFAULT NULL,
+  `insect_order` varchar(100) DEFAULT NULL,
+  `insect_family` varchar(100) DEFAULT NULL,
+  `insect_genus` varchar(100) DEFAULT NULL,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`insect_id`),
+  KEY `idx_insect_crop` (`crop_id`),
+  CONSTRAINT `fk_insect_crop` FOREIGN KEY (`crop_id`) REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1477 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 7. insect_detail 테이블
 CREATE TABLE `insect_detail` (
-	`insect_key` BIGINT NOT NULL AUTO_INCREMENT,
-	`distrb_info` TEXT NULL,
-	`stle_info` TEXT NULL,
-	`ecology_info` TEXT NULL,
-	`damage_info` TEXT NULL,
-	`qrant_info` TEXT NULL,
-	`prevent_method` TEXT NULL,
-	`biology_prvnbe_mth` TEXT NULL,
-	`chemical_prvnbe_mth` TEXT NULL,
-	`insect_subspecies` VARCHAR(255) NULL,
-	`insect_subgenus` VARCHAR(255) NULL,
-	`etc` TEXT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY (`insect_key`),
-	CONSTRAINT `FK_insect_TO_insect_detail` FOREIGN KEY (`insect_key`) 
-		REFERENCES `insect` (`insect_key`)
-) ENGINE=InnoDB;
+  `insect_id` int NOT NULL,
+  `distrb_info` text,
+  `stle_info` text,
+  `ecology_info` text,
+  `damage_info` text,
+  `qrant_info` text,
+  `prevent_method` text,
+  `biology_prvnbe_mth` text,
+  `chemical_prvnbe_mth` text,
+  `etc` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`insect_id`),
+  CONSTRAINT `fk_insect_detail` FOREIGN KEY (`insect_id`) REFERENCES `insect` (`insect_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. disease 테이블
 CREATE TABLE `disease` (
-	`disease_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`ncpms_sick_key` VARCHAR(255) NULL,
-	`sick_name_kor` VARCHAR(255) NOT NULL,
-	`sick_name_eng` VARCHAR(255) NULL,
-	`sick_name_chn` VARCHAR(255) NULL,
-	`status` INT NOT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`sort_order2` INT NULL,
-	`crop_id` BIGINT NOT NULL,
-	PRIMARY KEY (`disease_id`),
-	CONSTRAINT `FK_crop_TO_disease` FOREIGN KEY (`crop_id`) 
-		REFERENCES `crop` (`crop_id`)
-) ENGINE=InnoDB;
+  `disease_id` int NOT NULL AUTO_INCREMENT,
+  `crop_id` int NOT NULL,
+  `ncpms_sick_key` varchar(20) DEFAULT NULL,
+  `sick_name_kor` varchar(150) NOT NULL,
+  `sick_name_eng` varchar(150) DEFAULT NULL,
+  `sick_name_chn` varchar(150) DEFAULT NULL,
+  `sort_order2` int DEFAULT NULL,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`disease_id`),
+  KEY `idx_disease_crop` (`crop_id`),
+  CONSTRAINT `fk_disease_crop` FOREIGN KEY (`crop_id`) REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2273 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 9. disease_detail 테이블
 CREATE TABLE `disease_detail` (
-	`disease_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`infection_route` VARCHAR(255) NULL,
-	`development_condition` TEXT NULL,
-	`symptoms` TEXT NULL,
-	`prevention_method` TEXT NULL,
-	`biology_prvnbe_mth` TEXT NULL,
-	`chemical_prvnbe_mth` TEXT NULL,
-	`virus_name` VARCHAR(255) NULL,
-	`etc` TEXT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY (`disease_id`),
-	CONSTRAINT `FK_disease_TO_disease_detail` FOREIGN KEY (`disease_id`) 
-		REFERENCES `disease` (`disease_id`)
-) ENGINE=InnoDB;
+  `disease_id` int NOT NULL,
+  `infection_route` varchar(255) DEFAULT NULL,
+  `development_condition` text,
+  `symptoms` text,
+  `prevention_method` text,
+  `biology_prvnbe_mth` text,
+  `chemical_prvnbe_mth` text,
+  `virus_name` varchar(255) DEFAULT NULL,
+  `etc` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`disease_id`),
+  CONSTRAINT `fk_disease_detail` FOREIGN KEY (`disease_id`) REFERENCES `disease` (`disease_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 10. crop_cultivation 테이블
 CREATE TABLE `crop_cultivation` (
-	`crop_cultivation_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`cultivation_method` TEXT NULL,
-	`harvest_season` TEXT NULL,
-	`notes` TEXT NULL,
-	`standard_ability` TEXT NULL,
-	`crop_id` BIGINT NOT NULL,
-	PRIMARY KEY (`crop_cultivation_id`),
-	CONSTRAINT `FK_crop_TO_crop_cultivation` FOREIGN KEY (`crop_id`) 
-		REFERENCES `crop` (`crop_id`)
-) ENGINE=InnoDB;
+  `crop_cultivation_id` int NOT NULL AUTO_INCREMENT,
+  `crop_id` int NOT NULL,
+  `cultivation_method` text,
+  `harvest_season` text,
+  `notes` text,
+  `standard_ability` text,
+  PRIMARY KEY (`crop_cultivation_id`),
+  UNIQUE KEY `uk_crop_cultivation_crop` (`crop_id`),
+  KEY `idx_crop_cultivation_crop_id` (`crop_id`),
+  CONSTRAINT `fk_crop_cultivation_crop_id` FOREIGN KEY (`crop_id`) REFERENCES `crop` (`crop_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=185 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 11. wildlife_species 테이블
 CREATE TABLE `wildlife_species` (
@@ -320,8 +321,8 @@ CREATE TABLE `conversations` (
 CREATE TABLE `conversations_messages` (
 	`conversations_messages_id` BIGINT NOT NULL AUTO_INCREMENT,
 	`role` ENUM('USER','SYSTEM','ASSISTANT') NOT NULL,
-	`content` TEXT NOT NULL,
-	`metadata` JSON NULL,
+	`content` LONGTEXT NOT NULL,
+	`metadata` LONGTEXT NULL,
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`status` INT NULL,
@@ -331,14 +332,14 @@ CREATE TABLE `conversations_messages` (
 		REFERENCES `conversations` (`conversation_id`)
 ) ENGINE=InnoDB;
 
--- 18. message_pattachments 테이블
-CREATE TABLE `message_pattachments` (
-	`message_attachment_id` BIGINT NOT NULL AUTO_INCREMENT,
-	`sort_order` INT NOT NULL,
-	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY (`message_attachment_id`)
-) ENGINE=InnoDB;
+-- 18. message_pattachments 테이블, 메시지 첨부 안함
+-- CREATE TABLE `message_pattachments` (
+-- 	`message_attachment_id` BIGINT NOT NULL AUTO_INCREMENT,
+-- 	`sort_order` INT NOT NULL,
+-- 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- 	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+-- 	PRIMARY KEY (`message_attachment_id`)
+-- ) ENGINE=InnoDB;
 
 -- 19. community_post 테이블
 CREATE TABLE `community_post` (

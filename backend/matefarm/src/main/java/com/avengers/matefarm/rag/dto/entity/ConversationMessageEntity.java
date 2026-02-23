@@ -22,13 +22,10 @@ public class ConversationMessageEntity {
     @Column(name = "role", nullable = false)
     private MessageRole role;  
 
-    @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
-    /** LONGTEXT (JSON string 저장 권장) */
-    @Lob
-    @Column(name = "metadata")
+    @Column(name = "metadata", columnDefinition = "LONGTEXT")
     private String metadata;
 
     @Column(name = "status", nullable = false)

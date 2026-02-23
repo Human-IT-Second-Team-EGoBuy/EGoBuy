@@ -21,7 +21,7 @@ public class ChatConversationController {
         @RequestParam(name = "size", defaultValue = "50") int elementsPerPage,
         @RequestParam(name = "pageSize", defaultValue = "10") int pageSize
     ) {
-    return ResponseDTO.ok(chatConversationService.list(pageNo, pageSize, elementsPerPage));
+    return ResponseDTO.ok(chatConversationService.list(pageNo, elementsPerPage, pageSize));
     }
     
     @PostMapping("/conversations")

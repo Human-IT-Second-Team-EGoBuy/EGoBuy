@@ -161,26 +161,39 @@ public class RagService {
         try {
             RagResponse ragRes = fastApiWebClient.post()
                     .uri("/chat_rag")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON) // ✅ 추가
+                    .accept(org.springframework.http.MediaType.APPLICATION_JSON)      // ✅ 추가
                     .bodyValue(body)
                     .retrieve()
+                    // ✅ FastAPI가 4xx/5xx를 주면, body를 찍어서 원인 확인 가능
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            resp -> resp.bodyToMono(String.class).map(errBody -> {
+                                System.err.println("[FastAPI] status=" + resp.statusCode());
+                                System.err.println("[FastAPI] errorBody=" + errBody);
+                                return new RuntimeException("FastAPI error: " + resp.statusCode());
+                            }))
                     .bodyToMono(RagResponse.class)
                     .block();
 
             if (ragRes == null || ragRes.getAnswer() == null) {
+                System.err.println("[FastAPI] ragRes is null or answer is null");
                 throw new CommonException(ErrorCode.EXTERNAL_API_ERROR);
             }
             return ragRes;
 
         } catch (WebClientResponseException e) {
-            // FastAPI가 4xx/5xx를 준 경우
+            // ✅ status/body 그대로 남김
+            System.err.println("[FastAPI] WebClientResponseException status=" + e.getStatusCode());
+            System.err.println("[FastAPI] body=" + e.getResponseBodyAsString());
             throw new CommonException(ErrorCode.EXTERNAL_API_ERROR);
-        } catch (CommonException e) {
-            throw e;
+
         } catch (Exception e) {
-            // 타임아웃/네트워크 등
+            // ✅ 네트워크/타임아웃/역직렬화(Decoding) 등 진짜 원인이 여기 찍힘
+            e.printStackTrace();
             throw new CommonException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }
+
 
     private String makeTitleFromContent(String content) {
         String t = content == null ? "" : content.trim();
