@@ -1,7 +1,7 @@
 package com.avengers.matefarm.diagnosis.service;
 
 import com.avengers.matefarm.diagnosis.dto.*;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -11,27 +11,27 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class VisionDiagnosisService {
 
     private final WebClient fastApiWebClient;
 
+    public VisionDiagnosisService(@Qualifier("fastApiWebClient") WebClient fastApiWebClient) {
+        this.fastApiWebClient = fastApiWebClient;
+    }
+
     public VisionDiagnosisResponse diagnose(Integer cropId, MultipartFile image, Integer topK) {
 
-        // Spring -> FastAPI multipart (키 변환: crop_id / top_k)
         MultiValueMap<String, Object> multipart = new LinkedMultiValueMap<>();
         multipart.add("crop_id", cropId);
         multipart.add("top_k", topK);
         multipart.add("image", buildFilePart(image));
 
-        // FastAPI 호출
         FastApiResponse fast = fastApiWebClient.post()
                 .uri("/analyze")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -71,13 +71,10 @@ public class VisionDiagnosisService {
     }
 
     private VisionDiagnosisResponse toFrontendResponse(FastApiResponse fast, Integer requestCropId) {
-
-        // modelKey: final.target_model 우선, 없으면 target_model
         String modelKey = (fast.finalSection() != null && fast.finalSection().targetModel() != null)
                 ? fast.finalSection().targetModel()
                 : fast.targetModel();
 
-        // best: final.raw 우선 (없으면 model_result.best)
         BestResponse best = null;
         if (fast.finalSection() != null && fast.finalSection().raw() != null) {
             var raw = fast.finalSection().raw();
@@ -87,7 +84,6 @@ public class VisionDiagnosisService {
             best = new BestResponse(b.label(), b.labelKo(), b.prob());
         }
 
-        // topK: model_result.topk
         List<BestResponse> topK = List.of();
         if (fast.modelResult() != null && fast.modelResult().topk() != null) {
             topK = fast.modelResult().topk().stream()
@@ -95,7 +91,6 @@ public class VisionDiagnosisService {
                     .toList();
         }
 
-        // inferenceMs: meta.latency_ms_total 우선 -> 없으면 model_result.meta.latency_ms
         long inferenceMs = 0L;
         if (fast.meta() != null && fast.meta().latencyMsTotal() != null) {
             inferenceMs = fast.meta().latencyMsTotal();
@@ -105,7 +100,7 @@ public class VisionDiagnosisService {
         }
 
         return new VisionDiagnosisResponse(
-                requestCropId,      // 프론트에는 cropId만
+                requestCropId,
                 modelKey,
                 best,
                 topK,

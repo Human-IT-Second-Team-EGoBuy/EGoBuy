@@ -1,3 +1,7 @@
 package com.avengers.matefarm.insectpestinfo.dto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record CropCategoryDto(Long category_id, String category_name) {}
+public record CropCategoryDto(
+    @JsonProperty("category_id") Long categoryId,
+    @JsonProperty("category_name") String categoryName
+) {}

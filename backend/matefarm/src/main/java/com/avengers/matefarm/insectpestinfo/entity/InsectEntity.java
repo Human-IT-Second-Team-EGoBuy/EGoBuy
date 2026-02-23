@@ -19,12 +19,33 @@ public class InsectEntity {
     @JoinColumn(name = "crop_id", nullable = false)
     private CropEntity crop;
 
+    @Column(name = "ncpms_insect_key")
+    private String ncpmsInsectKey;
+
     @Column(name = "insect_species_kor")
-    private String pestName;
+    private String insectSpeciesKor;
+
+    @Column(name = "insect_species")
+    private String insectSpecies;
+
+    @Column(name = "insect_species_code")
+    private String insectSpeciesCode;
+
+    @Column(name = "tgt_vrmn_name")
+    private String tgtVrmnName;
+
+    @Column(name = "insect_order")
+    private String insectOrder;
+
+    @Column(name = "insect_family")
+    private String insectFamily;
+
+    @Column(name = "insect_genus")
+    private String insectGenus;
 
     @Column(name = "status", nullable = false)
     private Integer status;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }
