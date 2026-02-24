@@ -5,6 +5,7 @@ import './LoginPage.css';
 import axios from 'axios';
 import useUserStore from '../../../../../store/useUserStore'; // 로그인 시 Zustand로 전역 상태 관리를 하기 위해 추가.
 import { getUserProfile } from '../../../../../api/users';  // 사용할 함수를 users.js에서 추가
+import { socialLogin } from '../../../../../api/social';
 
 export default function LoginPage() {
   const [userId, setUserId] = useState('');
@@ -51,9 +52,9 @@ export default function LoginPage() {
 
   // 소셜 로그인 핸들러
   const handleSocialLogin = (provider) => {
-    // TODO: 각 소셜 로그인 제공자의 OAuth2 인증 URL로 리다이렉트
+    // 각 소셜 로그인 제공자의 OAuth2 인증 URL로 리다이렉트
+    socialLogin(provider)
     console.log(`${provider} 소셜 로그인 시도`);
-    // 예: window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
   };
 
   return (
@@ -150,7 +151,7 @@ export default function LoginPage() {
             <button 
               type="button" 
               className="btn-social btn-kakao"
-              onClick={() => handleSocialLogin('kakao')}
+              onClick={() => handleSocialLogin('kakao')}  // 클릭 시 handleSocialLogin에 파라미터 값으로 전달
               aria-label="카카오로 로그인"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

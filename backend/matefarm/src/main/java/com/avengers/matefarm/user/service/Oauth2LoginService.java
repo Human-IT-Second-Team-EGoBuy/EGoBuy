@@ -248,6 +248,7 @@ public class Oauth2LoginService {
         String accessToken  = jwtUtil.generateToken(naverUser, List.of("USER"));
         String refreshToken = jwtUtil.generateRefreshToken(naverUser, List.of("USER"));
 
+
         // 9. 토큰 정보를 반환.
         return ResponseOAuthLoginVO.builder()
                 .accessToken(accessToken)
@@ -293,10 +294,10 @@ public class Oauth2LoginService {
 
         return new NaverUserProfile(
                 userInfo.get("id").toString(),
-                (String)userInfo.get("name"),
+                (String)userInfo.get("name"),   // 네이버에서는 실명이 name 속성에 담김
                 (String)userInfo.get("nickname"),
                 (String) userInfo.get("email"),
-                (String) userInfo.get("mobile")  // 네이버에서는 실명이 name 속성에 담김
+                (String) userInfo.get("mobile")
         );
     }
 

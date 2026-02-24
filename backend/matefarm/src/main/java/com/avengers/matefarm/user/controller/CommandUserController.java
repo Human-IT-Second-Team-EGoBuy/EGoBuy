@@ -25,6 +25,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +48,11 @@ public class CommandUserController {
         this.emailService = emailService;
         this.oauth2LoginService = oauth2LoginService;
     }
+
+    // 소셜 로그인 후 Root 페이지로 리다이렉트 하기 위해 사용
+    @Value("${front.root-url}")
+    private String frontRootUrl;
+
     private final JwtUtil jwtUtil;
     private final UserService userService;
     private final EmailService emailService;
@@ -76,9 +83,10 @@ public class CommandUserController {
 
     /* 2-2. 네이버 로그인 */
     @GetMapping("/oauth2/naver-login")
-    public ResponseDTO<ResponseOAuthLoginVO> naverLogin(
+    public ResponseDTO<Void> naverLogin(
             @RequestParam String code,
-            @RequestParam String state) {
+            @RequestParam String state,
+            HttpServletResponse response) throws IOException {
 
         log.info("2-2 네이버 로그인 시작: code:{}, state:{}", code, state);
         // 회원이 네이버 로그인 시 code를 발급받아 사용. 이 정보로 AccessToken / Refresh Token 발급 ( 네이버 API 이용에 사용되는 )
@@ -86,13 +94,37 @@ public class CommandUserController {
         // 로그인 시 회원가입이 되었는지, 회원인지 판단하여 로직 분기.
         // 단, https://nid.naver.com/oauth2.0/authorize 로 요청 시, reat api 방식이 아닌 쿼리스트링 방식으로 호출 해야함.
 
+        // 1. naverLogin 로직
         ResponseOAuthLoginVO responseOauthLoginVO =
                 oauth2LoginService.
                         naverLogin(
                                 code,
                                 state);
 
-        return ResponseDTO.ok(responseOauthLoginVO);
+        // 2. 쿠키 설정 (HttpOnly)
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", responseOauthLoginVO.getAccessToken())
+                .path("/")
+                .httpOnly(true)
+                .secure(false) // 로컬 테스트 시 false, 배포(https) 시 true
+                .maxAge(3600)
+                .sameSite("Lax")
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", responseOauthLoginVO.getRefreshToken())
+                .path("/")
+                .httpOnly(true)
+                .secure(false)
+                .maxAge(604800)
+                .sameSite("Lax")
+                .build();
+
+        // 3. 응답 헤더에 쿠키 추가
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+        // 4. 로그인 성공 시 ("/") 루트 페이지로 리다이렉트
+        response.sendRedirect(frontRootUrl);
+        return ResponseDTO.ok(null);
     }
 
     /* 2-3. 카카오 로그인 URL 전송 API */

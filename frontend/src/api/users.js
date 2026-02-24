@@ -1,5 +1,5 @@
 // UserController API 
-import apiClient from './axios'; // 이전에 만든 인스턴스
+import apiClient from './axios';
 
 
 
