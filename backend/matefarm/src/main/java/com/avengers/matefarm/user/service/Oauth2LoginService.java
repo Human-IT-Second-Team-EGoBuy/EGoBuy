@@ -155,12 +155,12 @@ public class Oauth2LoginService {
         log.info("KakaoAccount: {}", kakaoAccount);
 
         Map<String, Object> UserProfile = (Map<String, Object>)kakaoAccount.get("profile");     // userInfo{ kakaoAccount{{profile{nickname:eaxmple}}} 구조
-
+        log.info("kakaoUserProfile 객체 확인 : {}", UserProfile);
         return new KakaoUserProfile(
                 userInfo.get("id").toString(),
                 (String)kakaoAccount.get("name"),
                 (String)UserProfile.get("nickname"),
-                (String) kakaoAccount.get("account_email"),
+                (String) kakaoAccount.get("email"),
                 (String) kakaoAccount.get("phone_number")
         );
 

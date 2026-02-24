@@ -83,7 +83,7 @@ export default function LoginPage() {
                   type="text" // email로 형식 검사 하지 않음.
                   id="userId"
                   className="input-field"
-                  placeholder="example@email.com"
+                  placeholder="아이디를 입력하세요"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
                   required
