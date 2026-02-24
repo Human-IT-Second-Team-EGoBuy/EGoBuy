@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { Card, WeatherUi, SectionText } from "./MainPageUi";
+import useUserStore from '../../../../store/useUserStore'; // Zustand 데이터를 확인하기 위한 로그
 
 export default function MainPage() {
   const [news, setnews] = useState();
+
+  const userState = useUserStore();
+  console.log("현재 유저 스토어 상태:", userState); // Zustand 데이터를 확인하기 위한 로그 추가 | 해당 요청은 비동기라서 Main에서 한번 load 시 로그인이 되었더라도 False를 반환함. 때문에, 이를 확인하기 위해 추가했던 로그
+
 
   return (
     <div className="p-4 md:p-6 space-y-8">

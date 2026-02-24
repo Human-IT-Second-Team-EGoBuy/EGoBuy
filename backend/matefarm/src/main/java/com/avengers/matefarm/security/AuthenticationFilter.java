@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -162,11 +163,34 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 .signWith(SignatureAlgorithm.HS512, env.getProperty("token.secret"))
                 .compact();
 
+        // AccessToken을 HttpOnly Cookie로 설정
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)               // JavaScript 접근 불가
+                .secure(false)                // Http Only : local 환경에서는 Http 상태이므로 배포 환경(Https)이 아닌 경우 false로 놓고 사용
+                .path("/")
+                .maxAge(getExpirationTime(env.getProperty("token.access-expiration-time")) / 1000) // 초 단위
+                .sameSite("Strict")          // CSRF 방어
+                .build();
+
+        // RefreshToken을 HttpOnly Cookie로 설정
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(getExpirationTime(env.getProperty("token.refresh-expiration-time")) / 1000)
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
+
         // 로그인 응답 객체 생성
         ResponseNormalLoginVO loginResponseVO = new ResponseNormalLoginVO(
-                accessToken,
+//                accessToken,
+                null,
                 new Date(accessExpiration),
-                refreshToken,
+//                refreshToken,
+                null,
                 new Date(refreshExpiration),
                 userAuthId
         );
