@@ -2,6 +2,10 @@ package com.avengers.matefarm.user.controller;
 
 
 import com.avengers.matefarm.common.ResponseDTO;
+import com.avengers.matefarm.common.exception.CommonException;
+import com.avengers.matefarm.common.exception.ErrorCode;
+import com.avengers.matefarm.security.JwtUtil;
+import com.avengers.matefarm.security.dto.AuthTokens;
 import com.avengers.matefarm.user.dto.UserDTO;
 import com.avengers.matefarm.user.dto.request.RequestCodeVerificationDTO;
 import com.avengers.matefarm.user.dto.request.RequestLoginedUserPasswordChangeDTO;
@@ -16,8 +20,13 @@ import com.avengers.matefarm.user.service.EmailService;
 import com.avengers.matefarm.user.service.Oauth2LoginService;
 import com.avengers.matefarm.user.service.UserService;
 import com.avengers.matefarm.user.vo.ResponseOAuthLoginVO;
+import com.avengers.matefarm.user.vo.ZustandDataResponseDTO;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -27,15 +36,17 @@ import java.io.IOException;
 @RequestMapping("/api/users")
 public class CommandUserController {
 
-    public CommandUserController(UserService userService,
+    public CommandUserController(JwtUtil jwtUtil,
+                                 UserService userService,
                                  EmailService emailService,
                                  Oauth2LoginService oauth2LoginService) {
 
+        this.jwtUtil = jwtUtil;
         this.userService = userService;
         this.emailService = emailService;
         this.oauth2LoginService = oauth2LoginService;
     }
-
+    private final JwtUtil jwtUtil;
     private final UserService userService;
     private final EmailService emailService;
     private final Oauth2LoginService oauth2LoginService;
@@ -140,7 +151,32 @@ public class CommandUserController {
 
 
     /* 2-7. 로그아웃 */
-    // Refresh Token 을 Redis 에서 제거.
+    @PostMapping("/auth/logout")
+    public ResponseDTO<Void> logout(HttpServletResponse response) {
+
+        // Cookie 삭제 (만료시간 0으로 설정)
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
+
+        return ResponseDTO.ok(null);
+    }
+    // Token 을 Cookie 에서 제거.
 
 
     /* 중복 검사 */
@@ -182,7 +218,44 @@ public class CommandUserController {
     }
 
     /* Token */
-    /* 6.Refresh Token 재발급 */
+    /* 6.Refresh Token으로 AccessToken 재발급 (추후 RefreshToken도 함께 재발급 받도록 수정할 예정 )*/
+    @PostMapping("/api/auth/refresh")
+    public ResponseDTO<Void> refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        // Cookie에서 RefreshToken 읽기
+        String refreshToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (refreshToken == null) {
+            throw new CommonException(ErrorCode.INVALID_TOKEN_ERROR);
+        }
+
+        // 새로운 AccessToken 발급
+        AuthTokens newTokens = jwtUtil.refreshAccessToken(refreshToken);
+
+        // 새 AccessToken을 Cookie로 설정
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newTokens.getAccessToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(3600) // 1시간
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+
+        return ResponseDTO.ok(null);
+    }
 
 
     /* 상태 관리 */
@@ -235,7 +308,27 @@ public class CommandUserController {
 
         return ResponseDTO.ok(userDTO);
     }
-    /* 11. Email 로 userAuthId 조회 */
+
+    /* 11.  회원 정보 조회 ( Zustand 에 user 정보 관리용으로 사용 ) */
+    @GetMapping("/userProfile")
+    public ResponseDTO<ZustandDataResponseDTO> getUserProfile(
+    ) {
+        String userAuthId = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("userAuthId :{}", userAuthId);
+
+        // SecurityContextHolder 를 통해 유저의 정보를 가져올 수 없는 경우
+        if (userAuthId == null) {
+            throw new CommonException(ErrorCode.NOT_FOUND_AUTHENTICATION);
+        }
+
+        ZustandDataResponseDTO responseDTO =
+                userService.
+                        getZustandData(userAuthId);
+
+        return ResponseDTO.ok(responseDTO);
+    }
+
+    /* 12. Email 로 userAuthId 조회 */
     @GetMapping("/find-authid/email")
     public ResponseDTO<ResponseUserAuthIdDTO> getUserAuthId(
             @RequestBody RequestEmailDTO requestEmailDTO
@@ -278,7 +371,7 @@ public class CommandUserController {
     }
 
     /** 아이디 찾기 & 비밀번호 재설정 **/
-    /* 11-1. 아이디&비밀번호 찾기 Step01 - email 로 userAuthId 검증 후 Verification Code 발송 (Oauth2 를 통한 회원가입을 한 유저는 사용 불가.) */
+    /* 15-1. 아이디&비밀번호 찾기 Step01 - email 로 userAuthId 검증 후 Verification Code 발송 (Oauth2 를 통한 회원가입을 한 유저는 사용 불가.) */
     @PostMapping("/find-authid")
     public ResponseDTO<Void> checkUserAuthId(
             @RequestBody RequestEmailDTO requestEmailDTO
@@ -291,7 +384,7 @@ public class CommandUserController {
         return ResponseDTO.ok(null);
     }
 
-    /* 11-2, 아이디 찾기 Step02 - Redis에 있는 Verification Code 검증 후 아이디 Eamil로 발송 */
+    /* 15-2, 아이디 찾기 Step02 - Redis에 있는 Verification Code 검증 후 아이디 Eamil로 발송 */
     @PostMapping("/send-authid")
     public ResponseDTO<Void> sendUserAuthId(
             @RequestBody RequestCodeVerificationDTO requestCodeVerificationDTO) {
@@ -311,7 +404,7 @@ public class CommandUserController {
         return ResponseDTO.ok(null);
     }
 
-    /* 12-3, 비로그인 사용자 비밀번호 재설정 step01 - VerificationCode 검증 및 일회성 Token 발급 후 비밀번호 재설정 URL 발송 */
+    /* 15-3, 비로그인 사용자 비밀번호 재설정 step01 - VerificationCode 검증 및 일회성 Token 발급 후 비밀번호 재설정 URL 발송 */
     @PostMapping("/check-send-reset-url")
     public ResponseDTO<Void> SendPwdResetUrl(
             @RequestBody RequestCodeVerificationDTO requestCodeVerificationDTO) {
@@ -324,7 +417,7 @@ public class CommandUserController {
         return ResponseDTO.ok(null);
 
     }
-    /* 12-4. 비로그인 사용자 비밀번호 재설정 step02 - Token 유효성 검증 후 비밀번호 재설정을 위한 API */
+    /* 15-4. 비로그인 사용자 비밀번호 재설정 step02 - Token 유효성 검증 후 비밀번호 재설정을 위한 API */
     @PostMapping("/reset-pwd")
     public ResponseDTO<Void> resetPassword(
             @RequestBody RequestResetPasswordDTO requestResetPasswordDTO
@@ -345,7 +438,7 @@ public class CommandUserController {
 
 
     /** 회원 정보 변경 **/
-    /* 14. 로그인 한 회원 비밀번호 변경 */
+    /* 17. 로그인 한 회원 비밀번호 변경 */
     @PatchMapping("{userId}/password")
     public ResponseDTO<String> updateLoginedUserPassword(
             @PathVariable("userId") Long userId,
@@ -360,7 +453,7 @@ public class CommandUserController {
         return ResponseDTO.ok("비밀번호가 성공적으로 변경되었습니다.");
     }
 
-    /* 15. 닉네임 변경 */
+    /* 18. 닉네임 변경 */
     @PatchMapping("/{userId}/nickname")
     public ResponseDTO<String> updateNickname(
             @PathVariable("userId") Long userId,

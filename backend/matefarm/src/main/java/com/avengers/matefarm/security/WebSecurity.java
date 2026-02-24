@@ -36,6 +36,8 @@ public class WebSecurity {
     private Environment env;
     // JWT 생성 및 검증 유틸
     private JwtUtil jwtUtil;
+    // 로그인 URL을 /api/login으로 변경하기 위해 추가
+    private AuthenticationFilter authenticationFilter;
 
 
     @Autowired
@@ -68,9 +70,10 @@ public class WebSecurity {
         // AuthenticationManager 생성
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
 
+
         // 요청 API 권한 설정 (추후 역할에 따라 Customizing )
         http.authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/signup").permitAll()
+            .requestMatchers("/api/login", "/signup").permitAll()
             //.requestMatchers("/api/ai-chat/vision/**").permitAll()
             //.requestMatchers("/api/ai-chat/**").authenticated()
             .requestMatchers("/**").permitAll()     // security 적용 시점에 수정
@@ -99,6 +102,10 @@ public class WebSecurity {
 
     private AuthenticationFilter getAuthenticationFilter(AuthenticationManager authenticationManager) {
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(authenticationManager, bCryptPasswordEncoder, userService, env);
+
+        // Spring Security가 가로챌 로그인 URL을 /api/login으로 변경
+        authenticationFilter.setFilterProcessesUrl("/api/login");
+
         authenticationFilter.setAuthenticationFailureHandler(authenticationFailureHandler());
         return authenticationFilter;
     }
@@ -115,8 +122,8 @@ public class WebSecurity {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);    // Credentials Allow
-                configuration.setAllowedOrigins(List.of("https://matefarm.click")); //  배포 후 도메인 변경
-//        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Allow frontend ( React localhost )
+//                configuration.setAllowedOrigins(List.of("https://matefarm.click")); //  배포 후 도메인 변경
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Allow frontend ( React localhost )
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));   // 허용할 HTTP Method 지정
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers
 

@@ -15,6 +15,7 @@ import com.avengers.matefarm.user.dto.request.RequestUserRegistVO;
 import com.avengers.matefarm.user.dto.response.ResponseUserAuthIdDTO;
 import com.avengers.matefarm.user.dto.validate.BooleanResponseDTO;
 import com.avengers.matefarm.user.repository.UserRepository;
+import com.avengers.matefarm.user.vo.ZustandDataResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -420,5 +421,21 @@ public class UserService implements UserDetailsService {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
+    }
+
+    /* Zustand에 user 데이터를 포함하기 위해 만든 전용 조회 메소드 */
+    public ZustandDataResponseDTO getZustandData(String userAuthId) {
+
+        UserEntity userEntity = userRepository.findByUserAuthId(userAuthId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
+
+        return ZustandDataResponseDTO.builder()
+                .userId(userEntity.getUserId())
+                .userAuthId(userEntity.getUserAuthId())
+                .userName(userEntity.getUserName())
+                .nickname(userEntity.getNickname())
+                .userStatus(userEntity.getUserStatus())
+                .userRole(userEntity.getUserRole())
+                .build();
     }
 }

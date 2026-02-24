@@ -22,7 +22,6 @@ export default function MapPage() {
   const [sggList, setSggList] = useState([]);
   const [umdList, setUmdList] = useState([]);
   const [riList, setRiList] = useState([]);
-
   const [selected, setSelected] = useState({ sido: "", sgg: "", umd: "", ri: "" });
 
   // 1) 시도 로드: 최초 1회만

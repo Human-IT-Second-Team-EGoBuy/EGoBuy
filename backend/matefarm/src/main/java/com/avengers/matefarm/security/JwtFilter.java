@@ -7,6 +7,7 @@ import com.avengers.matefarm.common.exception.CommonException;
 import com.avengers.matefarm.user.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -37,13 +38,31 @@ public class JwtFilter extends OncePerRequestFilter {
 
         log.info("UsernamePasswordAuthenticationFilter보다 먼저 동작하는 필터");
 
+        // Authorization 헤더에서 토큰 확인 (API 호출용)
         String authorizationHeader = request.getHeader("Authorization");
+        String token = null;
+
         log.info("Authorization header: {}", authorizationHeader);
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
+            token = authorizationHeader.substring(7);
+        }
+
+        // Authorization 헤더가 없으면 Cookie에서 토큰 확인
+        else {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("accessToken".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
             log.info("토큰 값: " + token);
 
+        if (token != null) {
             try {
                 if (jwtUtil.validateToken(token)) {
                     Authentication authentication = jwtUtil.getAuthentication(token);
@@ -64,6 +83,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
         }
+
 
         filterChain.doFilter(request, response);
     }
