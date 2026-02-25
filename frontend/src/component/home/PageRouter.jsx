@@ -9,6 +9,7 @@ import AiChatPage from "./page/aichat/AiChatPage";
 import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
 import InsectDetailPage from "./page/informationhub/InsectDetailPage";
 import DiseaseDetailPage from "./page/informationhub/DiseaseDetailPage";
+import RetailDetailPage from "./page/informationhub/retaildetailpage/RetailDetailPage"
 import LoginPage from "./page/user/auth/login/loginPage"
 import MyPage from "./page/user/mypage/MyPage"
 import SignupPage from "./page/user/auth/signup/SignUpPage"
@@ -35,15 +36,16 @@ export default function PageRouter() {
                 <Route path="/crops" element={<CropsPage />} />
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/insect-pests-info" element={<InsectPestsInfoPage />} />
+                <Route path="/insect-pests-info/insects/:insectId" element={<InsectDetailPage />} />
+                <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />} />
+                <Route path="/ai-chat" element={<AiChatPage />} />
+                <Route path="/retail-detail-info" element={<RetailDetailPage />} />
                 <Route path="/insect-pests-info/insects/:insectId" element={<InsectDetailPage />}/>
                 <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />}/>
                 <Route path="/ai-chat" element={<AiChatPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/mypage" element={<MyPage />} />
                 <Route path="/signup" element={<SignupPage />} />
-                
-                
-
 
                 </Route>
         </Routes>
