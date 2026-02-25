@@ -3,8 +3,8 @@ import HeaderUi from "./HeaderUi";
 import { useState, useMemo, useEffect } from "react"
 import Dropdown from "../dropdown/Dropdown";
 import useUserStore from "../../../store/useUserStore";
-import apiClient from "../../../api/axios";
-import { getUserProfile } from "../../../api/users"; // 함수 추가
+import apiClient from "@/api/axios";
+import { getUserProfile } from "@/api/users/users"; // 함수 추가
 
 /**
  * 상단 네비게이션의 카테고리 정의

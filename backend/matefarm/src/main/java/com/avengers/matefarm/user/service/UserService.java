@@ -377,7 +377,7 @@ public class UserService implements UserDetailsService {
 
         UserEntity newUser = new UserEntity();
 
-        newUser.setUserAuthId(kakaoUserProfile.getId()); // 네이버에서 제공하는 네이버 사용자 식별자 값
+        newUser.setUserAuthId(kakaoUserProfile.getId()); // 카카오에서 제공하는 네이버 사용자 식별자 값
         newUser.setUserIdentifier(userIdentifier);
         newUser.setUserName(kakaoUserProfile.getName());
         newUser.setNickname(kakaoUserProfile.getNickname());
