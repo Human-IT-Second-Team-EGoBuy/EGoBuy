@@ -1,4 +1,4 @@
-package com.avengers.matefarm.insectpestinfo.disease.dto;
+package com.avengers.matefarm.insectpestinfo.dto;
 
 public record DiseaseDetailResponse(
         DiseaseBaseDto base,

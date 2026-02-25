@@ -1,4 +1,4 @@
-package com.avengers.matefarm.insectpestinfo.insect.repository;
+package com.avengers.matefarm.insectpestinfo.repository;
 
 import com.avengers.matefarm.insectpestinfo.entity.InsectDetailEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

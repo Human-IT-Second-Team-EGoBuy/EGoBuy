@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import PestDetailLayout from "./PestDetailLayout";
-import { DEV_USE_MOCK, DUMMY_CROPS, DUMMY_INSECTS, DUMMY_INSECT_DETAILS } from "./pestDummy";
 
 function TypeBadge() {
   return <span className="pd-badge pd-badge-insect">해충</span>;
@@ -51,35 +50,18 @@ export default function InsectDetailPage() {
     setState("loading");
 
     try {
-      if (DEV_USE_MOCK) {
-        const b = DUMMY_INSECTS.find((x) => x.insect_id === id) || null;
-        if (!b) {
-          setBase(null);
-          setDetail(null);
-          setState("nf");
-          return;
-        }
-        const d = DUMMY_INSECT_DETAILS.find((x) => x.insect_id === id) || null;
-        setBase(b);
-        setDetail(d);
-        setState("ok");
-        return;
-      }
-
       const res = await axios.get(`/api/information-hub/insects/${id}`);
       const body = res.data;
 
-      if (body?.code !== "SU" || !body?.data) {
-        setState(body?.code === "NF" ? "nf" : "error");
+      if (!body?.success || !body?.content?.base) {
+        setState("nf");
+        setBase(null);
+        setDetail(null);
         return;
       }
 
-      const data = body.data;
-      const b = data.base || data.insect || data;
-      const d = data.detail || data.insectDetail || null;
-
-      setBase(b);
-      setDetail(d);
+      setBase(body.content.base);
+      setDetail(body.content.detail ?? null);
       setState("ok");
     } catch (e) {
       console.error(e);
@@ -99,7 +81,7 @@ export default function InsectDetailPage() {
 
   const subtitle = base
     ? joinLines(
-        `작물: ${base.crop_name ?? cropNameMap.get(base.crop_id) ?? "-"}`,
+        `작물: ${base?.crop_name ?? "-"}`,
         base?.insect_species_kor ? `종(국문): ${base.insect_species_kor}` : null,
         base?.insect_species ? `학명: ${base.insect_species}` : null,
         base?.insect_order ? `목: ${base.insect_order}` : null,
