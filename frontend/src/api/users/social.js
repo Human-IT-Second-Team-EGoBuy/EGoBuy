@@ -1,6 +1,6 @@
 // Social Login/Logout 에 사용될 백엔드 API 모음
 import { RouterProvider, useParams } from 'react-router-dom';
-import apiClient from './axios';
+import apiClient from '../axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**

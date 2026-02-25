@@ -9,7 +9,9 @@ import AiChatPage from "./page/aichat/AiChatPage";
 import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
 import InsectDetailPage from "./page/informationhub/InsectDetailPage";
 import DiseaseDetailPage from "./page/informationhub/DiseaseDetailPage";
-import LoginPage from "./page/user/login/loginPage"
+import LoginPage from "./page/user/auth/login/loginPage"
+import MyPage from "./page/user/mypage/MyPage"
+import SignupPage from "./page/user/auth/signup/SignUpPage"
 
 
 
@@ -37,6 +39,10 @@ export default function PageRouter() {
                 <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />}/>
                 <Route path="/ai-chat" element={<AiChatPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/mypage" element={<MyPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                
+                
 
 
                 </Route>

@@ -3,9 +3,9 @@ import { User, Lock, Eye, EyeOff } from 'lucide-react'; // 아이콘 라이브�
 import { useNavigate } from 'react-router-dom'; // 로그인 성공 시 페이지 이동을 위해 추가
 import './LoginPage.css';
 import axios from 'axios';
-import useUserStore from '../../../../../store/useUserStore'; // 로그인 시 Zustand로 전역 상태 관리를 하기 위해 추가.
-import { getUserProfile } from '../../../../../api/users';  // 사용할 함수를 users.js에서 추가
-import { socialLogin } from '../../../../../api/social';
+import useUserStore from '@/store/useUserStore'; // 로그인 시 Zustand로 전역 상태 관리를 하기 위해 추가.
+import { getUserProfile } from '@/api/users/users';  // 사용할 함수를 users.js에서 추가
+import { socialLogin } from '@/api/users/social';
 
 export default function LoginPage() {
   const [userId, setUserId] = useState('');
@@ -72,7 +72,7 @@ export default function LoginPage() {
         <div className="login-card">
           <form className="login-form" onSubmit={handleLogin}>
             
-            {/* 이메일 입력 */}
+            {/* 아이디 입력 */}
             <div className="input-group">
               <label htmlFor="userId">아이디</label>
               <div className="input-wrapper">

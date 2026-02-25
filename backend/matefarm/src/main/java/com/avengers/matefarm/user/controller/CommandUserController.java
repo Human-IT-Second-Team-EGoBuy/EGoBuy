@@ -263,11 +263,10 @@ public class CommandUserController {
     /* 3. 이메일 중복 검사 */
     @GetMapping("validate/email")
     public ResponseDTO<BooleanResponseDTO> validationCheckByEmail(
-            @RequestBody RequestEmailDTO requestEmailDTO) {
+            @RequestParam("email") String email) {
 
         BooleanResponseDTO booleanResponseDTO = userService.
-                checkValidationByEmailForDuplicate(
-                        requestEmailDTO.getEmail());
+                checkValidationByEmailForDuplicate(email);
 
         return ResponseDTO.ok(booleanResponseDTO);
     }
@@ -275,11 +274,11 @@ public class CommandUserController {
     /* 4. 아이디 중복 검사 */
     @GetMapping("/validate/authId")
     public ResponseDTO<BooleanResponseDTO> validationCheckByUserAuthId(
-            @RequestBody RequestLoginIdDTO requestLoginIdDTO) {
+            @RequestParam("user_auth_id") String userAuthId) {
 
         BooleanResponseDTO booleanResponseDTO = userService.
                 checkValidationByUserAuthIdForDuplicate(
-                        requestLoginIdDTO.getUserAuthId());
+                        userAuthId);
 
         return ResponseDTO.ok(booleanResponseDTO);
 
@@ -287,11 +286,10 @@ public class CommandUserController {
     /* 5. 닉네임 중복 검사 */
     @GetMapping("/validate/nickname")
     public ResponseDTO<BooleanResponseDTO> validationCheckByNickname(
-            @RequestBody RequestNicknameDTO requestNickname) {
+            @RequestParam("nickname") String nickname) {
 
         BooleanResponseDTO booleanResponseDTO = userService.
-                checkValidationByNicknameForDuplicate(
-                        requestNickname.getNickname());
+                checkValidationByNicknameForDuplicate(nickname);
 
         return ResponseDTO.ok(booleanResponseDTO);
 
