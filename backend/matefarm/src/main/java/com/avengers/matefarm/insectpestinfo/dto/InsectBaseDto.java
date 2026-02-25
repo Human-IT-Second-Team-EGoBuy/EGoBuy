@@ -1,4 +1,4 @@
-package com.avengers.matefarm.insectpestinfo.insect.dto;
+package com.avengers.matefarm.insectpestinfo.dto;
 
 import com.avengers.matefarm.insectpestinfo.entity.InsectEntity;
 

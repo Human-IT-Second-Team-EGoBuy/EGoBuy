@@ -1,4 +1,4 @@
-package com.avengers.matefarm.insectpestinfo.insect.dto;
+package com.avengers.matefarm.insectpestinfo.dto;
 
 public record InsectDetailResponse(
         InsectBaseDto base,

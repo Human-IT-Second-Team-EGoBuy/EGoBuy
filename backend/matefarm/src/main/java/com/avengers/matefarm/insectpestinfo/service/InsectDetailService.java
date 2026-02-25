@@ -1,9 +1,14 @@
-package com.avengers.matefarm.insectpestinfo.insect.service;
+package com.avengers.matefarm.insectpestinfo.service;
 
+import com.avengers.matefarm.common.exception.CommonException;
+import com.avengers.matefarm.common.exception.ErrorCode;
+import com.avengers.matefarm.insectpestinfo.dto.InsectBaseDto;
+import com.avengers.matefarm.insectpestinfo.dto.InsectDetailDto;
+import com.avengers.matefarm.insectpestinfo.dto.InsectDetailResponse;
 import com.avengers.matefarm.insectpestinfo.entity.InsectEntity;
-import com.avengers.matefarm.insectpestinfo.insect.dto.*;
-import com.avengers.matefarm.insectpestinfo.insect.repository.InsectDetailRepository;
-import com.avengers.matefarm.insectpestinfo.insect.repository.InsectRepository;
+import com.avengers.matefarm.insectpestinfo.repository.InsectDetailRepository;
+import com.avengers.matefarm.insectpestinfo.repository.InsectRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +23,7 @@ public class InsectDetailService {
     @Transactional(readOnly = true)
     public InsectDetailResponse get(Long insectId) {
         InsectEntity base = insectRepository.findByIdAndStatus(insectId, 1)
-                .orElseThrow(() -> new IllegalArgumentException("NF"));
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_POST));
 
         var detail = insectDetailRepository.findById(insectId).orElse(null);
 

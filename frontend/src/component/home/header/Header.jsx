@@ -13,10 +13,8 @@ import { getUserProfile } from "../../../api/users"; // 함수 추가
  */
 const NAV_MENU = [
     { id: "map", label: "농업지도", path: "/map" },
-    { id: "crops", label: "작물백과", path: "/crop-tech" },
     { id: "community", label: "커뮤니티", path: "/community" },
-    { id: "informationhub", label: "정보허브", path: "/insect-pests-info" },
-    
+    { id: "informationhub", label: "정보허브", path: "/insect-pests-info" }
 ]
 
 export default function Header() {
@@ -80,7 +78,6 @@ export default function Header() {
             { name: "영농 정착 정책 지원 지역", path: "/map/policy" },
             { name: "지역별 토양 분석 지도", path: "/map/soil" },
         ],
-        crops: [{ name: "품종별 재배기술", path: "/crop-tech" }],
         community: [{ name: "게시판", path: "/community" }],
         informationhub: [{ name: "병충해 정보", path: "/insect-pests-info" }],
         

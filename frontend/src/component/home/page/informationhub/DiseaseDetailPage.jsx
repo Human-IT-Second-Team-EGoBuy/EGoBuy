@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import PestDetailLayout from "./PestDetailLayout";
-import { DEV_USE_MOCK, DUMMY_CROPS, DUMMY_DISEASES, DUMMY_DISEASE_DETAILS } from "./pestDummy";
 
 function TypeBadge() {
   return <span className="pd-badge pd-badge-disease">병</span>;
@@ -43,51 +42,28 @@ export default function DiseaseDetailPage() {
   const [base, setBase] = useState(null);
   const [detail, setDetail] = useState(null);
 
-  const cropNameMap = useMemo(
-    () => new Map(DUMMY_CROPS.map((c) => [c.crop_id, c.crop_name])),
-    []
-  );
-
   /**  분기 1곳 */
   const fetchDetail = useCallback(async () => {
-    setState("loading");
+  setState("loading");
+  try {
+    const res = await axios.get(`/api/information-hub/diseases/${id}`);
+    const body = res.data;
 
-    try {
-      if (DEV_USE_MOCK) {
-        const b = DUMMY_DISEASES.find((x) => x.disease_id === id) || null;
-        if (!b) {
-          setBase(null);
-          setDetail(null);
-          setState("nf");
-          return;
-        }
-        const d = DUMMY_DISEASE_DETAILS.find((x) => x.disease_id === id) || null;
-        setBase(b);
-        setDetail(d);
-        setState("ok");
-        return;
-      }
-
-      const res = await axios.get(`/api/information-hub/diseases/${id}`);
-      const body = res.data;
-
-      if (body?.code !== "SU" || !body?.data) {
-        setState(body?.code === "NF" ? "nf" : "error");
-        return;
-      }
-
-      const data = body.data;
-      const b = data.base || data.disease || data;
-      const d = data.detail || data.diseaseDetail || null;
-
-      setBase(b);
-      setDetail(d);
-      setState("ok");
-    } catch (e) {
-      console.error(e);
-      setState("error");
+    if (!body?.success || !body?.content?.base) {
+      setState("nf"); // 혹은 "error" (원하는 정책대로)
+      setBase(null);
+      setDetail(null);
+      return;
     }
-  }, [id]);
+
+    setBase(body.content.base);
+    setDetail(body.content.detail ?? null);
+    setState("ok");
+  } catch (e) {
+    console.error(e);
+    setState("error");
+  }
+}, [id]);
 
   useEffect(() => {
     if (!Number.isFinite(id)) {
@@ -100,7 +76,7 @@ export default function DiseaseDetailPage() {
   const title = base?.pest_name ?? base?.sick_name_kor ?? "병 상세";
   const subtitle = base
     ? joinLines(
-        `작물: ${base.crop_name ?? cropNameMap.get(base.crop_id) ?? "-"}`,
+        `작물: ${base?.crop_name ?? "-"}`,
         base?.sick_name_eng ? `영문: ${base.sick_name_eng}` : null,
         base?.sick_name_chn ? `한자: ${base.sick_name_chn}` : null,
         detail?.virus_name ? `병원체: ${detail.virus_name}` : null
