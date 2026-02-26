@@ -38,7 +38,6 @@ export default function PageRouter() {
                 <Route path="/insect-pests-info" element={<InsectPestsInfoPage />} />
                 <Route path="/insect-pests-info/insects/:insectId" element={<InsectDetailPage />} />
                 <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />} />
-                <Route path="/ai-chat" element={<AiChatPage />} />
                 <Route path="/retail-detail-info" element={<RetailDetailPage />} />
                 <Route path="/ai-chat" element={<AiChatPage />} />
                 <Route path="/login" element={<LoginPage />} />
