@@ -35,7 +35,7 @@ public class ConversationMessageEntity {
     @JoinColumn(name = "conversation_id", nullable = false)
     private ConversationEntity conversation;
 
-     @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

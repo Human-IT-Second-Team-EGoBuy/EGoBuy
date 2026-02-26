@@ -37,7 +37,7 @@ public class ConversationEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
+
     @PrePersist
     void prePersist() {
         if (title == null || title.isBlank()) title = "새 대화";
