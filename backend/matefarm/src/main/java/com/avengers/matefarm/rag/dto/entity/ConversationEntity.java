@@ -32,12 +32,12 @@ public class ConversationEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    
     @PrePersist
     void prePersist() {
         if (title == null || title.isBlank()) title = "새 대화";

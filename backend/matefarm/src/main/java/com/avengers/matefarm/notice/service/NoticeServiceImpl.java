@@ -60,6 +60,8 @@ public class NoticeServiceImpl implements NoticeService {
                 .noticeContent(noticeUploadRequestDTO.getNoticeContent())
                 .filesTf(noticeUploadRequestDTO.getFileExist()) // Client 에서 파일 여부를 전송.
                 .writerId(userEntity)   // Jpa @ManyToOne 관계를 갖는 타입의 객체를 저장
+                .createdAt(LocalDateTime.now().withNano(0))
+                .updatedAt(LocalDateTime.now().withNano(0))
                 .build();
 
         NoticeEntity savedNotice = noticeRepository.save(noticeEntity);
@@ -104,6 +106,8 @@ public class NoticeServiceImpl implements NoticeService {
                 .noticeId(noticeEntity.getNoticeId())
                 .noticeTitle(noticeEntity.getNoticeTitle())
                 .noticeContent(noticeEntity.getNoticeContent())
+                .createdAt(noticeEntity.getCreatedAt())
+                .updatedAt(noticeEntity.getUpdatedAt())
                 .writerId(noticeEntity.getNoticeId())
                 .writerNickname(userEntity.getNickname())
                 .files(files)

@@ -39,22 +39,11 @@ public class NoticeEntity {
     @JoinColumn(name = "writer_id", nullable = false)
     private UserEntity writerId;
 
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-
-
-    /* Builder 패턴 전용 생성자 */
-    public NoticeEntity(
-            String noticeTitle,
-            String noticeContent,
-            FileExist filesTf,
-            UserEntity writerId
-    ) {
-        this.noticeTitle = noticeTitle;
-        this.noticeContent = noticeContent;
-        this.filesTf = filesTf;
-        this.writerId = writerId;
-
-    }
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
 }
 
