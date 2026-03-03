@@ -162,7 +162,11 @@ export default function Header() {
                             <span className="text-xs text-slate-500 font-medium">
                                 <b>{user?.nickname}</b>님
                             </span>
+                            {user?.user_role === "ADMIN" ? (
+                            <HeaderUi onClick={() => navigate("/admin")} variant="ghost">관리자페이지</HeaderUi>
+                            ) : (
                             <HeaderUi onClick={() => navigate("/mypage")} variant="ghost">마이페이지</HeaderUi>
+                            )}
                             <HeaderUi onClick={handleLogout} variant="ghost">로그아웃</HeaderUi>
                         </>
                     ) : (

@@ -1,0 +1,11 @@
+/* 전체 레이아웃 */
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* 메인 영역 */
+.admin-layout__main {
+  flex: 1;
+  background-color: #f9fafb; /* tailwind bg-gray-50 */
+}

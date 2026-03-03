@@ -5,21 +5,20 @@ import com.avengers.matefarm.insectpestinfo.dto.CropCategoryDto;
 import com.avengers.matefarm.insectpestinfo.dto.PagedResponse;
 import com.avengers.matefarm.insectpestinfo.dto.PestIssueRowDto;
 import com.avengers.matefarm.insectpestinfo.service.InsectPestInfoService;
-import org.springframework.http.ResponseEntity;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 // 정보허브(Information Hub) - 병해/해충 목록 조회 API 컨트롤러
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/information-hub")
 public class InsectPestInfoController {
 
     private final InsectPestInfoService service;
-
-    public InsectPestInfoController(InsectPestInfoService service) {
-        this.service = service;
-    }
 
     // [GET] /api/information-hub/crop-categories, 작물 카테고리 목록을 조회
     @GetMapping("/crop-categories")
