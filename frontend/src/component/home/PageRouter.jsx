@@ -9,11 +9,14 @@ import AiChatPage from "./page/aichat/AiChatPage";
 import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
 import InsectDetailPage from "./page/informationhub/InsectDetailPage";
 import DiseaseDetailPage from "./page/informationhub/DiseaseDetailPage";
-import LoginPage from "./page/user/login/loginPage"
+
 import AdminLayout from "./page/admin/layout/AdminLayout"
 import AdminQnaPage from "./page/admin/qna/AdminQnaPage"
 import AdminReportsPage from "./page/admin/reports/AdminReportsPage"
 import AdminUsersPage from "./page/admin/users/AdminUsersPage"
+import LoginPage from "./page/user/auth/login/loginPage"
+import MyPage from "./page/user/mypage/MyPage"
+import SignupPage from "./page/user/auth/signup/SignUpPage"
 
 
 
@@ -46,6 +49,8 @@ export default function PageRouter() {
                     <Route path="reports" element={<AdminReportsPage />} />
                     <Route path="qna" element={<AdminQnaPage />} />
                 </Route>
+                <Route path="/mypage" element={<MyPage />} />
+                <Route path="/signup" element={<SignupPage />} />
 
 
                 </Route>
