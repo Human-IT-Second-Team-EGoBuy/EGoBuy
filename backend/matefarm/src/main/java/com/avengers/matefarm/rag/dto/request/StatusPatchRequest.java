@@ -4,8 +4,7 @@ import lombok.*;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class StatusPatchRequest {
-
-  private Integer status; // 1=ACTIVE, 0=HIDDEN
   
+  private Integer status; // 1=ACTIVE, 0=HIDDEN
 
 }

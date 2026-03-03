@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Getter
 @Entity
 @Table(name = "disease")
@@ -34,10 +37,11 @@ public class DiseaseEntity {
     @Column(name = "sort_order2")
     private Integer sortOrder2;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
     private Integer status;
 
     // DB에서 자동 관리하는 경우 안전하게
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }

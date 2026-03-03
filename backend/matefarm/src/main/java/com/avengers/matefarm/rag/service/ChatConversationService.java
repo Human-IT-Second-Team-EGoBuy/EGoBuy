@@ -85,7 +85,7 @@ public class ChatConversationService {
 
     /** 1) 대화 상세 조회: ACTIVE(status=1)만 (숨김은 404처럼 NOT_FOUND) */
     @Transactional(readOnly = true)
-    public ConversationDto getConversation(long conversationId, boolean includeMessages) {
+    public ConversationDto getConversation(Long conversationId, Doolean includeMessages) {
         UserEntity user = getLoginUser();
 
         if (conversationId <= 0) {
@@ -142,7 +142,7 @@ public class ChatConversationService {
 
     /** 3) 대화 숨김(soft delete): ACTIVE인 것만 0으로 변경 */
     @Transactional
-    public void patchConversationStatus(long conversationId, int nextStatus) {
+    public void patchConversationStatus(Long conversationId, Integer nextStatus) {
         UserEntity user = getLoginUser();
 
         if (conversationId <= 0) {

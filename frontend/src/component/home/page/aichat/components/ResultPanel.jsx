@@ -1,16 +1,16 @@
-// 0~1 확률을 %로 변환 (NaN 방지)
-const toPercent = (n) => {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return "0%";
-  return `${Math.round(v * 100)}%`;
-};
-
-// 0~1 확률을 0~100 width로 변환 (NaN 방지)
-const toWidth = (n) => {
+// 0~1 확률로 강제(clamp) (NaN/undefined 방지 + 0~100 들어와도 대응)
+const clamp01 = (n) => {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
-  return Math.max(0, Math.min(100, Math.round(v * 100)));
+
+  // 혹시 0~100으로 들어오면 0~1로 보정
+  const normalized = v > 1 ? v / 100 : v;
+
+  return Math.max(0, Math.min(1, normalized));
 };
+
+const toPercent = (n) => `${Math.round(clamp01(n) * 100)}%`;
+const toWidth = (n) => Math.round(clamp01(n) * 100);
 
 // top1 키 호환( name/conf  또는 label/prob  또는 best 구조)
 const pickTop1 = (result) => {
@@ -18,11 +18,17 @@ const pickTop1 = (result) => {
 
   const name =
     t?.name ??
-    t?.label_ko ?? // 한글 라벨 우선
+    t?.labelKo ??
+    t?.label_ko ??
     t?.label ??
     "결과 없음";
 
-  const conf = t?.conf ?? t?.prob ?? 0;
+  const conf = clamp01(
+    t?.conf ??
+      t?.prob ??
+      t?.prob_global ??
+      0
+  );
 
   return { name, conf };
 };

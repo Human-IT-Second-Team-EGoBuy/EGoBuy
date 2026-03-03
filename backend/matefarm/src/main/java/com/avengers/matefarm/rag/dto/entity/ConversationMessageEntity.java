@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
@@ -28,6 +31,7 @@ public class ConversationMessageEntity {
     @Column(name = "metadata", columnDefinition = "LONGTEXT")
     private String metadata;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
     private Integer status; // 1=ACTIVE, 0=HIDDEN
 
@@ -35,21 +39,14 @@ public class ConversationMessageEntity {
     @JoinColumn(name = "conversation_id", nullable = false)
     private ConversationEntity conversation;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false, updatable = false, insertable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
     void prePersist() {
         if (status == null) status = 1;
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (updatedAt == null) updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

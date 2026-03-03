@@ -1,5 +1,8 @@
 package com.avengers.matefarm.insectpestinfo.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -20,6 +23,7 @@ public class CropEntity {
     @JoinColumn(name = "category_id", nullable = false)
     private CropCategoryEntity category;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
     private Integer status;
 }

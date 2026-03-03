@@ -3,7 +3,7 @@ package com.avengers.matefarm.diagnosis.dto;
 import java.util.List;
 
 public record VisionDiagnosisResponse(
-        Integer cropId,
+        Long cropId,
         String modelKey,
         BestResponse best,
         List<BestResponse> topK,

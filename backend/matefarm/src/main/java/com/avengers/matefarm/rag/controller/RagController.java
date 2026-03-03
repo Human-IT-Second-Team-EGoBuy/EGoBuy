@@ -16,7 +16,7 @@ public class RagController {
 
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseDTO<SendMessageData> sendMessage(
-            @PathVariable("conversationId") long conversationId,
+            @PathVariable("conversationId") Long conversationId,
             @RequestBody MessageSendRequest req
     ) {
         SendMessageData data = ragService.sendMessage(conversationId, req.getContent(), req.getClientMessageId());

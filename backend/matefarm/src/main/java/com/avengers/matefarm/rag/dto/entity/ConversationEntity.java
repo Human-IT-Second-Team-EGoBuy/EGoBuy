@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter @Setter
@@ -21,6 +23,7 @@ public class ConversationEntity {
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
     private Integer status; // 1=ACTIVE, 0=HIDDEN
 
@@ -32,23 +35,16 @@ public class ConversationEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false, updatable = false, insertable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
     void prePersist() {
         if (title == null || title.isBlank()) title = "새 대화";
         if (status == null) status = 1;
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (updatedAt == null) updatedAt = LocalDateTime.now();
+       
     }
-
-    @PreUpdate
-    void preUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-  
 }

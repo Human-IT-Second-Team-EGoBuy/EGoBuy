@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Getter
 @Entity
 @Table(name = "insect")
@@ -43,9 +46,10 @@ public class InsectEntity {
     @Column(name = "insect_genus")
     private String insectGenus;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
     private Integer status;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }

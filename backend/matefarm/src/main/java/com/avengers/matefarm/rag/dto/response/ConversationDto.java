@@ -8,7 +8,7 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 public class ConversationDto {
-    private long conversationId;
+    private Long conversationId;
     private String title;
     private Integer status;
     private LocalDateTime lastMessageAt;
