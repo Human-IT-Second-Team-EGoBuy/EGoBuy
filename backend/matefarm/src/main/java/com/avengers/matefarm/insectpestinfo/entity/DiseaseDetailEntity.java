@@ -22,30 +22,30 @@ public class DiseaseDetailEntity {
     @Column(name = "infection_route")
     private String infectionRoute;
 
-    @Lob @Column(name = "development_condition")
+    @Column(name = "development_condition", columnDefinition = "TEXT")
     private String developmentCondition;
 
-    @Lob @Column(name = "symptoms")
+    @Column(name = "symptoms", columnDefinition = "TEXT")
     private String symptoms;
 
-    @Lob @Column(name = "prevention_method")
+    @Column(name = "prevention_method", columnDefinition = "TEXT")
     private String preventionMethod;
 
-    @Lob @Column(name = "biology_prvnbe_mth")
+    @Column(name = "biology_prvnbe_mth", columnDefinition = "TEXT")
     private String biologyPrvnbeMth;
 
-    @Lob @Column(name = "chemical_prvnbe_mth")
+    @Column(name = "chemical_prvnbe_mth", columnDefinition = "TEXT")
     private String chemicalPrvnbeMth;
 
     @Column(name = "virus_name")
     private String virusName;
 
-    @Lob @Column(name = "etc")
+    @Column(name = "etc", columnDefinition = "TEXT")
     private String etc;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }

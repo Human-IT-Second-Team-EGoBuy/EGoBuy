@@ -35,9 +35,9 @@ public class DiseaseEntity {
     private Integer sortOrder2;
 
     @Column(name = "status", nullable = false)
-    private Integer status;
+    private Byte status;
 
     // DB에서 자동 관리하는 경우 안전하게
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }

@@ -1,0 +1,44 @@
+/* 사이드바 전체 */
+.admin-sidenav {
+  width: 224px; /* w-56 */
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb; /* tailwind border-gray-200 */
+  padding: 12px;
+}
+
+/* 제목 */
+.admin-sidenav__title {
+  padding: 12px 8px;
+  font-weight: 600;
+}
+
+/* 메뉴 영역 */
+.admin-sidenav__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* space-y-1 */
+}
+
+/* 기본 아이템 */
+.admin-sidenav__item {
+  display: block;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+/* 비활성 상태 */
+.admin-sidenav__item--inactive {
+  color: #374151; /* text-gray-700 */
+}
+
+.admin-sidenav__item--inactive:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+
+/* 활성 상태 */
+.admin-sidenav__item--active {
+  background-color: #000000;
+  color: #ffffff;
+}

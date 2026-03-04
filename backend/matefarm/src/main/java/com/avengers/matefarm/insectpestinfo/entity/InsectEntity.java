@@ -44,8 +44,8 @@ public class InsectEntity {
     private String insectGenus;
 
     @Column(name = "status", nullable = false)
-    private Integer status;
+    private Byte status;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }
