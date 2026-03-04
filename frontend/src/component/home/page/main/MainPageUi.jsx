@@ -1,11 +1,9 @@
 // 카드용도 컨테이너
-export function Card({ children, className = "" }) {
+export function Card({ children, className = "", ...props }) {
   return (
     <div
-      className={[
-        "bg-white rounded-3xl p-6 border border-slate-200 shadow-sm text-emerald-600",
-        className,
-      ].join(" ")}
+      {...props}
+      className={`card-base ${className}`}
     >
       {children}
     </div>
@@ -16,10 +14,7 @@ export function Card({ children, className = "" }) {
 export function WeatherUi({ children, className = "" }) {
   return (
     <section
-      className={[
-        "bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden min-h-[260px]",
-        className,
-      ].join(" ")}
+      className={`weather-container ${className}`}
     >
       {children}
     </section>
@@ -29,8 +24,8 @@ export function WeatherUi({ children, className = "" }) {
 // 제목 컨테이너
 export function SectionText({ title, right = null, className = "" }) {
   return (
-    <div className={["flex justify-between items-center", className].join(" ")}>
-      <h3 className="font-bold text-lg text-emerald-600">{title}</h3>
+    <div className={`section-text-wrapper ${className}`}>
+      <h3 className="section-title">{title}</h3>
       {right}
     </div>
   );

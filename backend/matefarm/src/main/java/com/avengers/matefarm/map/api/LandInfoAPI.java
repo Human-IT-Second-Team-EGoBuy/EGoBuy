@@ -35,10 +35,10 @@ public class LandInfoAPI {
     private final XmlMapper xmlMapper = new XmlMapper();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${FARM_SOILINFO_API_URL}")
+    @Value("${map.soil_info_api}")
     private String soilUrl;
 
-    @Value("${DATAPORTAL_API_KEY}")
+    @Value("${dataportal.api-key}")
     private String serviceKey;
 
     public LandInfoAPI(WebClient webClient) {

@@ -1,0 +1,87 @@
+/* RetailSectionStyles.css */
+@layer components {
+
+    /* 섹션 전체 카드 레이아웃 */
+    .price-card {
+        @apply lg:col-span-1 min-h-[500px] p-5;
+        /* p-5 등 기본 여백 추가 권장 */
+    }
+
+    /* 헤더 영역 (제목 + 더보기) */
+    .price-card-header {
+        @apply flex justify-between items-center mb-4;
+    }
+
+    .btn-more {
+        @apply text-[11px] text-blue-600 hover:underline font-semibold transition-all;
+    }
+
+    /* 선택 정보 배지 컨테이너 */
+    .badge-container {
+        @apply flex flex-wrap gap-2 mt-2 mb-4;
+    }
+
+    /* 공통 배지 스타일 */
+    .status-badge {
+        @apply px-2 py-1 text-[10px] font-bold rounded-md border;
+    }
+
+    .badge-item {
+        @apply bg-blue-50 text-blue-600 border-blue-100;
+    }
+
+    .badge-retail {
+        @apply bg-green-50 text-green-600 border-green-100;
+    }
+
+    .badge-wholesale {
+        @apply bg-orange-50 text-orange-600 border-orange-100;
+    }
+
+    /* 도/소매가 전환 탭 버튼 그룹 */
+    .filter-tab-container {
+        @apply flex bg-slate-100 p-1 rounded-xl mb-6;
+    }
+
+    .filter-tab-btn {
+        @apply flex-1 py-2 text-xs font-medium rounded-lg transition-all duration-200;
+    }
+
+    .filter-tab-btn-active {
+        @apply bg-white shadow-sm text-blue-600;
+    }
+
+    .filter-tab-btn-inactive {
+        @apply text-slate-500 hover:text-slate-700;
+    }
+
+    .select-gorup {
+        @apply flex flex-wrap items-center justify-center gap-3 mb-6
+    }
+
+    /* 메인 검색/조회 버튼 */
+    .btn-search-main {
+        @apply w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all;
+    }
+
+    /* 차트 컨테이너 및 안내 문구 */
+    .chart-wrapper {
+        @apply h-64 w-full mt-4;
+    }
+
+    .chart-empty-msg {
+        @apply flex items-center justify-center h-full text-slate-400 text-sm;
+    }
+
+    .tootip-div {
+        @apply bg-white p-3 shadow-lg rounded-xl border border-slate-100;
+    }
+
+    .chart-text-1 {
+        @apply text-xs font-bold text-slate-700;
+    }
+
+    .chart-text-2 {
+        @apply text-sm font-extrabold text-blue-600
+    }
+}

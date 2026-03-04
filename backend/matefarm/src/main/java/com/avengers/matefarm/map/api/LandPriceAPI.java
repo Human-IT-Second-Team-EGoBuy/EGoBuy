@@ -31,10 +31,10 @@ public class LandPriceAPI {
      * - 운영 배포에서 값이 비어있으면 즉시 장애가 나도록(=fail-fast) 검증하는 편이 안전함
      * - 아래 validateConfig()에서 체크
      */
-    @Value("${TRADE_PRICE_API_URL}")
+    @Value("${map.land_price_api_url}")
     private String tradePriceUrl;
 
-    @Value("${DATAPORTAL_API_KEY}")
+    @Value("${dataportal.api-key}")
     private String serviceKey;
 
     public LandPriceAPI(WebClient.Builder webClientBuilder) {
