@@ -17,5 +17,5 @@ public class CropCategoryEntity {
     private String name;
 
     @Column(name = "status", nullable = false)
-    private Integer status;
+    private Byte status;
 }
