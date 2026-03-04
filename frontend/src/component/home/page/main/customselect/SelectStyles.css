@@ -1,0 +1,49 @@
+/* select-styles.css */
+@layer components {
+  /* 전체 감싸는 컨테이너 */
+  .select-container {
+    @apply relative flex-1 min-w-[120px];
+  }
+
+  /* 선택 버튼 (Trigger) */
+  .select-btn {
+    @apply relative w-full cursor-default rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-slate-200 text-sm 
+           transition-all duration-200 outline-none;
+  }
+  
+  /* 버튼 활성화/포커스 상태 */
+  .select-btn-active {
+    @apply ring-2 ring-blue-500/20 border-blue-500 shadow-sm;
+  }
+
+  /* 버튼 비활성화 상태 */
+  .select-btn-disabled {
+    @apply bg-slate-50 opacity-60 cursor-not-allowed;
+  }
+
+  /* 드롭다운 옵션 리스트 박스 */
+  .select-options-panel {
+    @apply absolute z-50 mt-1.5 w-full rounded-xl bg-white py-1.5 shadow-xl ring-1 ring-black ring-black/5 
+           focus:outline-none text-sm max-h-60 overflow-y-auto;
+  }
+
+  /* 개별 옵션 아이템 */
+  .select-option-item {
+    @apply relative cursor-default select-none py-2.5 pl-10 pr-4 text-slate-700 transition-colors;
+  }
+
+  /* 옵션 아이템 마우스 호버/키보드 선택 시 */
+  .select-option-active {
+    @apply bg-blue-50 text-blue-700;
+  }
+
+  /* 선택된 옵션 스타일 */
+  .select-option-selected {
+    @apply font-bold text-blue-600 bg-blue-50/50;
+  }
+
+  /* 체크 아이콘 위치 */
+  .select-check-icon {
+    @apply absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600;
+  }
+}

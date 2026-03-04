@@ -9,7 +9,12 @@ import AiChatPage from "./page/aichat/AiChatPage";
 import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
 import InsectDetailPage from "./page/informationhub/InsectDetailPage";
 import DiseaseDetailPage from "./page/informationhub/DiseaseDetailPage";
-import LoginPage from "./page/user/auth/login/LoginPage"
+
+import AdminLayout from "./page/admin/layout/AdminLayout"
+import AdminQnaPage from "./page/admin/qna/AdminQnaPage"
+import AdminReportsPage from "./page/admin/reports/AdminReportsPage"
+import AdminUsersPage from "./page/admin/users/AdminUsersPage"
+import LoginPage from "./page/user/auth/login/loginPage"
 import MyPage from "./page/user/mypage/MyPage"
 import SignupPage from "./page/user/auth/signup/SignUpPage"
 
@@ -35,14 +40,18 @@ export default function PageRouter() {
                 <Route path="/crops" element={<CropsPage />} />
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/insect-pests-info" element={<InsectPestsInfoPage />} />
-                <Route path="/insect-pests-info/insects/:insectId" element={<InsectDetailPage />}/>
-                <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />}/>
+                <Route path="/insect-pests-info/insects/:insectId" element={<InsectDetailPage />} />
+                <Route path="/insect-pests-info/diseases/:diseaseId" element={<DiseaseDetailPage />} />
+                <Route path="/retail-detail-info" element={<RetailDetailPage />} />
                 <Route path="/ai-chat" element={<AiChatPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="reports" element={<AdminReportsPage />} />
+                    <Route path="qna" element={<AdminQnaPage />} />
+                </Route>
                 <Route path="/mypage" element={<MyPage />} />
                 <Route path="/signup" element={<SignupPage />} />
-                
-                
 
 
                 </Route>

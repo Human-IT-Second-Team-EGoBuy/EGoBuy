@@ -48,7 +48,7 @@ public class InsectEntity {
 
     @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
-    private Integer status;
+    private Byte status;
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;

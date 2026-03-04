@@ -73,13 +73,13 @@ export default function Header() {
      */
     const dropdownContents = useMemo(() => ({
         map: [
-            { name: "토지 매매가 지도", path: "/map/trade" },
-            { name: "야생동물 서식지 지도", path: "/map/animal" },
-            { name: "영농 정착 정책 지원 지역", path: "/map/policy" },
-            { name: "지역별 토양 분석 지도", path: "/map/soil" },
+           
         ],
         community: [{ name: "게시판", path: "/community" }],
-        informationhub: [{ name: "병충해 정보", path: "/insect-pests-info" }],
+        informationhub: [
+            { name: "병충해 정보", path: "/insect-pests-info" },
+            { name: "농산물 가격 정보", path: "/retail-detail-info"}
+        ],
         
 
     }), []);
@@ -162,7 +162,11 @@ export default function Header() {
                             <span className="text-xs text-slate-500 font-medium">
                                 <b>{user?.nickname}</b>님
                             </span>
+                            {user?.user_role === "ADMIN" ? (
+                            <HeaderUi onClick={() => navigate("/admin")} variant="ghost">관리자페이지</HeaderUi>
+                            ) : (
                             <HeaderUi onClick={() => navigate("/mypage")} variant="ghost">마이페이지</HeaderUi>
+                            )}
                             <HeaderUi onClick={handleLogout} variant="ghost">로그아웃</HeaderUi>
                         </>
                     ) : (

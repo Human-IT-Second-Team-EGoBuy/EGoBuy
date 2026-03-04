@@ -549,5 +549,37 @@ CREATE TABLE `blacklist` (
 		REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB;
 
+/*
+* kamis api 사용하기 위해
+* 대분류, 중분류, 소분류 코드와
+* 지역 코드 적재한 테이블 쿼리
+*/
 
+--32. 대분류 코드 테이블
+create table category_master (
+ctgry_cd int primary key,
+ctgry_nm varchar(50) not null
+);
+
+--33. 중분류(품목) 코드 테이블
+create table item_master (
+item_cd int primary key,
+ctgry_cd int,
+item_nm varchar(50) not null,
+foreign key (ctgry_cd) references category_master(ctgry_cd)
+);
+
+--34. 소분류(품종) 코드 테이블
+create table variety_master (
+	item_cd int,
+    vrty_cd varchar(10),
+    vrty_nm varchar(100),
+    primary key (item_cd, vrty_cd)
+);
+
+--35. 지역 코드 테이블
+create table region_master (
+	sgg_cd int primary key,
+    sgg_nm varchar(50) not null
+);
  
