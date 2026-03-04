@@ -1,7 +1,11 @@
-/* tailwindcss import and font style import*/
-
 @import "tailwindcss";
+
+@import "./component/home/page/main/MainPage.css";
 @import "./component/home/page/aichat/aichat.css";
+@import "./component/home/page/main/customselect/SelectStyles.css";
+@import "./component/home/page/main/section/SectionStyles.css";
+@import "./component/home/page/informationhub/insectpestsinfo.css";
+
 
 body {
     font-family: "Noto Sans KR", sans-serif;

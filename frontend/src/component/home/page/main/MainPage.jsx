@@ -1,5 +1,6 @@
-import { useState } from "react";
 import { Card, WeatherUi, SectionText } from "./MainPageUi";
+import RetailSection from "./section/RetailSection";
+import NewsSection from "./section/NewsSection";
 import useUserStore from '../../../../store/useUserStore'; // Zustand 데이터를 확인하기 위한 로그
 
 export default function MainPage() {
@@ -19,20 +20,10 @@ export default function MainPage() {
       </WeatherUi>
 
       <section className="space-y-4">
-        <SectionText title="지역별 주요 농업 뉴스"/>
-        
+        <SectionText />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 rounded-2xl border-slate-100">
-            <h2>news</h2>
-          </Card>
-          <Card className="p-4 rounded-2xl border-slate-100">
-            <h2>news</h2>
-          </Card>
-          <Card className="p-4 rounded-2xl border-slate-100">
-            <h2>news</h2>
-          </Card>
-        </div>
+          <NewsSection/>
+          
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -48,16 +39,14 @@ export default function MainPage() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
-        <Card className="lg:col-span-1">
-          <h2 className="font-bold text-lg mb-4">retail graph</h2>
-          <div className="text-sm text-slate-500">여기에 그래프</div>
-        </Card>
+
+        <RetailSection />
 
         <Card className="lg:col-span-2">
           <h2 className="font-bold text-lg mb-4">community show</h2>
           <div className="text-sm text-slate-500">여기에 커뮤니티 리스트</div>
         </Card>
       </section>
-    </div>
+    </div >
   );
 }

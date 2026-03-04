@@ -55,6 +55,10 @@ public enum ErrorCode {
     NOT_FOUND_NOTICE(40403, HttpStatus.NOT_FOUND, "공지사항이 존재하지 않습니다."),
     NOT_FOUND_POST(40404, HttpStatus.NOT_FOUND,"게시글이 존재하지 않습니다."),
     NOT_FOUND_COMMENT(40405, HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
+
+    // Retail service Error text
+    NOT_FOUND_DATA(40406, HttpStatus.NOT_FOUND, "해당 조건의 코드를 찾을 수 없습니다"),
+    
     NOT_FOUND_INQUIRY(40407, HttpStatus.NOT_FOUND, "상태를 변경할 문의사항이 존재하지 않습니다."),
     NOT_FOUND_CONVERSATION(40408, HttpStatus.NOT_FOUND, "챗봇 대화 내용이 존재하지 않습니다."),
     NOT_FOUND_AUTHENTICATION(40409, HttpStatus.NOT_FOUND, "회원의 인증 정보를 찾을 수 없습니다."), // Zustand를 사용하므로 브라우저 새로고침 시 User 정보를 유지하려는데 UserProfile을 불러올 수 없는 경우

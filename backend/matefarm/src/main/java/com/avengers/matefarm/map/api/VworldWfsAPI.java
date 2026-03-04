@@ -13,10 +13,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class VworldWfsAPI {
 
-    @Value("${VWORLD_WFS_API_URL}")
+    @Value("${map.vworld_wfs_api-url}")
     private String vworldApiUrl;
 
-    @Value("${VWORLD_WFS_API_KEY}")
+    @Value("${map.vworld_wfs_api_key}")
     private String vworldApiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
