@@ -1,4 +1,6 @@
+import os
 import time
+import logging
 from typing import List, Optional, Literal, Dict, Any
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
@@ -16,6 +18,11 @@ from app.services.diagnosis_rag_llm import (
 from app.services.intent import classify_intent
 from app.services.llm import get_llm as get_chat_llm, build_chat_prompt
 
+
+# 진단 LLM 사용 여부 (기본 OFF)
+DIAG_LLM_ENABLED = os.getenv("DIAG_LLM_ENABLED", "1") == "1"
+# 채팅 LLM 사용 여부 (기본 ON/원하면 OFF로)
+CHAT_LLM_ENABLED = os.getenv("CHAT_LLM_ENABLED", "1") == "1"
 
 router = APIRouter()
 MAX_BYTES = 10 * 1024 * 1024
@@ -87,12 +94,19 @@ async def analyze(
     rag_answer = None
     rag_evidence = []
 
-    if label_ko and decision != "REJECT":
-        rag_evidence = await retrieve(query=label_ko, intent="진단", top_n=5)
-        prompt = build_diagnosis_prompt(label_ko=label_ko, evidence_docs=rag_evidence)
-        llm = get_diag_llm()
-        resp = llm.invoke(prompt)
-        rag_answer = resp.content if hasattr(resp, "content") else str(resp)
+    if DIAG_LLM_ENABLED and label_ko and decision != "REJECT":
+        try:
+            rag_evidence = await retrieve(query=label_ko, intent="진단", top_n=5)
+            prompt = build_diagnosis_prompt(label_ko=label_ko, evidence_docs=rag_evidence)
+            llm = get_diag_llm()
+            resp = llm.invoke(prompt)
+            rag_answer = resp.content if hasattr(resp, "content") else str(resp)
+        except Exception as e:
+            # 여기서 예외 삼키고 모델결과는 그대로 반환
+            logging.exception("Diagnosis LLM failed; returning model-only result")
+            rag_answer = None
+            out.setdefault("meta", {})
+            out["meta"]["diag_llm_error"] = str(e)
 
     return {
         "conversation_id": conv_id,
@@ -140,8 +154,21 @@ async def chat_rag(req: ChatRagRequest):
         history=history_dicts,
     )
 
-    llm = get_chat_llm()
-    resp = llm.invoke(prompt)
-    answer = resp.content if hasattr(resp, "content") else str(resp)
+    if not CHAT_LLM_ENABLED:
+        return {"answer": "현재 LLM이 비활성화되어 있어요.", "intent": intent, "citations": evidence}
 
-    return {"answer": answer, "intent": intent, "citations": evidence}
+    try:
+        llm = get_chat_llm()
+        resp = llm.invoke(prompt)
+        answer = resp.content if hasattr(resp, "content") else str(resp)
+        return {"answer": answer, "intent": intent, "citations": evidence}
+    except Exception as e:
+        logging.exception("Chat LLM failed; returning fallback answer")
+        return {
+            "answer": "현재 답변 생성(LLM)에 문제가 있어요. 잠시 후 다시 시도해주세요.",
+            "intent": intent,
+            "citations": evidence,
+            "error": str(e),
+        }
+
+

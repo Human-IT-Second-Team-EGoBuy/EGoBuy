@@ -32,7 +32,7 @@ public class ChatConversationController {
     @GetMapping("/conversations/{conversationId}")
     public ResponseDTO<ConversationDto> detail(
             @PathVariable Long conversationId,
-            @RequestParam(value = "includeMessages", defaultValue = "true") Doolean includeMessages
+            @RequestParam(value = "includeMessages", defaultValue = "true") Boolean includeMessages
     ) {
         return ResponseDTO.ok(chatConversationService.getConversation(conversationId, includeMessages));
     }

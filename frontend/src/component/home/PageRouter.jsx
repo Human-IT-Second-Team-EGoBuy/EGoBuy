@@ -9,7 +9,7 @@ import AiChatPage from "./page/aichat/AiChatPage";
 import InsectPestsInfoPage from "./page/informationhub/InsectPestsInfoPage";
 import InsectDetailPage from "./page/informationhub/InsectDetailPage";
 import DiseaseDetailPage from "./page/informationhub/DiseaseDetailPage";
-import LoginPage from "./page/user/auth/login/loginPage"
+import LoginPage from "./page/user/auth/login/LoginPage"
 import MyPage from "./page/user/mypage/MyPage"
 import SignupPage from "./page/user/auth/signup/SignUpPage"
 

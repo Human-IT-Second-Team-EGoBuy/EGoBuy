@@ -7,7 +7,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FastApiResponse(
-        @JsonProperty("conversation_id") Long conversationId,
+        @JsonProperty("conversation_id") String conversationId,
         @JsonProperty("crop_id") Long cropId,
         @JsonProperty("target_model") String targetModel,
         String decision,

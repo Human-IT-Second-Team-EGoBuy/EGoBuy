@@ -7,14 +7,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libglib2.0-0 \
-  && rm -rf /var/lib/apt/lists/*
-
+# 먼저 requirements 복사
 COPY requirements-embedder.txt .
+
+# PyPI를 기본 인덱스로 강제 + torch 인덱스는 extra로
 RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements-embedder.txt
+ && pip install --no-cache-dir \
+    --index-url https://pypi.org/simple \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r requirements-embedder.txt
 
 COPY app ./app
 COPY data ./data

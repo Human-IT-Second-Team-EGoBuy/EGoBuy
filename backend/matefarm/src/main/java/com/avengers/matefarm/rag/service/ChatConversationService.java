@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 @RequiredArgsConstructor
 public class ChatConversationService {
@@ -30,16 +33,38 @@ public class ChatConversationService {
     private final ConversationRepository conversationRepository;
     private final ConversationMessageRepository messageRepository;
     private final UserRepository userRepository;
+    private static final Logger log = LoggerFactory.getLogger(ChatConversationService.class);
 
     /** JWT 로그인 유저(userAuthId) 가져오기 (CommonException 통일) */
     private UserEntity getLoginUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+        log.info("auth={}, authenticated={}, name={}, principalClass={}, principal={}",
+                auth,
+                auth != null && auth.isAuthenticated(),
+                auth != null ? auth.getName() : null,
+                auth != null && auth.getPrincipal() != null ? auth.getPrincipal().getClass().getName() : null,
+                auth != null ? auth.getPrincipal() : null
+        );
+
+        if (auth == null
+                || !auth.isAuthenticated()
+                || auth instanceof AnonymousAuthenticationToken
+                || auth.getPrincipal() == null
+                || "anonymousUser".equals(String.valueOf(auth.getPrincipal()))) {
             throw new CommonException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        String userAuthId = auth.getName();
+        String userAuthId = null;
+
+        Object principal = auth.getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+            userAuthId = ud.getUsername();
+        } else {
+            // principal이 String이거나, 커스텀 principal이면 일단 name 사용
+            userAuthId = auth.getName();
+        }
+
         if (userAuthId == null || userAuthId.isBlank() || "anonymousUser".equals(userAuthId)) {
             throw new CommonException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -85,7 +110,7 @@ public class ChatConversationService {
 
     /** 1) 대화 상세 조회: ACTIVE(status=1)만 (숨김은 404처럼 NOT_FOUND) */
     @Transactional(readOnly = true)
-    public ConversationDto getConversation(Long conversationId, Doolean includeMessages) {
+    public ConversationDto getConversation(Long conversationId, Boolean includeMessages) {
         UserEntity user = getLoginUser();
 
         if (conversationId <= 0) {

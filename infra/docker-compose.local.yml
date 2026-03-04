@@ -1,62 +1,138 @@
-# local 환경에서 사용할 docker-compose 설정파일
-version: '3.9'
+version: "3.9"
+
 services:
+  # =========================
+  # DB
+  # =========================
   db:
     image: mariadb:10.11
     container_name: db
-    env_file:
-      - .env.local.db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: matefarm
-      MYSQL_USER: matefarm
-      MYSQL_PASSWORD: matefarm
-
+      MARIADB_ROOT_PASSWORD: matefarm
+      MARIADB_DATABASE: matefarm
+      MARIADB_USER: matefarm
+      MARIADB_PASSWORD: matefarm
     ports:
-      - "3308:3306"   # 호스트 3308 → 컨테이너 3306
+      - "3307:3306"
     volumes:
       - dbdata:/var/lib/mysql
+      # - ../db/matefarm_ddl.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     healthcheck:
-      # DB가 살아있는지 확인. ( health Check )
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-pmatefarm"]
       interval: 5s
-      # test 명령을 실행했을 때 5초 안에 응답이 없으면 실패로 간주
       timeout: 5s
       retries: 10
+    networks:
+      - matefarm-network
 
+  # =========================
+  # Redis
+  # =========================
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - matefarm-network
+
+  # =========================
+  # AI stack
+  # =========================
+  orchestrator:
+    build: ../ai/services/orchestrator
+    container_name: orchestrator
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../ai/.env 
+    environment:
+      MODEL_BASE_URL: http://model-service:8010/predict
+      EMBEDDER_BASE_URL: http://embedder:8030
+      DIAG_LLM_ENABLED: "1"
+      CHAT_LLM_ENABLED: "1"
+    depends_on:
+      - model-service
+      - embedder
+    networks:
+      - matefarm-network
+
+  model-service:
+    build: ../ai/services/model-service
+    container_name: model-service
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    env_file:
+      - ../ai/.env 
+    environment:
+      DEVICE: cpu
+      WEIGHTS_PATH: /weights/best_model_epoch8_NEW.pth
+    volumes:
+      - ../ai/services/model-service/weights:/weights:ro
+    networks:
+      - matefarm-network
+
+  embedder:
+    build: ../ai/services/embedder
+    container_name: embedder
+    restart: unless-stopped
+    ports:
+      - "8030:8030"
+    env_file:
+      - ../ai/.env 
+    volumes:
+      - ../ai/services/embedder/data/chroma_db:/chroma
+    environment:
+      CHROMA_PERSIST_DIR: /chroma
+    networks:
+      - matefarm-network
+
+  # =========================
+  # Backend (Spring)
+  # =========================
   backend:
     build: ../backend/matefarm
     container_name: backend
     env_file:
-      - .env.local.back
+      - ../backend/matefarm/.env 
     environment:
-      # yaml 파일 설정.
-#      SPRING_PROFILES_ACTIVE: local
-      # DB Service name 으로 수정
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/matefarm?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
-#      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME} 괜히 .env에 있는데 따로 설정했다가 변수명 꼬여서 인식 안된다.
+      FASTAPI_BASE_URL: http://orchestrator:8000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      FRONT_ROOT_URL: http://localhost
+      MARIADB_ROOT_PASSWORD: root
     ports:
       - "8080:8080"
-      # DB health Check 후 OK 면 backend build.
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+      orchestrator:
+        condition: service_started
+    networks:
+      - matefarm-network
 
+  # =========================
+  # Frontend
+  # =========================
   frontend:
     build: ../frontend
     container_name: frontend
-    environment: {}
     ports:
       - "80:80"
     depends_on:
       - backend
-
-  # Redis 추가
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
+    networks:
+      - matefarm-network
 
 volumes:
   dbdata:
+
+networks:
+  matefarm-network:
+    driver: bridge

@@ -9,10 +9,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class FastApiWebClientConfig {
 
     @Bean
-    public WebClient fastApiWebClient(@Value("${fastapi.base-url}") String baseUrl) {
-        System.out.println("[FastAPI] baseUrl=" + baseUrl);
+    public WebClient fastApiWebClient(@Value("${FASTAPI_BASE_URL}") String baseUrl) {
         return WebClient.builder()
-                .baseUrl(baseUrl)
+                .baseUrl(baseUrl) // http://orchestrator:8000
+                .filter((req, next) -> {
+                    // 실제 어디로 호출하는지 로그로 확정
+                    System.out.println("[FastAPI] " + req.method() + " " + req.url());
+                    return next.exchange(req);
+                })
                 .build();
     }
 }
