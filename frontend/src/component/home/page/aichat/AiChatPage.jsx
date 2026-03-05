@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./aichat.css";
 import axios from "axios";
+import { useSearchParams } from "react-router-dom";
 
 import HeaderBar from "./components/HeaderBar";
 import ChatPanel from "./components/ChatPanel";
@@ -31,14 +32,26 @@ export default function AiChatPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [diagnosing, setDiagnosing] = useState(false);
 
+  const [searchParams] = useSearchParams();
+
   const cropName = useMemo(() => {
     return cropItems.find((x) => Number(x.crop_id) === Number(cropId))?.crop_name ?? "";
   }, [cropItems, cropId]);
 
   useEffect(() => {
     setCropItems(CROP_ITEMS);
-    setCropId(CROP_ITEMS.length ? Number(CROP_ITEMS[0].crop_id) : null);
-  }, []);
+
+    const qMode = searchParams.get("mode");
+    if (qMode === "vision") setMode("vision");
+
+    const qCropId = searchParams.get("cropId");
+    // cropId가 없으면 기존처럼 첫번째로
+    const initialCropId = qCropId
+      ? Number(qCropId)
+      : (CROP_ITEMS.length ? Number(CROP_ITEMS[0].crop_id) : null);
+
+    setCropId(initialCropId);
+    }, []);
 
   useEffect(() => {
     return () => {

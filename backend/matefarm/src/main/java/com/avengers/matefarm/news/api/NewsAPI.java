@@ -14,7 +14,7 @@ public class NewsAPI {
 
     private final WebClient webClient;
 
-    @Value("${oaouth2.client.registration.naver.news-client-id}")
+    @Value("${oauth2.client.registration.naver.news-client-id}")
     private String clientId;
 
     @Value("${oauth2.client.registration.naver.news-client-secret}")

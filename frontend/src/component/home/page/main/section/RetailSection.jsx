@@ -23,7 +23,7 @@ export default function RetailSection() {
     useEffect(() => {
         const initLoad = async () => {
             try {
-                const res = await axios.get("http://localhost:8080/api/retail/open");
+                const res = await axios.get("/api/retail/open");
                 if (res.data.success) setCategoryList(res.data.content || []);
                 handleGetRetailAvgData(); // 초기 데이터 로드 (쌀)
             } catch (err) { console.log("초기 로드 실패", err); }
@@ -35,7 +35,7 @@ export default function RetailSection() {
         try {
             const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
             const cropName = selected.variety || selected.item;
-            const res = await axios.get("http://localhost:8080/api/retail/avg", {
+            const res = await axios.get("/api/retail/avg", {
                 params: { toDate: today, cropNm: cropName, filter }
             });
             if (res.data?.content) setAvgData(res.data.content);
@@ -45,14 +45,14 @@ export default function RetailSection() {
     const handleCategoryChange = async (e) => {
         const ctgryNm = e.target.value;
         setSelected({ category: ctgryNm, item: "", variety: "" });
-        const res = await axios.get("http://localhost:8080/api/retail/item-open", { params: { ctgryNm } });
+        const res = await axios.get("/api/retail/item-open", { params: { ctgryNm } });
         setItemList(res.data.content || []);
     };
 
     const handleItemChange = async (e) => {
         const itemNm = e.target.value;
         setSelected(prev => ({ ...prev, item: itemNm, variety: "" }));
-        const res = await axios.get("http://localhost:8080/api/retail/variety-open", { params: { itemNm } });
+        const res = await axios.get("/api/retail/variety-open", { params: { itemNm } });
         setVarietyList(res.data.content || []);
     };
 
