@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, TypedDict, Literal
 
 
 Decision = Literal["CONFIDENT", "UNCERTAIN", "REJECT"]
-ModelName = Literal["liriope", "wambugu"]
+
 
 class ModelTopKItem(TypedDict, total=False):
     index: int
@@ -29,7 +29,6 @@ class AnalyzeState(TypedDict, total=False):
     # input
     request_id: str
     crop_id: int
-    target_model: ModelName
     image_bytes: bytes
     image_mime: str
     top_k: int
@@ -37,8 +36,7 @@ class AnalyzeState(TypedDict, total=False):
     routing: Dict[str, Any]
 
     # outputs (intermediate)
-    liriope: Dict[str, Any]
-    wambugu: Dict[str, Any]
+    model_result: Dict[str, Any]
 
     # final outputs
     decision: Decision

@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Getter @Setter
@@ -14,41 +18,37 @@ import java.time.LocalDateTime;
 public class ConversationEntity {
 
   @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "conversation_id")
-    private Long conversationId;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "conversation_id")
+  private Long conversationId;
 
-    @Column(name = "title", nullable = false, length = 255)
-    private String title;
+  @Column(name = "title", nullable = false, length = 255)
+  private String title;
 
-    @Column(name = "status", nullable = false)
-    private Integer status; // 1=ACTIVE, 0=HIDDEN
+  @JdbcTypeCode(SqlTypes.TINYINT)
+  @Column(name = "status", nullable = false)
+  private Integer status; // 1=ACTIVE, 0=HIDDEN
 
-    @Column(name = "last_message_at")
-    private LocalDateTime lastMessageAt;
+  @Column(name = "last_message_at")
+  private LocalDateTime lastMessageAt;
 
-    /** users.user_id FK */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+  /** users.user_id FK */
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", nullable = false)
+  private UserEntity user;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
 
-    @PrePersist
-    void prePersist() {
-        if (title == null || title.isBlank()) title = "새 대화";
-        if (status == null) status = 1;
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (updatedAt == null) updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-  
+  @PrePersist
+  void prePersist() {
+      if (title == null || title.isBlank()) title = "새 대화";
+      if (status == null) status = 1;
+      
+  }
 }

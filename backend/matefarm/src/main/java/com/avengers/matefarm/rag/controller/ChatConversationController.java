@@ -31,8 +31,8 @@ public class ChatConversationController {
 
     @GetMapping("/conversations/{conversationId}")
     public ResponseDTO<ConversationDto> detail(
-            @PathVariable long conversationId,
-            @RequestParam(value = "includeMessages", defaultValue = "true") boolean includeMessages
+            @PathVariable Long conversationId,
+            @RequestParam(value = "includeMessages", defaultValue = "true") Boolean includeMessages
     ) {
         return ResponseDTO.ok(chatConversationService.getConversation(conversationId, includeMessages));
     }
@@ -40,7 +40,7 @@ public class ChatConversationController {
 
     @PatchMapping("/conversations/{conversationId}/status")
    public ResponseDTO<Void> patchStatus(
-            @PathVariable long conversationId,
+            @PathVariable Long conversationId,
             @RequestBody StatusPatchRequest req
     ) {
         chatConversationService.patchConversationStatus(conversationId, req.getStatus());

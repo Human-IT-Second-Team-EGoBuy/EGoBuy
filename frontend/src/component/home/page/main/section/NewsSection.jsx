@@ -13,7 +13,7 @@ export default function NewsSection() {
   useEffect(() => {
     const getNews = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/news/open");
+        const res = await axios.get("/api/news/open");
         if (res.data?.content?.items) setNews(res.data.content.items);
       } catch (err) {
         console.error("뉴스 로드 실패", err);

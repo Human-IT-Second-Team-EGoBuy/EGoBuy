@@ -14,7 +14,7 @@ import com.avengers.matefarm.rag.repository.ConversationRepository;
 import com.avengers.matefarm.user.dto.UserEntity;
 import com.avengers.matefarm.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,15 +29,28 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class RagService {
 
-    private final WebClient fastApiWebClient; // Bean으로 주입되어 있다고 가정
+    
+    private final WebClient fastApiWebClient;
     private final ConversationRepository conversationRepository;
     private final ConversationMessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final ObjectMapper om; 
 
-    private final ObjectMapper om = new ObjectMapper();
+    public RagService(
+        @Qualifier("fastApiWebClient") WebClient fastApiWebClient,
+        ConversationRepository conversationRepository,
+        ConversationMessageRepository messageRepository,
+        UserRepository userRepository,
+        ObjectMapper om
+    ) {
+        this.fastApiWebClient = fastApiWebClient;
+        this.conversationRepository = conversationRepository;
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.om = om;
+    }
 
     /** JWT 로그인 유저(userAuthId) 가져오기 (CommonException 통일) */
     private UserEntity getLoginUser() {

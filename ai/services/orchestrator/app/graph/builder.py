@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, END
 
 from app.graph.state import AnalyzeState
-from app.graph.nodes_analyze import run_selected_model, decide_and_finalize
+from app.graph.nodes_analyze import run_model, decide_and_finalize
 from app.graph.nodes_chat import chat_flow
 
 _analyze_graph = None
@@ -14,11 +14,11 @@ def get_analyze_graph():
         return _analyze_graph
 
     g = StateGraph(AnalyzeState)
-    g.add_node("run_selected_model", run_selected_model)
+    g.add_node("run_model", run_model)
     g.add_node("decide_and_finalize", decide_and_finalize)
 
-    g.set_entry_point("run_selected_model")
-    g.add_edge("run_selected_model", "decide_and_finalize")
+    g.set_entry_point("run_model")
+    g.add_edge("run_model", "decide_and_finalize")
     g.add_edge("decide_and_finalize", END)
 
     _analyze_graph = g.compile()

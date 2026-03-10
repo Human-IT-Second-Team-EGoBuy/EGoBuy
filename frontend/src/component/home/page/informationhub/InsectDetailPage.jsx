@@ -40,11 +40,7 @@ export default function InsectDetailPage() {
   const [base, setBase] = useState(null);
   const [detail, setDetail] = useState(null);
 
-  const cropNameMap = useMemo(
-    () => new Map(DUMMY_CROPS.map((c) => [c.crop_id, c.crop_name])),
-    []
-  );
-
+  
   /**  분기 1곳 */
   const fetchDetail = useCallback(async () => {
     setState("loading");

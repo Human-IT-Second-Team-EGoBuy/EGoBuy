@@ -3,10 +3,6 @@ from typing import Any, Dict, List, Tuple
 from app.graph.state import AnalyzeState
 from app.services.model_client import predict_model
 
-
-
-
-
 def _extract_topk(result: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     모델 서비스 응답에서 topk 리스트를 뽑아내는 함수.
@@ -54,19 +50,14 @@ def _decide(p1: float, margin: float, thresholds: Dict[str, float]) -> str:
     return "UNCERTAIN"
 
 
-async def run_selected_model(state: AnalyzeState) -> AnalyzeState:
-    """
-      target_model만 호출해서 state["liriope"] 또는 state["wambugu"]에 저장
-    """
-    target = state["target_model"]
+async def run_model(state: AnalyzeState) -> AnalyzeState:
     result = await predict_model(
-        model_name=target,
         image_bytes=state["image_bytes"],
         image_mime=state["image_mime"],
         top_k=int(state.get("top_k", 5)),
         crop_id=state.get("crop_id"),
     )
-    state[target] = result
+    state["model_result"] = result
     return state
 
 
@@ -79,53 +70,87 @@ def _score_from_result(result: Dict[str, Any], topk: List[Dict[str, Any]]) -> Tu
             pass
     return _score_from_topk(topk)
 
+def _score_from_topk_global(topk: List[Dict[str, Any]]) -> Tuple[float, float]:
+    """
+    top1_prob_global, margin_global(top1-top2)
+    topk 항목에 prob_global이 있을 때만 의미 있음.
+    """
+    def prob_g(item: Dict[str, Any]) -> float:
+        try:
+            return float(item.get("prob_global", 0.0))
+        except Exception:
+            return 0.0
+
+    if not topk:
+        return 0.0, 0.0
+
+    p1 = prob_g(topk[0])
+    p2 = prob_g(topk[1]) if len(topk) > 1 else 0.0
+    return p1, (p1 - p2)
+
 
 async def decide_and_finalize(state: AnalyzeState) -> AnalyzeState:
-    target = state["target_model"]
-    result = state.get(target, {}) or {}
+    result = state.get("model_result", {}) or {}
 
     topk = _extract_topk(result)
-    p1, margin = _score_from_result(result, topk)  # confidence 우선
+
+    # 1) 기존 점수(보통: crop 필터링이면 조건부(prob), 아니면 global(prob))
+    p1_cond, margin_cond = _score_from_result(result, topk)
+
+    # 2) global 점수(prob_global 기반)
+    p1_g, margin_g = _score_from_topk_global(topk)
 
     thresholds = state.get("thresholds", {}) or {}
-    decision = _decide(p1, margin, thresholds)
+
+    # 필터링 여부 (model-service가 meta.filtered_by_crop 내려주는 경우)
+    meta = result.get("meta") or {}
+    filtered = bool(meta.get("filtered_by_crop"))
+
+    # 하이브리드: "REJECT만 global로 가드"
+    # (테스트 전이라 보수적으로 기본값 0.15 추천. 필요하면 0.10~0.20에서 튜닝)
+    reject_min_prob_global = float(thresholds.get("reject_min_prob_global", 0.15))
+
+    if filtered and (p1_g > 0.0):
+        # 1) global이 너무 낮으면, 조건부가 높아도 거절(과확신 방지)
+        if p1_g < reject_min_prob_global:
+            decision = "REJECT"
+        else:
+            # 2) confident/uncertain은 기존 기준(조건부) 그대로
+            decision = _decide(p1_cond, margin_cond, thresholds)
+    else:
+        # 필터링이 아니거나 prob_global이 없으면 기존 로직 그대로
+        decision = _decide(p1_cond, margin_cond, thresholds)
 
     best = topk[0] if topk else {}
     label_en = best.get("label") or best.get("class") or best.get("name") or ""
     label_ko = best.get("label_ko") or ""
 
-    # meta 기반 추가 reject (필터 후 후보합이 너무 작으면 지원불가로 처리)
-    meta = result.get("meta") or {}
-    if isinstance(meta, dict) and meta.get("filtered") is True:
-        try:
-            kept_sum = float(meta.get("kept_sum", 0.0))
-            reject_kept_sum = float(meta.get("reject_kept_sum", 0.2))
-            if kept_sum < reject_kept_sum:
-                label_en = "Invalid"
-        except Exception:
-            pass
-
     if label_en == "Invalid":
         decision = "REJECT"
         label_ko = "결과 없음"
 
-    best_with_ko = dict(best)
-    if label_ko:
-        best_with_ko["label_ko"] = label_ko
-
     final = {
-        "target_model": target,
-        "top1_prob": p1,
-        "margin": margin,
+        # UI/기존 호환용: 기존 필드 유지(조건부 기준)
+        "top1_prob": p1_cond,
+        "margin": margin_cond,
         "label": label_en,
         "label_ko": label_ko,
-        "raw": best_with_ko,
+        "raw": best,
+
+        # 디버깅/튜닝용 추가 필드
+        "top1_prob_global": p1_g,
+        "margin_global": margin_g,
+        "filtered_by_crop": filtered,
+        "reject_min_prob_global": reject_min_prob_global,
+        "score_basis": "hybrid(reject=global,conf=cond)" if (filtered and p1_g > 0.0) else "default",
     }
 
-    state["decision"] = decision  # type: ignore
+    state["decision"] = decision
     state["final"] = final
-    state.setdefault("evidence", [])
     state.setdefault("meta", {})
-    state["meta"]["top1_prob"] = p1
-    state["meta"]["margin"] = margin
+    state["meta"]["top1_prob"] = p1_cond
+    state["meta"]["margin"] = margin_cond
+    state["meta"]["top1_prob_global"] = p1_g
+    state["meta"]["margin_global"] = margin_g
+    state["meta"]["score_basis"] = final["score_basis"]
     return state

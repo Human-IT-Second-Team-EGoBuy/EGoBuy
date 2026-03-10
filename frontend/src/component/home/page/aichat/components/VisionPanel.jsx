@@ -29,7 +29,7 @@ export default function VisionPanel({
   const leftSpan = result ? "lg:col-span-5" : "lg:col-span-12";
 
   //  진단 가능 조건(안전)
-  const canDiagnose = !!file && !!cropId && !diagnosing;
+  const canDiagnose = !!file && cropId != null && !diagnosing;
 
   return (
     <div className="vp-grid">

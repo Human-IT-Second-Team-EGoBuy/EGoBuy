@@ -116,7 +116,7 @@ export default function RetailDetailPage() {
 
     const handleGetSggName = async () => {
         try {
-            const res = await axios.get("http://localhost:8080/api/retail/sgg-open");
+            const res = await axios.get("/api/retail/sgg-open");
             setSggList(res.data?.content || []);
         } catch (err) {
             console.log("지역 로드 실패", err);
@@ -128,7 +128,7 @@ export default function RetailDetailPage() {
             const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
             const cropName = selected.variety || selected.item;
 
-            const res = await axios.get("http://localhost:8080/api/retail/avg", {
+            const res = await axios.get("/api/retail/avg", {
                 params: { toDate: today, cropNm: cropName, filter },
             });
 
@@ -155,7 +155,7 @@ export default function RetailDetailPage() {
         if (!cropName) return alert("검색할 품목이나 품종을 선택해주세요.");
 
         try {
-            const res = await axios.get("http://localhost:8080/api/retail/search", {
+            const res = await axios.get("/api/retail/search", {
                 params: {
                     toDate: today,
                     regionNm: selected.sggNm,
@@ -182,7 +182,7 @@ export default function RetailDetailPage() {
 
     const fetchCategories = async () => {
         try {
-            const res = await axios.get("http://localhost:8080/api/retail/open");
+            const res = await axios.get("/api/retail/open");
             setCategoryList(res.data?.content || []);
         } catch (err) {
             console.error("부류 로드 실패", err);
@@ -195,7 +195,7 @@ export default function RetailDetailPage() {
         setVarietyList([]);
 
         try {
-            const res = await axios.get("http://localhost:8080/api/retail/item-open", {
+            const res = await axios.get("/api/retail/item-open", {
                 params: { ctgryNm },
             });
             setItemList(res.data?.content || []);
@@ -209,7 +209,7 @@ export default function RetailDetailPage() {
         setSelected((prev) => ({ ...prev, item: itemNm, variety: "" }));
 
         try {
-            const res = await axios.get("http://localhost:8080/api/retail/variety-open", {
+            const res = await axios.get("/api/retail/variety-open", {
                 params: { itemNm },
             });
             setVarietyList(res.data?.content || []);

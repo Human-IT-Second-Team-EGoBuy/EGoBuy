@@ -95,7 +95,7 @@ export default function Header() {
     // 챗봇
     const getHeaderStyleAiChat = () => {
         const base = "transition-all duration-200";
-        const active = pathname.startsWith("/aiChat")
+        const active = pathname.startsWith("/ai-chat")
             ? "text-emerald-700 border-b-2 border-emerald-500 font-bold"
             : "text-slate-600 hover:text-emerald-600";
         return `${base} ${active}`;

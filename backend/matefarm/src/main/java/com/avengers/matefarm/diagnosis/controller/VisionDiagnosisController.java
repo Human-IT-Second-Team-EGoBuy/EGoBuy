@@ -17,12 +17,11 @@ public class VisionDiagnosisController {
 
     @PostMapping(value = "/diagnose", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseDTO<VisionDiagnosisResponse> diagnose(
-            @RequestParam("cropId") Integer cropId,
+            @RequestParam("cropId") Long cropId,
             @RequestParam("image") MultipartFile image,
             @RequestParam(value = "topK", required = false) Integer topK
     ) {
-        int k = (topK == null ? 5 : topK);
-        VisionDiagnosisResponse data = visionDiagnosisService.diagnose(cropId, image, k);
+        VisionDiagnosisResponse data = visionDiagnosisService.diagnose(cropId, image, topK);
         return ResponseDTO.ok(data);
     }
 }

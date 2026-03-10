@@ -307,7 +307,7 @@ CREATE TABLE `soil_analysis` (
 CREATE TABLE `conversations` (
 	`conversation_id` BIGINT NOT NULL AUTO_INCREMENT,
 	`title` VARCHAR(255) NOT NULL,
-	`status` INT NOT NULL,
+	`status` TINYINT NOT NULL DEFAULT '1',
 	`last_message_at` TIMESTAMP NULL,
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -325,7 +325,7 @@ CREATE TABLE `conversations_messages` (
 	`metadata` LONGTEXT NULL,
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	`status` INT NULL,
+	`status` TINYINT NOT NULL DEFAULT '1',
 	`conversation_id` BIGINT NOT NULL,
 	PRIMARY KEY (`conversations_messages_id`),
 	CONSTRAINT `FK_conversations_TO_messages` FOREIGN KEY (`conversation_id`) 

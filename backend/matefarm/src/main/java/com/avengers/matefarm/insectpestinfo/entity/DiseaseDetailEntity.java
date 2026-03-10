@@ -22,25 +22,25 @@ public class DiseaseDetailEntity {
     @Column(name = "infection_route")
     private String infectionRoute;
 
-    @Column(name = "development_condition", columnDefinition = "TEXT")
+    @Column(name = "development_condition")
     private String developmentCondition;
 
-    @Column(name = "symptoms", columnDefinition = "TEXT")
+    @Column(name = "symptoms")
     private String symptoms;
 
-    @Column(name = "prevention_method", columnDefinition = "TEXT")
+    @Column(name = "prevention_method")
     private String preventionMethod;
 
-    @Column(name = "biology_prvnbe_mth", columnDefinition = "TEXT")
+    @Column(name = "biology_prvnbe_mth")
     private String biologyPrvnbeMth;
 
-    @Column(name = "chemical_prvnbe_mth", columnDefinition = "TEXT")
+    @Column(name = "chemical_prvnbe_mth")
     private String chemicalPrvnbeMth;
 
     @Column(name = "virus_name")
     private String virusName;
 
-    @Column(name = "etc", columnDefinition = "TEXT")
+    @Column(name = "etc")
     private String etc;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)

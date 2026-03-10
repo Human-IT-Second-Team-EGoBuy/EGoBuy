@@ -69,4 +69,5 @@ def build_chat_graph():
 
 
 #  builder.py가 import 하는 이름 유지
-chat_flow = build_chat_graph()
+def chat_flow():
+    return build_chat_graph()

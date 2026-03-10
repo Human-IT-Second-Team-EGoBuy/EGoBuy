@@ -1,6 +1,7 @@
 // src/component/page/aichat/components/ChatPanel.jsx
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import axios from "axios";
+import apiClient from "@/api/axios";
+
 
 /** ====== UI 문구 ====== */
 const WELCOME_BOT_MSG = "새 대화를 시작할게요. 어떤 도움이 필요하세요?";
@@ -113,45 +114,10 @@ const pickFromSendResponse = (content, fallbackUserText, fallbackClientMessageId
   return { userMsg, botMsg, title, lastMessageAt };
 };
 
-/** ====== axios 기본 ====== */
-axios.defaults.withCredentials = true;
-
-// HMR에서 인터셉터 중복 등록 방지
-if (!axios.__MF_INTERCEPTOR__) {
-  axios.__MF_INTERCEPTOR__ = true;
-
-  axios.interceptors.request.use((config) => {
-    const isFormData =
-      typeof FormData !== "undefined" && config.data instanceof FormData;
-
-    config.headers = config.headers ?? {};
-
-    // Content-Type 처리
-    if (!isFormData && config.data != null) {
-      config.headers["Content-Type"] = "application/json";
-    } else if (isFormData) {
-      delete config.headers["Content-Type"];
-    }
-
-    // Authorization 자동 부착 (현재 프론트는 localStorage를 사용)
-    const token =
-      sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      delete config.headers.Authorization;
-    }
-
-    return config;
-  });
-}
-
 export default function ChatPanel() {
   /** ====== 인증 상태 ====== */
   const [authBlocked, setAuthBlocked] = useState(false);
-  const token = localStorage.getItem("accessToken");
-  const needLogin = authBlocked || !token;
+  const needLogin = authBlocked;
 
   /** ====== 상태 ====== */
   const [chats, setChats] = useState([]);
@@ -166,7 +132,7 @@ export default function ChatPanel() {
   /** ====== 401 공통 처리 ====== */
   const handleAuthError = useCallback((e) => {
     const status = e?.response?.status;
-    if (status === 401) {
+    if (status === 401 || status === 403 || e?.__AUTH_REQUIRED__) {
       setAuthBlocked(true);
       setSending(false);
       setLoadingChat(false);
@@ -182,7 +148,7 @@ export default function ChatPanel() {
 
     setLoadingList(true);
     try {
-      const res = await axios.get(API.listConversations, {
+      const res = await apiClient.get(API.listConversations, {
         params: { page: 1, size: 50 },
       });
 
@@ -238,7 +204,7 @@ export default function ChatPanel() {
     (async () => {
       setLoadingChat(true);
       try {
-        const res = await axios.get(API.getConversation(activeId), {
+        const res = await apiClient.get(API.getConversation(activeId), {
           params: { includeMessages: true, limit: 100 },
         });
 
@@ -310,7 +276,7 @@ export default function ChatPanel() {
 
     setSending(true);
     try {
-      const res = await axios.post(API.createConversation, {});
+      const res = await apiClient.post(API.createConversation, {});
       const content = pickContent(res) ?? {};
       const ui = mapApiConversationItemToUi(content);
 
@@ -353,7 +319,7 @@ export default function ChatPanel() {
 
     setSending(true);
     try {
-      await axios.patch(API.patchConversationStatus(conversationId), { status: 0 });
+      await apiClient.patch(API.patchConversationStatus(conversationId), { status: 0 });
     } catch (e) {
       if (handleAuthError(e)) return;
       console.error("patch conversation status error:", e);
@@ -394,7 +360,7 @@ export default function ChatPanel() {
     setInput("");
 
     try {
-      const res = await axios.post(API.sendMessage(activeId), {
+      const res = await apiClient.post(API.sendMessage(activeId), {
         content: text,
         clientMessageId,
       });

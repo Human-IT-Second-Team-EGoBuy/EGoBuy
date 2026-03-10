@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Getter
 @Entity
 @Table(name = "disease")
@@ -34,6 +37,7 @@ public class DiseaseEntity {
     @Column(name = "sort_order2")
     private Integer sortOrder2;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "status", nullable = false)
     private Byte status;
 

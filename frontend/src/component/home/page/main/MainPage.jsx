@@ -1,6 +1,8 @@
 import { Card, WeatherUi, SectionText } from "./MainPageUi";
+import { useState, useEffect } from "react";
 import RetailSection from "./section/RetailSection";
 import NewsSection from "./section/NewsSection";
+import VisionSection from "./section/VisionSection";
 import useUserStore from '../../../../store/useUserStore'; // Zustand 데이터를 확인하기 위한 로그
 
 export default function MainPage() {
@@ -27,10 +29,7 @@ export default function MainPage() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h2 className="font-bold text-lg mb-4">diagnosis ai</h2>
-          <div className="text-sm text-slate-500">여기에 병충해 진단 ai UI</div>
-        </Card>
+         <VisionSection />
 
         <Card>
           <h2 className="font-bold text-lg mb-4">farming guide search</h2>

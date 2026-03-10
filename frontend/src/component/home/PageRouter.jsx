@@ -14,9 +14,10 @@ import AdminLayout from "./page/admin/layout/AdminLayout"
 import AdminQnaPage from "./page/admin/qna/AdminQnaPage"
 import AdminReportsPage from "./page/admin/reports/AdminReportsPage"
 import AdminUsersPage from "./page/admin/users/AdminUsersPage"
-import LoginPage from "./page/user/auth/login/loginPage"
+import LoginPage from "./page/user/auth/login/LoginPage"
 import MyPage from "./page/user/mypage/MyPage"
 import SignupPage from "./page/user/auth/signup/SignUpPage"
+import RetailDetailPage from "./page/informationhub/retaildetailpage/RetailDetailPage";
 
 
 
